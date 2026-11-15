@@ -1924,7 +1924,7 @@ function normalizeSavedIllustration(value) {
 function escapeIllustrationHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 }
-function illustrationFigure(value) {
+function illustrationFigure(value, { caption: captionOverride, alt: altOverride } = {}) {
   if (!value) return "";
   let image;
   try {
@@ -1932,9 +1932,10 @@ function illustrationFigure(value) {
   } catch {
     return "";
   }
-  const caption = escapeIllustrationHtml(image.draft.scene.summary);
+  const caption = escapeIllustrationHtml(captionOverride ?? image.draft.scene.summary);
+  const alt = escapeIllustrationHtml(altOverride ?? captionOverride ?? image.draft.scene.summary) || "\u914D\u56FE";
   const captionHtml = caption ? `<figcaption style="margin-top:10px;font-size:0.9em;line-height:1.6">${caption}</figcaption>` : "";
-  return `<figure data-titania-illustration="${escapeIllustrationHtml(image.id)}" style="margin:24px auto;text-align:center;max-width:100%"><a href="${image.filePath}" target="_blank" rel="noopener"><img src="${image.filePath}" alt="${caption || "\u914D\u56FE"}" width="${image.width}" height="${image.height}" loading="lazy" style="display:block;max-width:100%;height:auto;max-height:80vh;object-fit:contain;margin:auto;border-radius:12px"></a>${captionHtml}</figure>`;
+  return `<figure data-titania-illustration="${escapeIllustrationHtml(image.id)}" style="margin:24px auto;text-align:center;max-width:100%"><a href="${image.filePath}" target="_blank" rel="noopener"><img src="${image.filePath}" alt="${alt}" width="${image.width}" height="${image.height}" loading="lazy" style="display:block;max-width:100%;height:auto;max-height:80vh;object-fit:contain;margin:auto;border-radius:12px"></a>${captionHtml}</figure>`;
 }
 var ILLUSTRATION_MAX_MANUAL_SELECTIONS, ILLUSTRATION_INDEX_KEY, MAX_IMAGE_BYTES, ILLUSTRATION_DRAFT_VERSION, ILLUSTRATION_BACKEND_IDS, BACKENDS, MIME_EXTENSIONS;
 var init_illustrationData = __esm({
@@ -18650,9 +18651,10 @@ textarea.t-input {\r
     flex-direction: column;\r
     align-items: center;\r
     justify-content: center;\r
-    gap: 12px;\r
-    padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))\r
-        max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));\r
+    gap: var(--t-gap-stack);\r
+    /* \u9876\u90E8\u4E3A 44px \u5173\u95ED\u6309\u94AE\u7559\u72EC\u7ACB\u7A7A\u95F4\uFF0C\u7AD6\u56FE\u4E0D\u88AB\u6309\u94AE\u906E\u4F4F\u3002 */\r
+    padding: calc(max(12px, env(safe-area-inset-top)) + 52px) max(16px, env(safe-area-inset-right))\r
+        max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));\r
 }\r
 \r
 .t-illustration-lightbox-backdrop {\r
@@ -18661,15 +18663,27 @@ textarea.t-input {\r
     background: rgba(0, 0, 0, 0.82);\r
 }\r
 \r
-/* \u821E\u53F0\u662F\u6EDA\u52A8\u5BB9\u5668\uFF1A\u6A2A\u56FE\u7F29\u5230\u5BBD\u5EA6\u5185\uFF0C\u7AD6\u56FE\u4FDD\u6301\u539F\u5C3A\u5BF8\u7EB5\u5411\u6EDA\u52A8\u3002 */\r
+/* \u821E\u53F0\u662F\u6EDA\u52A8\u5BB9\u5668\uFF1A\u6A2A\u56FE\u7F29\u5230\u5BBD\u5EA6\u5185\uFF0C\u7AD6\u56FE\u7EB5\u5411\u6EDA\u52A8\u3002\r
+   min-height:0 + flex-shrink \u4E3A\u56FE\u9898\u548C\u6D4F\u89C8\u680F\u8BA9\u4F4D\uFF0C\u957F\u6458\u8981\u4E0D\u4F1A\u628A\u5173\u95ED/\u7FFB\u9875\u6309\u94AE\u6324\u51FA\u5C4F\u5E55\u3002 */\r
 .t-illustration-lightbox-stage {\r
     position: relative;\r
+    flex: 0 1 auto;\r
+    min-width: 0;\r
+    min-height: 0;\r
     max-width: 100%;\r
+    max-height: calc(100vh - 150px);\r
     max-height: calc(100dvh - 150px);\r
     overflow: auto;\r
     overscroll-behavior: contain;\r
     -webkit-overflow-scrolling: touch;\r
+    touch-action: auto;\r
     border-radius: var(--t-radius-panel);\r
+}\r
+\r
+/* \u53EA\u63A5\u7BA1\u7EC4\u56FE\u7684\u5355\u6307\u6A2A\u5411\u624B\u52BF\uFF1B\u7EB5\u5411\u4E0E\u53CC\u6307\u7F29\u653E\u4ECD\u7531\u6D4F\u89C8\u5668\u5904\u7406\u3002\r
+   \u5DF2\u653E\u5927\u65F6\u6062\u590D auto\uFF0C\u5355\u6307\u53EF\u5728\u6D4F\u89C8\u5668\u653E\u5927\u7684\u9875\u9762\u5185\u81EA\u7531\u5E73\u79FB\u3002 */\r
+.t-illustration-lightbox.has-gallery:not(.is-zoomed) .t-illustration-lightbox-stage {\r
+    touch-action: pan-y pinch-zoom;\r
 }\r
 \r
 .t-illustration-lightbox-image {\r
@@ -18683,32 +18697,100 @@ textarea.t-input {\r
 \r
 .t-illustration-lightbox-caption {\r
     position: relative;\r
+    flex: 0 1 auto;\r
+    min-height: 0;\r
+    box-sizing: border-box;\r
     margin: 0;\r
-    max-width: 42em;\r
+    padding: 8px 12px;\r
+    max-width: min(42em, 100%);\r
+    max-height: min(20vh, 8em);\r
+    max-height: min(20dvh, 8em);\r
+    overflow-y: auto;\r
+    overscroll-behavior: contain;\r
+    overflow-wrap: anywhere;\r
+    white-space: pre-wrap;\r
     text-align: center;\r
     font-size: 0.9em;\r
     line-height: 1.6;\r
+    border-radius: var(--t-radius-panel);\r
+    background: var(--t-color-surface-elevated);\r
     color: var(--t-color-text-secondary);\r
+}\r
+\r
+/* PC \u4E0E\u624B\u673A\u5171\u7528\u56FE\u4E0B\u6D4F\u89C8\u680F\uFF0C\u4E0D\u7528\u53E0\u5728\u56FE\u7247\u4E24\u4FA7\u7684\u6309\u94AE\u906E\u6321\u7A84\u5C4F\u753B\u9762\u3002 */\r
+.t-illustration-lightbox-controls {\r
+    position: relative;\r
+    flex: 0 0 auto;\r
+    display: flex;\r
+    align-items: center;\r
+    gap: 12px;\r
+    max-width: 100%;\r
+    padding: 4px;\r
+    box-sizing: border-box;\r
+    border: 1px solid var(--t-color-border-strong);\r
+    border-radius: var(--t-radius-panel);\r
+    background: var(--t-color-surface-elevated);\r
+}\r
+\r
+.t-illustration-lightbox-counter {\r
+    min-width: 6ch;\r
+    text-align: center;\r
+    white-space: nowrap;\r
+    font-size: 0.9em;\r
+    font-variant-numeric: tabular-nums;\r
+    color: var(--t-color-text-secondary);\r
+}\r
+\r
+.t-illustration-lightbox-close,\r
+.t-illustration-lightbox-nav {\r
+    display: inline-flex;\r
+    align-items: center;\r
+    justify-content: center;\r
+    flex: 0 0 auto;\r
+    box-sizing: border-box;\r
+    width: 44px;\r
+    min-width: 44px;\r
+    height: 44px;\r
+    min-height: 44px;\r
+    margin: 0;\r
+    padding: 0;\r
+    border: 1px solid var(--t-color-border-strong);\r
+    border-radius: var(--t-radius-circle);\r
+    background: var(--t-color-surface-elevated);\r
+    color: var(--t-color-text);\r
+    font: inherit;\r
+    line-height: 1;\r
+    cursor: pointer;\r
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;\r
 }\r
 \r
 .t-illustration-lightbox-close {\r
     position: absolute;\r
     top: max(12px, env(safe-area-inset-top));\r
     right: max(12px, env(safe-area-inset-right));\r
-    display: inline-flex;\r
-    align-items: center;\r
-    justify-content: center;\r
-    width: 36px;\r
-    height: 36px;\r
-    padding: 0;\r
-    border: 1px solid var(--t-color-border-strong);\r
-    border-radius: var(--t-radius-circle);\r
-    background: var(--t-color-surface-elevated);\r
-    color: var(--t-color-text);\r
-    cursor: pointer;\r
 }\r
 \r
-.t-illustration-lightbox [hidden] { display: none; }\r
+.t-illustration-lightbox-close:hover,\r
+.t-illustration-lightbox-nav:not([aria-disabled="true"]):hover {\r
+    border-color: var(--t-color-brand);\r
+    color: var(--t-color-brand);\r
+}\r
+\r
+.t-illustration-lightbox-close:focus-visible,\r
+.t-illustration-lightbox-nav:focus-visible,\r
+.t-illustration-lightbox-stage:focus-visible,\r
+.t-illustration-lightbox-caption:focus-visible {\r
+    outline: 2px solid var(--t-color-brand);\r
+    outline-offset: 3px;\r
+}\r
+\r
+.t-illustration-lightbox-nav[aria-disabled="true"] { opacity: 0.45; cursor: default; }\r
+.t-illustration-lightbox [hidden] { display: none !important; }\r
+\r
+@media (prefers-reduced-motion: reduce) {\r
+    .t-illustration-lightbox-close,\r
+    .t-illustration-lightbox-nav { transition: none; }\r
+}\r
 \r
 @media (max-width: 600px) {\r
     .t-root.t-illustration-window {\r
@@ -18809,10 +18891,32 @@ textarea.t-input {\r
     background: rgb(6 11 18 / .9);\r
 }\r
 \r
-.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-close {\r
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-close,\r
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-nav,\r
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-controls {\r
     background: var(--t-studio-raised);\r
-    border: 1px solid var(--t-studio-gold-border);\r
+    border-color: var(--t-studio-gold-border);\r
     color: var(--t-studio-muted);\r
+}\r
+\r
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-caption {\r
+    background: var(--t-studio-raised);\r
+    color: var(--t-studio-muted);\r
+}\r
+\r
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-counter { color: var(--t-studio-muted); }\r
+\r
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-close:hover,\r
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-nav:not([aria-disabled="true"]):hover {\r
+    border-color: var(--t-studio-gold);\r
+    color: var(--t-studio-gold);\r
+}\r
+\r
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-close:focus-visible,\r
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-nav:focus-visible,\r
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-stage:focus-visible,\r
+.t-studio-workspace.t-illustration-lightbox .t-illustration-lightbox-caption:focus-visible {\r
+    outline-color: var(--t-studio-gold);\r
 }\r
 \r
 @media screen and (max-width: 700px) {\r
@@ -19537,6 +19641,11 @@ textarea.t-input {\r
 .t-unified-swipe-hint:focus-visible { outline: 2px solid var(--t-echo-accent); outline-offset: -2px; }\r
 .t-unified-pages { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }\r
 .t-unified-page { flex: 1; min-height: 0; min-width: 0; overflow: auto; padding: 24px; overscroll-behavior: contain; }\r
+/* \u53EA\u5728\u624B\u52BF\u548C\u77ED\u6682\u56DE\u5F39\u671F\u95F4\u79FB\u52A8\u5F53\u524D\u9875\uFF0C\u4E0D\u6539\u7A97\u53E3\u5916\u58F3\u3001\u5E95\u680F\u6216\u6EDA\u52A8\u4F4D\u7F6E\u3002 */\r
+.t-unified-frame-motion { transform: translate3d(var(--t-frame-drag-x, 0px), 0, 0); will-change: transform; user-select: none; -webkit-user-select: none; }\r
+@media (prefers-reduced-motion: reduce) {\r
+    .t-unified-frame-motion { transform: none; }\r
+}\r
 .t-unified-setup-inner { width: min(900px, 100%); margin: 20px auto; }\r
 .t-unified-source-state { margin: 0 0 26px; padding: 12px 16px; border-left: 3px solid var(--t-echo-accent); color: var(--t-echo-muted); background: var(--t-echo-accent-soft); font-size: var(--t-text-caption); }\r
 .t-unified-setting { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; padding: 26px 0; border-bottom: 1px solid var(--t-echo-line); }\r
@@ -19658,9 +19767,66 @@ textarea.t-input {\r
 .t-unified-generation-secondary { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }\r
 .t-unified-generation-secondary .t-btn { min-height: 44px; padding: 6px 12px; border-color: transparent; background: transparent; color: var(--t-echo-muted); }\r
 .t-unified-generation-secondary .t-btn:hover:not(:disabled) { border-color: var(--t-echo-line); background: var(--t-echo-raised); color: var(--t-color-text-strong); }\r
-.t-unified-results .t-unified-image-stage { width: min(960px, 100%); margin: 0 auto 22px; }\r
-.t-unified-text-result { width: min(760px, 100%); margin: 30px auto; line-height: 1.95; font-size: calc(17px * var(--t-ui-font-scale, 1)); overflow-wrap: anywhere; }\r
-.t-unified-text-result img { max-width: 100%; max-height: 65dvh; object-fit: contain; }\r
+/* \u7B2C\u56DB\u6B65\u4EE5\u4F5C\u54C1\u4E3A\u4E3B\uFF1A\u9605\u8BFB\u533A\u72EC\u7ACB\u6EDA\u52A8\uFF0C\u91C7\u7528\u56FE\u7F29\u7565\u6761\u5728\u6240\u6709\u5C4F\u5BBD\u4FDD\u7559\u3002 */\r
+.t-unified-page.t-unified-results { display: flex; flex-direction: column; overflow: hidden; padding: 18px 24px 12px; }\r
+.t-unified-results > .t-unified-page-heading { flex: 0 0 auto; min-width: 0; gap: 12px 20px; margin-bottom: 12px; }\r
+.t-unified-results > .t-unified-page-heading > div:first-child { flex: 1; min-width: 0; }\r
+.t-unified-results [data-role="result-work-title"] { color: var(--t-color-text-strong); line-height: var(--t-leading-ui); overflow-wrap: anywhere; }\r
+.t-unified-results [data-role="result-overview"] { margin: 5px 0 0; color: var(--t-echo-muted); font-size: var(--t-text-caption); line-height: var(--t-leading-ui); }\r
+.t-unified-results > .t-unified-page-heading .t-unified-segmented { flex: 0 0 auto; margin-bottom: 0; }\r
+.t-unified-results .t-unified-result-issue { flex: 0 0 auto; margin: 0 0 10px; padding: 8px 12px; }\r
+.t-unified-result-scroll { flex: 1; min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; }\r
+.t-unified-results [data-role="result-images"] { height: 100%; min-height: 0; }\r
+.t-unified-results .t-unified-image-stage { width: min(1040px, 100%); height: 100%; margin: 0 auto; gap: 0; }\r
+.t-unified-results .t-unified-image-viewer { display: flex; align-items: center; justify-content: center; height: 100%; background: transparent; }\r
+.t-unified-results .t-unified-large-image { height: 100%; max-height: 100%; background: transparent; }\r
+.t-unified-results .t-unified-placeholder { flex: 1; min-height: 120px; text-align: center; line-height: var(--t-leading-prose); }\r
+.t-unified-result-caption { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; min-width: 0; gap: 16px; padding: 12px 0 8px; }\r
+.t-unified-result-caption > div { flex: 1; min-width: 0; }\r
+.t-unified-result-caption h3 { margin: 0; color: var(--t-color-text-strong); font-size: var(--t-text-body); font-weight: 500; line-height: var(--t-leading-ui); overflow-wrap: anywhere; }\r
+.t-unified-result-caption p { margin: 4px 0 0; color: var(--t-echo-muted); font-size: var(--t-text-caption); line-height: var(--t-leading-ui); }\r
+.t-unified-result-caption .t-btn { flex: 0 0 auto; border-color: transparent; background: transparent; color: var(--t-echo-accent); }\r
+.t-unified-result-strip { display: flex; flex: 0 0 auto; min-width: 0; gap: 10px; padding: 4px 0 6px; overflow-x: auto; overflow-y: hidden; overscroll-behavior: contain; }\r
+.t-unified-result-thumb { display: grid; flex: 0 0 132px; min-width: 0; gap: 4px; margin: 0; padding: 5px 5px 7px; border: 1px solid transparent; border-radius: var(--t-radius-container); background: transparent; color: var(--t-color-text-strong); font: inherit; text-align: left; cursor: pointer; }\r
+.t-unified-result-thumb-image { display: grid; place-items: center; height: 68px; overflow: hidden; border-radius: var(--t-radius-control); background: var(--t-echo-raised); color: var(--t-echo-muted); }\r
+.t-unified-result-thumb-image img { display: block; width: 100%; height: 100%; object-fit: cover; }\r
+.t-unified-result-thumb :is(strong,small) { min-width: 0; overflow: hidden; font-size: var(--t-text-caption); text-overflow: ellipsis; white-space: nowrap; }\r
+.t-unified-result-thumb strong { font-weight: 500; }\r
+.t-unified-result-thumb small { color: var(--t-echo-muted); }\r
+.t-unified-result-thumb[aria-pressed="true"] { border-color: var(--t-echo-accent); background: var(--t-echo-accent-soft); }\r
+.t-unified-result-thumb:hover { border-color: var(--t-echo-line); }\r
+.t-unified-result-thumb[aria-pressed="true"]:hover { border-color: var(--t-echo-accent); }\r
+.t-unified-result-thumb:focus-visible,.t-unified-position-unit:focus-visible { outline: 2px solid var(--t-echo-accent); outline-offset: -3px; }\r
+.t-unified-text-result { width: min(760px, 100%); margin: 12px auto 28px; color: var(--t-color-text-strong); line-height: 1.95; font-size: calc(17px * var(--t-ui-font-scale, 1)); overflow-wrap: anywhere; }\r
+.t-unified-text-result img { max-width: 100%; object-fit: contain; }\r
+.t-unified-text-result .t-imaging-reading-figure { scroll-margin-top: 12px; }\r
+.t-unified-text-result .t-imaging-reading-figure a { display: block; cursor: zoom-in; }\r
+.t-unified-text-result .t-imaging-reading-figure :is(a:focus-visible,figure:focus-visible) { outline: 2px solid var(--t-echo-accent); outline-offset: 3px; }\r
+.t-unified-text-result .t-imaging-reading-figure:focus { outline: 1px solid var(--t-echo-line); outline-offset: 3px; }\r
+.t-unified-result-modifications { display: grid; gap: 10px; margin: 18px 0; }\r
+.t-unified-result-modifications .t-btn { text-align: left; padding: 12px 16px; }\r
+.t-unified-imaging.is-unified-results [data-command="performance"].needs-attention { color: var(--t-echo-accent); border-color: var(--t-echo-accent); }\r
+.t-unified-sheet:is([data-mode="position"],[data-mode="performance"]) [data-role="sheet-body"] { display: flex; flex-direction: column; overflow: hidden; }\r
+.t-unified-sheet:is([data-mode="position"],[data-mode="performance"]) [data-role="sheet-body"] > p { flex: 0 0 auto; }\r
+.t-unified-sheet:is([data-mode="position"],[data-mode="performance"]) .t-unified-sheet-footer { flex: 0 0 auto; }\r
+.t-unified-position-units { display: grid; align-content: start; flex: 1; min-height: 0; gap: 8px; overflow: auto; overscroll-behavior: contain; }\r
+.t-unified-position-unit { display: grid; gap: 8px; width: 100%; min-width: 0; padding: 16px 14px; border: 1px solid var(--t-echo-line); border-radius: var(--t-radius-control); background: transparent; color: var(--t-color-text-strong); font: inherit; text-align: left; cursor: pointer; }\r
+.t-unified-position-unit strong { color: var(--t-echo-muted); font-size: var(--t-text-caption); font-weight: 500; }\r
+.t-unified-position-unit span { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--t-text-body); line-height: 1.9; }\r
+.t-unified-position-unit[aria-pressed="true"] { border-color: var(--t-echo-accent); background: var(--t-echo-accent-soft); }\r
+.t-unified-position-unit[aria-pressed="true"] strong { color: var(--t-echo-accent); }\r
+.t-unified-position-status { margin: 8px 0 0; color: var(--t-echo-muted); font-size: var(--t-text-caption); line-height: var(--t-leading-ui); white-space: pre-wrap; overflow-wrap: anywhere; }\r
+.t-unified-position-status:empty { display: none; }\r
+.t-unified-performance-summary { margin: 0 0 12px; padding: 10px 12px; border-left: 2px solid var(--t-echo-accent); background: var(--t-echo-accent-soft); color: var(--t-color-text-strong); font-size: var(--t-text-caption); line-height: var(--t-leading-prose); }\r
+.t-unified-performance-sequence { display: grid; align-content: start; flex: 1; min-height: 0; gap: 14px; overflow: auto; overscroll-behavior: contain; }\r
+.t-unified-performance-shot { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px 12px; min-width: 0; padding: 12px 0; border-bottom: 1px solid var(--t-echo-line); }\r
+.t-unified-performance-shot > img,.t-unified-performance-empty { display: grid; place-items: center; width: 72px; height: 60px; object-fit: cover; border-radius: var(--t-radius-control); background: var(--t-echo-raised); color: var(--t-echo-muted); }\r
+.t-unified-performance-shot > div { min-width: 0; }\r
+.t-unified-performance-shot h3 { margin: 0; color: var(--t-color-text-strong); font-size: var(--t-text-caption); font-weight: 500; overflow-wrap: anywhere; }\r
+.t-unified-performance-shot p { margin: 4px 0 0; color: var(--t-echo-muted); font-size: var(--t-text-caption); }\r
+.t-unified-performance-shot blockquote { margin: 8px 0 0; color: var(--t-echo-muted); font-size: var(--t-text-caption); line-height: var(--t-leading-prose); overflow-wrap: anywhere; }\r
+.t-unified-performance-shot > .t-btn { grid-column: 2; justify-self: start; }\r
+.t-unified-performance-shot.needs-position h3 { color: var(--t-echo-accent); }\r
 .t-unified-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 20px; border-top: 1px solid var(--t-echo-line); background: var(--t-echo-bg); flex: 0 0 auto; }\r
 .t-unified-footer:has(> [data-role="notice"][hidden]) { justify-content: flex-end; }\r
 .t-unified-footer > div:first-child { flex: 1; min-width: 0; max-height: 100px; overflow: auto; color: var(--t-echo-muted); font-size: var(--t-text-caption); line-height: var(--t-leading-prose); white-space: pre-wrap; }\r
@@ -19684,6 +19850,9 @@ textarea.t-input {\r
 .t-unified-imaging.is-unified-playing .t-illustration-panel > :not(.t-unified-player) { display: none; }\r
 .t-unified-imaging.is-unified-playing .t-unified-player { position: static; width: 100%; height: 100%; }\r
 @media (max-width: 1100px) {\r
+    /* \u4E0D\u7ED9\u5DE5\u4F5C\u533A\u6216\u6574\u9875\u8BBE pan-y\uFF1A\u7956\u5148\u7684\u9650\u5236\u4F1A\u8FDE\u5019\u9009\u6761\u7684\u6A2A\u5411\u6EDA\u52A8\u4E00\u8D77\u7981\u6389\u3002\r
+       \u4EC5\u4E3B\u56FE\u3001\u63D0\u793A\u6761\u4E0E\u975E\u4EA4\u4E92\u6587\u5B57\u9884\u7559\u6A2A\u6ED1\uFF0C\u4FDD\u7559\u7AD6\u5411\u9605\u8BFB\u3001\u53CC\u6307\u7F29\u653E\u548C\u8F93\u5165\u7F16\u8F91\u3002 */\r
+    .t-unified-imaging.is-frame-browsing :is(.t-unified-swipe-hint, .t-unified-image-stage, .t-unified-editor > header, .t-unified-receipt, .t-unified-ai-empty, .t-unified-page p, .t-unified-page h2, .t-unified-page h3, .t-unified-page small) { touch-action: pan-y pinch-zoom; }\r
     .t-unified-imaging .t-unified-rail { display: none; }\r
     .t-unified-workspace.has-rail { grid-template-columns: minmax(0, 1fr); }\r
     .t-unified-swipe-hint:not([hidden]) { display: block; }\r
@@ -19741,6 +19910,26 @@ textarea.t-input {\r
     .t-unified-footer [data-command="primary"] { flex: 1; }\r
     .t-unified-imaging :is(input,textarea,select) { font-size: max(16px, calc(16px * var(--t-ui-font-scale, 1))); }\r
     .t-unified-ai-empty { margin: 30px auto; }\r
+    .t-unified-page.t-unified-results { padding: 12px 16px 6px; }\r
+    .t-unified-results > .t-unified-page-heading { flex-wrap: nowrap; align-items: flex-start; gap: 8px; margin-bottom: 8px; }\r
+    .t-unified-results [data-role="result-work-title"] { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: calc(16px * var(--t-ui-font-scale, 1)); }\r
+    .t-unified-results [data-role="result-overview"] { font-size: calc(11px * var(--t-ui-font-scale, 1)); }\r
+    .t-unified-results > .t-unified-page-heading .t-unified-segmented { flex-wrap: nowrap; gap: 4px; }\r
+    .t-unified-results > .t-unified-page-heading .t-btn { min-height: 40px; padding: 6px 10px; }\r
+    .t-unified-result-caption { gap: 8px; padding: 8px 0 4px; }\r
+    .t-unified-result-caption h3 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: calc(14px * var(--t-ui-font-scale, 1)); }\r
+    .t-unified-result-caption p { font-size: calc(11px * var(--t-ui-font-scale, 1)); }\r
+    .t-unified-result-caption .t-btn { padding: 6px 8px; }\r
+    .t-unified-result-strip { gap: 6px; padding-bottom: 4px; }\r
+    .t-unified-result-thumb { flex-basis: 108px; gap: 3px; padding: 4px 4px 5px; }\r
+    .t-unified-result-thumb-image { height: 52px; }\r
+    .t-unified-result-thumb strong { font-size: calc(12px * var(--t-ui-font-scale, 1)); }\r
+    .t-unified-result-thumb small { font-size: calc(11px * var(--t-ui-font-scale, 1)); }\r
+    .t-unified-imaging.is-unified-results .t-unified-footer .t-unified-actions { flex-wrap: wrap; gap: 6px; }\r
+    .t-unified-imaging.is-unified-results .t-unified-footer .t-unified-actions > .t-btn { flex: 1 1 100px; min-width: 0; }\r
+    .t-unified-imaging.is-unified-results .t-unified-footer [data-command="performance"] { flex-basis: 100%; }\r
+    .t-unified-text-result { margin-top: 6px; }\r
+    .t-unified-sheet:is([data-mode="position"],[data-mode="performance"]) [data-role="sheet-body"] { padding: 16px; }\r
 }\r
 
 
@@ -31350,7 +31539,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184607], "04-features/toolbox-settings.css": [184656, 189061], "04-features/main-window.css": [189105, 234004], "04-features/main-window-legacy.css": [234055, 257921], "04-features/script-picker.css": [257967, 264462], "04-features/wi-selector.css": [264506, 282332], "04-features/continuation.css": [282377, 306246], "04-features/queue.css": [306284, 312844], "04-features/content-editor.css": [312891, 315198], "04-features/illustration.css": [315243, 338986], "04-features/visual-selection.css": [339035, 344294], "04-features/storyboard.css": [344337, 361417], "04-features/echo-imaging.css": [361462, 417519], "04-features/settings-drawer.css": [417567, 435801], "04-features/settings.css": [435842, 463868], "04-features/manager.css": [463908, 477206], "04-features/workshop.css": [477247, 500029], "04-features/favs.css": [500066, 541550], "04-features/debug.css": [541588, 558353], "04-features/story-outline.css": [558399, 592705], "04-features/outline-entry-menu.css": [592756, 599509], "04-features/rewrite.css": [599549, 650448], "04-features/paragraph-editor.css": [650497, 654280], "04-features/reader.css": [654319, 663678], "04-features/chat-book.css": [663720, 670261], "04-features/story-memory.css": [670306, 717693], "04-features/retrieval.css": [717735, 729701], "04-features/character-evolution.css": [729753, 764427], "04-features/story-memory-notifications.css": [764486, 767698], "04-features/story-timetrace.css": [767746, 785878], "04-features/tts.css": [785914, 821603], "04-features/confirm-dialog.css": [821650, 825648], "04-features/image-cropper.css": [825694, 829552], "04-features/st-embedded.css": [829596, 861278], "04-features/scene-advance.css": [861324, 889924], "04-features/theater-midnight.css": [889973, 915301] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184607], "04-features/toolbox-settings.css": [184656, 189061], "04-features/main-window.css": [189105, 234004], "04-features/main-window-legacy.css": [234055, 257921], "04-features/script-picker.css": [257967, 264462], "04-features/wi-selector.css": [264506, 282332], "04-features/continuation.css": [282377, 306246], "04-features/queue.css": [306284, 312844], "04-features/content-editor.css": [312891, 315198], "04-features/illustration.css": [315243, 342551], "04-features/visual-selection.css": [342600, 347859], "04-features/storyboard.css": [347902, 364982], "04-features/echo-imaging.css": [365027, 431259], "04-features/settings-drawer.css": [431307, 449541], "04-features/settings.css": [449582, 477608], "04-features/manager.css": [477648, 490946], "04-features/workshop.css": [490987, 513769], "04-features/favs.css": [513806, 555290], "04-features/debug.css": [555328, 572093], "04-features/story-outline.css": [572139, 606445], "04-features/outline-entry-menu.css": [606496, 613249], "04-features/rewrite.css": [613289, 664188], "04-features/paragraph-editor.css": [664237, 668020], "04-features/reader.css": [668059, 677418], "04-features/chat-book.css": [677460, 684001], "04-features/story-memory.css": [684046, 731433], "04-features/retrieval.css": [731475, 743441], "04-features/character-evolution.css": [743493, 778167], "04-features/story-memory-notifications.css": [778226, 781438], "04-features/story-timetrace.css": [781486, 799618], "04-features/tts.css": [799654, 835343], "04-features/confirm-dialog.css": [835390, 839388], "04-features/image-cropper.css": [839434, 843292], "04-features/st-embedded.css": [843336, 875018], "04-features/scene-advance.css": [875064, 903664], "04-features/theater-midnight.css": [903713, 929041] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -35540,14 +35729,17 @@ var init_imagingGenerationState = __esm({
 });
 
 // src/core/imagingResults.js
+function imagingResultFrames(workspace, images = [], source2 = workspace.source) {
+  const imageMap = new Map([...workspace.images || [], ...images].map((image) => [image.id, image]));
+  return workspace.frames.map((frame, index2) => {
+    const image = imageMap.get(frame.adoptedId) || null;
+    return { frame, index: index2, image, anchor: image ? imageAnchor(frame, image, source2) : -1 };
+  }).sort((a, b) => (a.anchor < 0 ? Infinity : a.anchor) - (b.anchor < 0 ? Infinity : b.anchor) || a.index - b.index);
+}
 function buildImagingResult(value, images = [], source2 = value?.source) {
   const boundSource = createImagingSource(source2);
   const workspace = normalizeImagingWorkspace(value, boundSource, images);
-  const imageMap = new Map(workspace.images.map((image) => [image.id, image]));
-  const adopted = workspace.frames.filter((frame) => frame.adoptedId).map((frame) => {
-    const image = imageMap.get(frame.adoptedId);
-    return { frameId: frame.id, title: frame.title, image, anchor: imageAnchor(frame, image, boundSource) };
-  });
+  const adopted = imagingResultFrames(workspace, workspace.images, boundSource).filter((item2) => item2.image).map(({ frame, index: index2, image, anchor }) => ({ frameId: frame.id, index: index2, title: frame.title, image, anchor }));
   const unplacedImages = adopted.filter((item2) => item2.anchor < 0);
   const segments = [], texts = [];
   for (const part of boundSource.parts) {
@@ -35558,12 +35750,13 @@ function buildImagingResult(value, images = [], source2 = value?.source) {
     for (const item2 of insertions) {
       const start = boundSource.units[item2.anchor].start;
       if (start > position) segments.push({ kind: "text", partId: part.id, start: position, end: start, text: body.slice(position, start) });
-      segments.push({ kind: "image", partId: part.id, start, frameId: item2.frameId, title: item2.title, image: item2.image });
+      segments.push({ kind: "image", partId: part.id, start, frameId: item2.frameId, index: item2.index, title: item2.title, image: item2.image });
       position = start;
     }
     if (position < body.length) segments.push({ kind: "text", partId: part.id, start: position, end: body.length, text: body.slice(position) });
   }
-  const html = segments.map((segment) => segment.kind === "image" ? illustrationFigure(segment.image) : `<div data-imaging-part="${escapeIllustrationHtml(segment.partId)}" style="white-space:pre-wrap;line-height:1.9">${escapeIllustrationHtml(segment.text)}</div>`).join("") + (unplacedImages.length ? `<section data-imaging-unplaced><h2>\u5C1A\u672A\u5B9A\u4F4D\u7684\u5DF2\u91C7\u7528\u753B\u9762</h2>${unplacedImages.map((item2) => illustrationFigure(item2.image)).join("")}</section>` : "");
+  const figure = (item2) => `<section class="t-imaging-reading-figure" data-imaging-frame="${escapeIllustrationHtml(item2.frameId)}" tabindex="-1">${illustrationFigure(item2.image, { caption: item2.title, alt: `\u753B\u9762 ${item2.index + 1}\uFF1A${item2.title}` })}</section>`;
+  const html = `<header class="t-imaging-reading-heading" style="margin:0 0 2em"><h1 style="font-size:1.65em;line-height:1.4">${escapeIllustrationHtml(boundSource.title)}</h1></header>` + segments.map((segment) => segment.kind === "image" ? figure(segment) : `<div data-imaging-part="${escapeIllustrationHtml(segment.partId)}" data-imaging-start="${segment.start}">${segment.text.split(/\n[ \t]*\n/u).map((paragraph) => `<p style="white-space:pre-wrap;line-height:1.95;margin:0 0 1.1em">${escapeIllustrationHtml(paragraph)}</p>`).join("")}</div>`).join("") + (unplacedImages.length ? `<section data-imaging-unplaced><h2>\u5C1A\u672A\u5B9A\u4F4D\u7684\u5DF2\u91C7\u7528\u753B\u9762</h2>${unplacedImages.map(figure).join("")}</section>` : "");
   return { source: boundSource, text: texts.join("\n\n"), segments, images: adopted, unplacedImages, html };
 }
 function buildImagingStoryboard(value, images = [], source2 = value?.source) {
@@ -35597,7 +35790,7 @@ function buildImagingStoryboard(value, images = [], source2 = value?.source) {
   if (result.unplacedImages.length) throw new Error("\u5DF2\u91C7\u7528\u7684\u65E7\u753B\u9762\u5C1A\u65E0\u7CBE\u786E\u539F\u6587\u4F4D\u7F6E\uFF0C\u8BF7\u5148\u786E\u8BA4\u53D6\u666F\uFF1B\u4E0D\u4F1A\u731C\u6D4B\u6362\u666F\u6BB5\u843D\u3002");
   const sequence2 = [...result.images].sort((a, b) => a.anchor - b.anchor);
   if (sequence2.some((item2, index2) => index2 && item2.anchor === sequence2[index2 - 1].anchor)) {
-    throw new Error("\u591A\u4E2A\u91C7\u7528\u753B\u9762\u4F7F\u7528\u540C\u4E00\u6362\u666F\u4F4D\u7F6E\uFF0C\u8BF7\u5728\u7ED3\u679C\u9875\u7528\u300C\u8C03\u6574\u6F14\u51FA\u4F4D\u7F6E\u300D\u786E\u8BA4\u4E0D\u540C\u7684\u6B63\u6587\u8D77\u70B9\uFF1B\u65E0\u9700\u91CD\u753B\uFF0C\u56FE\u6587\u4F5C\u54C1\u4ECD\u53EF\u67E5\u770B\u5168\u90E8\u753B\u9762\u3002");
+    throw new Error("\u591A\u4E2A\u91C7\u7528\u753B\u9762\u4F7F\u7528\u540C\u4E00\u6362\u666F\u4F4D\u7F6E\uFF0C\u8BF7\u7528\u300C\u8C03\u6574\u56FE\u7247\u4F4D\u7F6E\u300D\u786E\u8BA4\u4E0D\u540C\u7684\u6B63\u6587\u8D77\u70B9\uFF1B\u65E0\u9700\u91CD\u753B\uFF0C\u56FE\u6587\u4F5C\u54C1\u4ECD\u53EF\u67E5\u770B\u5168\u90E8\u753B\u9762\u3002");
   }
   const units = result.source.units, assets = [], shots = [];
   const addShot = (item2, start, end) => {
@@ -35637,6 +35830,23 @@ function buildImagingStoryboard(value, images = [], source2 = value?.source) {
     updatedAt: workspace.updatedAt
   });
   return { ...document2, source: result.source };
+}
+function imagingPerformanceState(workspace, images = [], source2 = workspace.source) {
+  const frames2 = imagingResultFrames(workspace, images, source2);
+  if (frames2.length < 2) return { ready: false, message: "\u5236\u4F5C\u591A\u4E2A\u753B\u9762\u540E\uFF0C\u53EF\u4EE5\u6253\u5F00\u89C6\u89C9\u5C0F\u8BF4\u6F14\u51FA\u3002", frameIds: [] };
+  const missing = frames2.filter((item2) => !item2.image);
+  if (missing.length) return { ready: false, message: `\u8FD8\u6709 ${missing.length} \u5E45\u672A\u91C7\u7528\u56FE\u7247\uFF0C\u5168\u90E8\u91C7\u7528\u540E\u53EF\u6F14\u51FA\u3002`, frameIds: missing.map((item2) => item2.frame.id) };
+  try {
+    return { ready: true, document: buildImagingStoryboard(workspace, images, source2), message: "\u6362\u666F\u987A\u5E8F\u5DF2\u5C31\u7EEA\uFF0C\u6F14\u51FA\u4F7F\u7528\u5B8C\u6574\u6B63\u6587\u3002", frameIds: [] };
+  } catch (error4) {
+    const unplaced = frames2.filter((item2) => item2.anchor < 0);
+    const conflicts = frames2.filter((item2, index2) => frames2.some((other, otherIndex) => otherIndex !== index2 && other.anchor === item2.anchor));
+    return {
+      ready: false,
+      message: error4.message || "\u6F14\u51FA\u4F4D\u7F6E\u9700\u8981\u786E\u8BA4\u3002",
+      frameIds: (unplaced.length ? unplaced : conflicts).map((item2) => item2.frame.id)
+    };
+  }
 }
 var init_imagingResults = __esm({
   "src/core/imagingResults.js"() {
@@ -39419,9 +39629,28 @@ var init_characterProfileWindow = __esm({
 });
 
 // src/ui/illustrationLightbox.js
-function openIllustrationLightbox({ image, container = null, onClose = null } = {}) {
+function openIllustrationLightbox({
+  image,
+  images = null,
+  initialIndex = 0,
+  onChange = null,
+  container = null,
+  onClose = null
+} = {}) {
+  const gallery = Array.isArray(images) && images.length ? Array.from(images) : [image];
+  if (gallery.some((item2) => !item2 || typeof item2.filePath !== "string" || !item2.filePath.trim())) {
+    throw new TypeError("\u914D\u56FE\u706F\u7BB1\u9700\u8981\u5DF2\u4FDD\u5B58\u7684\u56FE\u7247\u8BB0\u5F55\u3002");
+  }
+  const canBrowse = gallery.length > 1;
+  let currentIndex = canBrowse && Number.isFinite(initialIndex) ? Math.max(0, Math.min(gallery.length - 1, Math.trunc(initialIndex))) : 0;
+  let disposed = false;
+  let swipe = null;
+  const restoreFocus = document.activeElement;
+  const touchOptions = { passive: true };
+  const viewport = window.visualViewport;
   const root = document.createElement("div");
   root.className = "t-root t-illustration-lightbox";
+  root.classList.toggle("has-gallery", canBrowse);
   applyStudioTheme(root);
   root.setAttribute("role", "dialog");
   root.setAttribute("aria-modal", "true");
@@ -39431,49 +39660,196 @@ function openIllustrationLightbox({ image, container = null, onClose = null } = 
   backdrop.className = "t-illustration-lightbox-backdrop";
   const stage = document.createElement("div");
   stage.className = "t-illustration-lightbox-stage";
+  stage.tabIndex = 0;
+  stage.setAttribute("role", "region");
+  stage.setAttribute("aria-label", "\u5927\u56FE\uFF0C\u957F\u56FE\u53EF\u4E0A\u4E0B\u6EDA\u52A8");
   const img = document.createElement("img");
   img.className = "t-illustration-lightbox-image";
-  img.alt = "";
+  img.draggable = false;
   stage.append(img);
   const caption = document.createElement("p");
   caption.className = "t-illustration-lightbox-caption";
+  caption.tabIndex = 0;
   caption.hidden = true;
-  const closeButton = document.createElement("button");
-  closeButton.type = "button";
-  closeButton.className = "t-illustration-lightbox-close";
-  closeButton.title = "\u5173\u95ED";
-  closeButton.setAttribute("aria-label", "\u5173\u95ED");
-  const closeIcon = document.createElement("i");
-  closeIcon.className = CLOSE_ICON;
-  closeButton.append(closeIcon);
-  root.append(backdrop, stage, caption, closeButton);
-  (container || document.body).append(root);
-  let disposed = false;
-  const restoreFocus = document.activeElement;
-  function onKeydown(event) {
-    if (event.key !== "Escape") return;
-    event.stopPropagation();
-    close();
+  const controls = document.createElement("div");
+  controls.className = "t-illustration-lightbox-controls";
+  controls.setAttribute("role", "group");
+  controls.setAttribute("aria-label", "\u56FE\u7247\u6D4F\u89C8");
+  controls.hidden = !canBrowse;
+  function makeButton(className, label2, iconClass) {
+    const button5 = document.createElement("button");
+    button5.type = "button";
+    button5.className = className;
+    button5.title = label2;
+    button5.setAttribute("aria-label", label2);
+    const icon2 = document.createElement("i");
+    icon2.className = iconClass;
+    icon2.setAttribute("aria-hidden", "true");
+    button5.append(icon2);
+    return button5;
   }
+  const previousButton = makeButton("t-illustration-lightbox-nav", "\u4E0A\u4E00\u5F20", "fa-solid fa-chevron-left");
+  const nextButton = makeButton("t-illustration-lightbox-nav", "\u4E0B\u4E00\u5F20", "fa-solid fa-chevron-right");
+  const counter = document.createElement("span");
+  counter.className = "t-illustration-lightbox-counter";
+  counter.setAttribute("role", "status");
+  counter.setAttribute("aria-live", "polite");
+  counter.setAttribute("aria-atomic", "true");
+  controls.append(previousButton, counter, nextButton);
+  const closeButton = makeButton("t-illustration-lightbox-close", "\u5173\u95ED", CLOSE_ICON);
+  root.append(backdrop, stage, caption, controls, closeButton);
+  function renderImage() {
+    const currentImage = gallery[currentIndex];
+    img.removeAttribute("width");
+    img.removeAttribute("height");
+    if (currentImage.width) img.width = currentImage.width;
+    if (currentImage.height) img.height = currentImage.height;
+    const summary2 = currentImage.draft?.scene?.summary || "";
+    img.alt = summary2 || "\u914D\u56FE";
+    img.src = currentImage.filePath;
+    caption.textContent = summary2;
+    caption.hidden = !summary2;
+    counter.textContent = `${currentIndex + 1} / ${gallery.length}`;
+    counter.setAttribute("aria-label", `\u7B2C ${currentIndex + 1} \u5F20\uFF0C\u5171 ${gallery.length} \u5F20`);
+    previousButton.setAttribute("aria-disabled", String(currentIndex === 0));
+    nextButton.setAttribute("aria-disabled", String(currentIndex === gallery.length - 1));
+    stage.scrollTop = 0;
+    stage.scrollLeft = 0;
+    caption.scrollTop = 0;
+  }
+  function changeBy(direction) {
+    const index2 = currentIndex + direction;
+    if (disposed || !canBrowse || index2 < 0 || index2 >= gallery.length) return;
+    currentIndex = index2;
+    swipe = null;
+    renderImage();
+    onChange?.(gallery[currentIndex], currentIndex);
+  }
+  function previous() {
+    changeBy(-1);
+  }
+  function next() {
+    changeBy(1);
+  }
+  function onKeydown(event) {
+    if (disposed || event.isComposing || !root.isConnected) return;
+    const active6 = document.activeElement;
+    if (!root.contains(active6) && active6 !== document.body && active6 !== document.documentElement) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      close();
+      return;
+    }
+    if (event.key === "Tab") {
+      const focusable = [
+        stage,
+        ...!caption.hidden ? [caption] : [],
+        ...canBrowse ? [previousButton, nextButton] : [],
+        closeButton
+      ];
+      const index2 = focusable.indexOf(document.activeElement);
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const nextIndex = index2 < 0 ? event.shiftKey ? focusable.length - 1 : 0 : (index2 + (event.shiftKey ? -1 : 1) + focusable.length) % focusable.length;
+      focusable[nextIndex].focus({ preventScroll: true });
+      return;
+    }
+    if (!canBrowse || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      changeBy(event.key === "ArrowLeft" ? -1 : 1);
+    }
+  }
+  function isZoomed() {
+    return (viewport?.scale || 1) > 1.01;
+  }
+  function syncZoom() {
+    const zoomed = isZoomed();
+    root.classList.toggle("is-zoomed", zoomed);
+    if (zoomed) swipe = null;
+  }
+  function onTouchStart(event) {
+    swipe = null;
+    if (!canBrowse || event.touches.length !== 1 || !stage.contains(event.target) || isZoomed()) return;
+    const touch = event.touches[0];
+    swipe = { id: touch.identifier, x: touch.clientX, y: touch.clientY, horizontal: false };
+  }
+  function onTouchMove(event) {
+    if (!swipe) return;
+    if (event.touches.length !== 1 || isZoomed()) {
+      swipe = null;
+      return;
+    }
+    const touch = event.touches[0];
+    if (touch.identifier !== swipe.id) {
+      swipe = null;
+      return;
+    }
+    const dx = Math.abs(touch.clientX - swipe.x), dy = Math.abs(touch.clientY - swipe.y);
+    if (!swipe.horizontal && Math.max(dx, dy) >= 12) {
+      if (dx <= dy * 1.5) {
+        swipe = null;
+        return;
+      }
+      swipe.horizontal = true;
+    }
+  }
+  function onTouchEnd(event) {
+    const gesture = swipe;
+    swipe = null;
+    if (!gesture || event.touches.length || isZoomed()) return;
+    const touch = Array.from(event.changedTouches).find((item2) => item2.identifier === gesture.id);
+    if (!touch) return;
+    const dx = touch.clientX - gesture.x, dy = touch.clientY - gesture.y;
+    const threshold = Math.max(48, Math.min(80, stage.clientWidth * 0.16));
+    if (Math.abs(dx) < threshold || Math.abs(dx) <= Math.abs(dy) * 1.5) return;
+    changeBy(dx < 0 ? 1 : -1);
+  }
+  function onTouchCancel() {
+    swipe = null;
+  }
+  const removalObserver = new MutationObserver(() => {
+    if (!root.isConnected) close();
+  });
   function close() {
     if (disposed) return;
     disposed = true;
-    document.removeEventListener("keydown", onKeydown, true);
+    swipe = null;
+    removalObserver.disconnect();
+    viewport?.removeEventListener("resize", syncZoom);
+    window.removeEventListener("keydown", onKeydown, true);
+    backdrop.removeEventListener("click", close);
+    closeButton.removeEventListener("click", close);
+    previousButton.removeEventListener("click", previous);
+    nextButton.removeEventListener("click", next);
+    root.removeEventListener("touchstart", onTouchStart, touchOptions);
+    root.removeEventListener("touchmove", onTouchMove, touchOptions);
+    root.removeEventListener("touchend", onTouchEnd, touchOptions);
+    root.removeEventListener("touchcancel", onTouchCancel, touchOptions);
     root.remove();
-    if (restoreFocus?.isConnected) restoreFocus.focus?.();
-    onClose?.();
+    try {
+      if (restoreFocus?.isConnected) restoreFocus.focus?.({ preventScroll: true });
+    } finally {
+      onClose?.();
+    }
   }
-  img.src = image.filePath || "";
-  if (image.width) img.width = image.width;
-  if (image.height) img.height = image.height;
-  const summary2 = image.draft?.scene?.summary || "";
-  img.alt = summary2 || "\u914D\u56FE";
-  caption.textContent = summary2;
-  caption.hidden = !summary2;
+  renderImage();
+  syncZoom();
+  (container || document.body).append(root);
+  removalObserver.observe(document.documentElement, { childList: true, subtree: true });
+  viewport?.addEventListener("resize", syncZoom, touchOptions);
   backdrop.addEventListener("click", close);
   closeButton.addEventListener("click", close);
-  document.addEventListener("keydown", onKeydown, true);
-  closeButton.focus?.();
+  previousButton.addEventListener("click", previous);
+  nextButton.addEventListener("click", next);
+  root.addEventListener("touchstart", onTouchStart, touchOptions);
+  root.addEventListener("touchmove", onTouchMove, touchOptions);
+  root.addEventListener("touchend", onTouchEnd, touchOptions);
+  root.addEventListener("touchcancel", onTouchCancel, touchOptions);
+  window.addEventListener("keydown", onKeydown, true);
+  closeButton.focus({ preventScroll: true });
   return { element: root, close };
 }
 var CLOSE_ICON;
@@ -40424,13 +40800,18 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
                     <div class="t-unified-generation-secondary">${command("generate-current", "\u518D\u753B\u8FD9\u5E45")}${command("adjust", "\u4FEE\u6539\u63D0\u793A\u8BCD")}</div>
                 </section>
                 <section class="t-unified-page t-unified-results" data-page="4" hidden>
-                    <header class="t-unified-page-heading"><div><h2>\u672C\u6B21\u4F5C\u54C1</h2><p data-role="result-overview"></p></div><div class="t-unified-segmented">${command("result-images", "\u56FE\u7247")}${command("result-text", "\u56FE\u6587")}</div></header>
-                    <p class="t-unified-issue" data-role="incomplete" hidden></p><div data-role="result-images"><div class="t-unified-image-stage"><img class="t-unified-large-image" data-role="result-image" alt="\u5F53\u524D\u753B\u9762\u7684\u91C7\u7528\u56FE\u7247" hidden><div class="t-unified-placeholder" data-role="result-placeholder"></div>${command("expand-result", `${icon("expand")} \u653E\u5927\u67E5\u770B`)}</div><h3 data-role="result-title"></h3><p data-role="result-range"></p><div class="t-unified-actions">${command("download-current", "\u4E0B\u8F7D\u5F53\u524D\u56FE\u7247")}${command("download-all", "\u6253\u5305\u672C\u6B21\u91C7\u7528\u56FE")}${command("change-candidate", "\u8FD4\u56DE\u7B2C\u4E09\u6B65\u6362\u5019\u9009")}${command("image-position", "\u4E3A\u65E7\u56FE\u786E\u8BA4\u64AD\u653E\u4F4D\u7F6E")}</div></div>
-                    <article class="t-unified-text-result" data-role="result-text" hidden></article><p>\u56FE\u6587\u5BFC\u51FA\u548C\u89C6\u89C9\u5C0F\u8BF4\u6F14\u51FA\u4F7F\u7528\u540C\u4E00\u7EC4\u91C7\u7528\u56FE\u3002\u6F14\u51FA\u64AD\u653E\u5B8C\u6574\u6B63\u6587\uFF0C\u4E0D\u91CD\u65B0\u9009\u666F\u6216\u751F\u56FE\uFF1B\u9605\u8BFB\u901F\u5EA6\u3001\u5B57\u53F7\u4E0E\u81EA\u52A8\u63A8\u8FDB\u5728\u6F14\u51FA\u83DC\u5355\u4E2D\u8BBE\u7F6E\u3002</p>
+                    <header class="t-unified-page-heading"><div><h2 data-role="result-work-title">\u672C\u6B21\u4F5C\u54C1</h2><p data-role="result-overview" role="status"></p></div><div class="t-unified-segmented" aria-label="\u4F5C\u54C1\u67E5\u770B\u65B9\u5F0F">${command("result-images", "\u56FE\u7247")}${command("result-text", "\u56FE\u6587")}</div></header>
+                    <div class="t-unified-issue t-unified-result-issue" data-role="incomplete" hidden><p data-role="incomplete-text"></p>${command("complete-results", "\u7EE7\u7EED\u5236\u4F5C")}</div>
+                    <div class="t-unified-result-scroll" data-role="result-scroll">
+                        <div data-role="result-images"><div class="t-unified-image-stage"><button type="button" class="t-unified-image-viewer" data-role="result-viewer" data-command="expand-result" aria-label="\u653E\u5927\u67E5\u770B\u91C7\u7528\u56FE" hidden><img class="t-unified-large-image" data-role="result-image" alt="\u5F53\u524D\u753B\u9762\u7684\u91C7\u7528\u56FE\u7247" draggable="false"><span class="t-unified-expand-icon">${icon("expand")}</span></button><div class="t-unified-placeholder" data-role="result-placeholder"></div></div></div>
+                        <article class="t-unified-text-result" data-role="result-text" hidden></article>
+                    </div>
+                    <div class="t-unified-result-caption"><div><h3 data-role="result-title"></h3><p data-role="result-caption-note"></p></div>${command("modify-result", "\u4FEE\u6539\u8FD9\u5E45")}</div>
+                    <div class="t-unified-result-strip" data-role="result-strip" role="group" aria-label="\u6574\u7EC4\u753B\u9762\uFF0C\u70B9\u51FB\u67E5\u770B\u6216\u5B9A\u4F4D\u63D2\u56FE"></div>
                 </section>
             </main>
         </div>
-        <footer class="t-unified-footer" data-role="footer"><div data-role="notice" role="status" aria-live="polite"></div><div class="t-unified-actions">${command("secondary", "")}${command("primary", "", true)}</div></footer>
+        <footer class="t-unified-footer" data-role="footer"><div data-role="notice" role="status" aria-live="polite"></div><div class="t-unified-actions">${command("performance", `${icon("play")} \u89C6\u89C9\u5C0F\u8BF4\u6F14\u51FA`)}${command("secondary", "")}${command("primary", "", true)}</div></footer>
         <div class="t-unified-sheet" data-role="sheet" hidden><section role="dialog" aria-modal="true" aria-label="\u56DE\u58F0\u6620\u50CF\u64CD\u4F5C"><header><h2 data-role="sheet-title"></h2>${command("close-sheet", "\u5173\u95ED")}</header><div data-role="sheet-body"></div></section></div>
         <div class="t-unified-player" data-role="player" hidden></div>
     </section>`;
@@ -40447,9 +40828,11 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
     if (document.activeElement !== field3(name)) field3(name).value = value ?? "";
   };
   let session2 = null, disposed = false, loading = true, readerOpen = false, resultView = "images", pickerId = "", lastResultKey = "", lightbox = null, player2 = null, selectionInfo = null;
-  let frameSwipe = null, suppressFrameClickUntil = 0, composing = false;
-  let sheetMode = "", followGeneration = false;
+  let resultCache = null, resultCacheKey = "", positionAnchor = -1, positionFrameId = "", positionImageId = "", positionReturnMode = "";
+  let frameSwipe = null, frameMotion = null, frameTouchActive = false, frameTouchDragged = false, suppressFrameClickUntil = 0, composing = false;
+  let sheetMode = "", followGeneration = false, deferredGenerationFrame = "", generationFollowTimer = 0;
   const compactView = window.matchMedia?.("(max-width: 1100px)");
+  const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
   const frameScrollPositions = /* @__PURE__ */ new Map();
   const viewingCandidates = /* @__PURE__ */ new Map(), newCandidateIds = /* @__PURE__ */ new Map(), adoptionFailures = /* @__PURE__ */ new Map();
   const events = new AbortController(), eventOptions = { signal: events.signal };
@@ -40483,6 +40866,7 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
   function notice(message) {
     if (session2) {
       session2.notice = message;
+      if (session2.step === 4) session2.resultNotice = message;
       notify2(session2);
     } else role("notice").textContent = message;
   }
@@ -40490,6 +40874,7 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
     const wasOpen = !role("sheet").hidden;
     role("sheet").hidden = true;
     sheetMode = "";
+    delete role("sheet").dataset.mode;
     if (wasOpen) {
       const selectionFrame = role("selection-frames").querySelector('[aria-pressed="true"]');
       const target2 = readerOpen ? selectionFrame?.getClientRects().length ? selectionFrame : actions("finish-selection")[0] : actions("primary")[0];
@@ -40498,9 +40883,11 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
     }
   }
   function showSheet(title, html, mode = "") {
+    cancelFrameSwipe();
     sheetMode = mode;
     role("sheet-title").textContent = title;
     role("sheet-body").innerHTML = html;
+    role("sheet").dataset.mode = mode;
     role("sheet").hidden = false;
     actions("close-sheet")[0]?.focus({ preventScroll: true });
   }
@@ -40584,19 +40971,21 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
     if (session2?.step === 2 && !readerOpen && role("frame-title").getClientRects().length) role("frame-title").focus({ preventScroll: true });
   }
   function frameScrollContainer() {
-    if (!session2 || session2.step < 2 || session2.step === 2 && readerOpen || session2.step === 4 && resultView === "text") return null;
-    return session2.step === 2 ? role("editor") : root.querySelector(`[data-page="${session2.step}"]`);
+    if (!session2 || session2.step < 2 || session2.step === 2 && readerOpen) return null;
+    return session2.step === 4 ? role("result-scroll") : session2.step === 2 ? role("editor") : root.querySelector(`[data-page="${session2.step}"]`);
   }
   function rememberFrameScroll() {
     const scroller = frameScrollContainer(), frame = activeFrame(session2);
-    if (frame && scroller?.getClientRects().length) frameScrollPositions.set(`${frame.id}:${session2.step}`, scroller.scrollTop);
+    if (!frame || !scroller?.getClientRects().length) return;
+    if (session2.step === 4 && resultView === "text") session2.resultReadingTop = scroller.scrollTop;
+    else frameScrollPositions.set(`${frame.id}:${session2.step}`, scroller.scrollTop);
   }
   function restoreFrameScroll() {
-    const frame = activeFrame(session2), step = session2?.step, scroller = frameScrollContainer();
+    const frame = activeFrame(session2), step = session2?.step, view2 = resultView, scroller = frameScrollContainer();
     if (!frame || !scroller) return;
-    const top = frameScrollPositions.get(`${frame.id}:${step}`) ?? 0;
+    const top = step === 4 && view2 === "text" ? session2.resultReadingTop || 0 : frameScrollPositions.get(`${frame.id}:${step}`) ?? 0;
     requestAnimationFrame(() => {
-      if (!disposed && activeFrame(session2)?.id === frame.id && session2.step === step && frameScrollContainer() === scroller && scroller.getClientRects().length) scroller.scrollTop = top;
+      if (!disposed && activeFrame(session2)?.id === frame.id && session2.step === step && resultView === view2 && frameScrollContainer() === scroller && scroller.getClientRects().length) scroller.scrollTop = top;
     });
   }
   function canBrowseFrames() {
@@ -40604,17 +40993,89 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
   }
   function switchFrame(direction) {
     if (!canBrowseFrames() || composing) return false;
-    const frames2 = session2.workspace.frames, next = frames2[frames2.indexOf(activeFrame(session2)) + direction];
+    const frames2 = browsingFrames(session2), next = frames2[frames2.indexOf(activeFrame(session2)) + direction];
     return next ? activate2(next.id, { keepReaderOpen: false }) : false;
   }
   function frameSwipeValid(gesture) {
-    return canBrowseFrames() && !composing && (compactView?.matches ?? window.innerWidth <= 1100) && window.getSelection?.()?.isCollapsed !== false && session2.step === gesture.step && session2.workspace.id === gesture.workspaceId && activeFrame(session2).id === gesture.frameId;
+    return canBrowseFrames() && !composing && (compactView?.matches ?? window.innerWidth <= 1100) && window.getSelection?.()?.isCollapsed !== false && session2.step === gesture.step && session2.workspace.id === gesture.workspaceId && activeFrame(session2).id === gesture.frameId && gesture.scroller.isConnected && Math.abs(gesture.scroller.scrollTop - gesture.scrollTop) <= 1 && Math.abs(gesture.scroller.scrollLeft - gesture.scrollLeft) <= 1 && Math.abs(role("workspace").clientWidth - gesture.width) <= 1;
+  }
+  function clearFrameMotion() {
+    const motion = frameMotion;
+    frameMotion = null;
+    if (!motion) return;
+    motion.effect?.cancel();
+    motion.node.classList.remove("t-unified-frame-motion");
+    motion.node.style.removeProperty("--t-frame-drag-x");
+  }
+  function cancelFrameSwipe() {
+    frameSwipe = null;
+    clearFrameMotion();
+  }
+  function clearGenerationFollow() {
+    clearTimeout(generationFollowTimer);
+    generationFollowTimer = 0;
+    deferredGenerationFrame = "";
+  }
+  function resumeGenerationFollow() {
+    clearTimeout(generationFollowTimer);
+    generationFollowTimer = 0;
+    if (!deferredGenerationFrame || frameTouchActive || disposed || !followGeneration) return;
+    generationFollowTimer = setTimeout(() => {
+      generationFollowTimer = 0;
+      const id4 = deferredGenerationFrame;
+      deferredGenerationFrame = "";
+      if (id4 && !frameTouchActive && !disposed && followGeneration && !composing && session2?.step === 3 && role("sheet").hidden && role("player").hidden && !lightbox) activate2(id4, { keepReaderOpen: false, fromJob: true });
+    }, FRAME_SWIPE.clickDelay);
+  }
+  function recordFrameSwipe(gesture, touch) {
+    const now = performance.now();
+    gesture.dx = touch.clientX - gesture.x;
+    gesture.dy = touch.clientY - gesture.y;
+    gesture.samples.push({ x: touch.clientX, time: now });
+    while (gesture.samples.length > 2 && gesture.samples[1].time < now - FRAME_SWIPE.velocityWindow) gesture.samples.shift();
+  }
+  function frameSwipeIntent(gesture) {
+    const dx = Math.abs(gesture.dx), dy = Math.abs(gesture.dy);
+    if (Math.max(dx, dy) < FRAME_SWIPE.intentDistance) return "";
+    if (dx > dy * FRAME_SWIPE.directionRatio) return "horizontal";
+    if (dy > dx * FRAME_SWIPE.directionRatio) return "vertical";
+    return "";
+  }
+  function dragFrame(gesture) {
+    if (reducedMotion?.matches) return;
+    const frames2 = browsingFrames(session2), direction = gesture.dx < 0 ? 1 : -1;
+    const hasNext = Boolean(frames2[frames2.indexOf(activeFrame(session2)) + direction]);
+    const limit = Math.min(72, gesture.width * 0.2);
+    gesture.offset = limit * Math.tanh(gesture.dx / limit) * (hasNext ? 1 : 0.3);
+    if (!frameMotion) {
+      frameMotion = { node: gesture.scroller, effect: null };
+      gesture.scroller.classList.add("t-unified-frame-motion");
+    }
+    gesture.scroller.style.setProperty("--t-frame-drag-x", `${gesture.offset.toFixed(2)}px`);
+  }
+  function settleFrameSwipe(gesture, switched) {
+    const node3 = switched ? frameScrollContainer() : gesture.scroller;
+    const offset = switched ? (gesture.dx < 0 ? 1 : -1) * Math.min(36, Math.max(18, Math.abs(gesture.offset || 0))) : gesture.offset || 0;
+    clearFrameMotion();
+    if (!node3 || !offset || reducedMotion?.matches || typeof node3.animate !== "function") return;
+    node3.classList.add("t-unified-frame-motion");
+    const animation = node3.animate([
+      { transform: `translate3d(${offset}px, 0, 0)` },
+      { transform: "translate3d(0, 0, 0)" }
+    ], { duration: switched ? 180 : 160, easing: "cubic-bezier(.2, .7, .2, 1)" });
+    frameMotion = { node: node3, effect: animation };
+    void animation.finished.then(() => {
+      if (frameMotion?.effect === animation) clearFrameMotion();
+    }, () => {
+    });
   }
   function goStep(step) {
     if (!session2 && step > 1) return;
     rememberFrameScroll();
-    frameSwipe = null;
+    cancelFrameSwipe();
     followGeneration = false;
+    clearGenerationFollow();
+    if (session2?.step === 4 && (step === 2 || step === 3)) session2.workspace.activeId = activeFrame(session2).id;
     picker.rememberScroll();
     session2 && (session2.step = step);
     const missing = session2?.workspace.frames.find((frame) => !frame.selection);
@@ -40626,19 +41087,29 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
     refresh();
     restoreFrameScroll();
   }
-  function activate2(id4, { keepReaderOpen = readerOpen, fromJob = false } = {}) {
-    if (composing || !session2?.workspace.frames.some((frame) => frame.id === id4)) return false;
-    if (!fromJob) followGeneration = false;
+  function activate2(id4, { keepReaderOpen = readerOpen, fromJob = false, locateResult = true } = {}) {
+    if (!session2?.workspace.frames.some((frame) => frame.id === id4)) return false;
+    if (fromJob && (frameTouchActive || generationFollowTimer)) {
+      deferredGenerationFrame = id4;
+      return false;
+    }
+    if (composing) return false;
+    if (!fromJob) {
+      followGeneration = false;
+      clearGenerationFollow();
+    }
     const focused = document.activeElement;
     if (root.contains(focused) && focused.matches("input,textarea,select,[contenteditable]")) focused.blur();
     rememberFrameScroll();
-    frameSwipe = null;
+    cancelFrameSwipe();
     picker.rememberScroll();
-    session2.workspace.activeId = id4;
+    if (session2.step === 4) session2.resultActiveId = id4;
+    else session2.workspace.activeId = id4;
     pickerId = "";
     readerOpen = session2.step === 2 && session2.workspace.settings.mode === "manual" && (keepReaderOpen || !activeFrame(session2).selection);
     refresh();
-    restoreFrameScroll();
+    if (session2.step === 4 && resultView === "text" && locateResult) locateResultImage(id4);
+    else if (locateResult) restoreFrameScroll();
     return true;
   }
   function settingsEqual() {
@@ -40673,25 +41144,34 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
     next.legacyDocument = old.legacyDocument;
     session2.workspace = next;
     next.activeId = next.frames[0].id;
+    session2.resultActiveId = "";
+    session2.resultReadingTop = 0;
+    session2.resultNotice = "";
+    resultCache = null;
+    lastResultKey = "";
     markDirty(session2);
     closeSheet();
     goStep(2);
     await save();
   }
-  async function save() {
-    if (!session2 || busy(session2)) return;
+  async function save(successMessage = "\u5F53\u524D\u65B9\u6848\u5DF2\u4FDD\u5B58\u3002") {
+    if (!session2 || busy(session2)) return false;
+    let saved = false;
     session2.writing = true;
     refresh();
     try {
       await persist(session2);
-      session2.notice = "\u5F53\u524D\u65B9\u6848\u5DF2\u4FDD\u5B58\u3002";
+      session2.notice = successMessage;
+      saved = true;
     } catch (error4) {
       session2.notice = formatIllustrationError(error4);
       session2.dirty = true;
     } finally {
       session2.writing = false;
+      if (session2.step === 4) session2.resultNotice = session2.notice;
       notify2(session2);
     }
+    return saved;
   }
   async function prepare(frames2) {
     if (!guardMutation()) return;
@@ -40841,6 +41321,8 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
       stoppedIds: /* @__PURE__ */ new Set(),
       status: `\u51C6\u5907\u751F\u6210 ${frames2.length} \u5E45\u753B\u9762\u2026`
     };
+    cancelFrameSwipe();
+    clearGenerationFollow();
     followGeneration = true;
     for (const frame of frames2) viewingCandidates.delete(frame.id);
     current3.job = job4;
@@ -41000,6 +41482,123 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
   function focusedImage(frame) {
     return imageList(session2).find((image) => image.id === frame?.focusedId) || imageList(session2).find((image) => frame?.candidateIds.includes(image.id)) || null;
   }
+  function resultPresentation() {
+    const images = imageList(session2), rows = imagingResultFrames(session2.workspace, images, session2.source);
+    const key = JSON.stringify([session2.workspace.id, session2.workspace.revision, session2.workspace.reading, session2.source.fingerprint, rows.map(({ frame, image, anchor }) => [frame.id, frame.title, frame.adoptedId, frame.playbackPositionEdited, anchor, image?.filePath, image?.width, image?.height])]);
+    if (!resultCache || key !== resultCacheKey) {
+      resultCacheKey = key;
+      resultCache = {
+        rows,
+        result: buildImagingResult(session2.workspace, images, session2.source),
+        performance: imagingPerformanceState(session2.workspace, images, session2.source)
+      };
+    }
+    return resultCache;
+  }
+  function locateResultImage(id4) {
+    requestAnimationFrame(() => {
+      if (disposed || session2?.step !== 4 || resultView !== "text" || activeFrame(session2)?.id !== id4) return;
+      const figure = role("result-text").querySelector(`[data-imaging-frame="${id4}"]`);
+      if (!figure) return;
+      figure.scrollIntoView({ block: "start", behavior: reducedMotion?.matches ? "auto" : "smooth" });
+      figure.focus({ preventScroll: true });
+    });
+  }
+  function renderResultStrip(rows) {
+    const strip = role("result-strip"), existing = new Map([...strip.children].map((button5) => [button5.dataset.resultFrame, button5]));
+    strip.hidden = rows.length < 2;
+    let cursor = strip.firstElementChild;
+    for (const { frame, index: index2, image, anchor } of rows) {
+      let button5 = existing.get(frame.id);
+      if (!button5) {
+        button5 = document.createElement("button");
+        button5.type = "button";
+        button5.className = "t-unified-result-thumb";
+        button5.dataset.resultFrame = frame.id;
+        button5.innerHTML = `<span class="t-unified-result-thumb-image"><img alt="" loading="lazy" draggable="false"><span>${icon("image")}</span></span><strong></strong><small></small>`;
+      }
+      if (button5 !== cursor) strip.insertBefore(button5, cursor);
+      cursor = button5.nextElementSibling;
+      const img = button5.querySelector("img");
+      img.hidden = !image;
+      if (image && img.getAttribute("src") !== image.filePath) img.src = image.filePath;
+      if (!image) img.removeAttribute("src");
+      button5.querySelector(".t-unified-result-thumb-image > span").hidden = Boolean(image);
+      setNodeText(button5.querySelector("strong"), frame.title);
+      setNodeText(button5.querySelector("small"), `\u753B\u9762 ${index2 + 1}${!image ? " \xB7 \u672A\u91C7\u7528" : anchor < 0 ? " \xB7 \u672A\u5B9A\u4F4D" : ""}`);
+      button5.setAttribute("aria-pressed", String(frame.id === activeFrame(session2).id));
+      button5.setAttribute("aria-label", `\u753B\u9762 ${index2 + 1}\uFF1A${frame.title}\uFF0C${image ? resultView === "text" ? "\u5B9A\u4F4D\u6B63\u6587\u4E2D\u7684\u63D2\u56FE" : "\u67E5\u770B\u91C7\u7528\u56FE" : "\u5C1A\u672A\u91C7\u7528\u56FE\u7247"}`);
+      button5.title = frame.title;
+      existing.delete(frame.id);
+    }
+    for (const button5 of existing.values()) button5.remove();
+    const selected = strip.querySelector('[aria-pressed="true"]');
+    if (selected && strip.getClientRects().length) {
+      const bounds5 = strip.getBoundingClientRect(), item2 = selected.getBoundingClientRect();
+      if (item2.left < bounds5.left) strip.scrollLeft += item2.left - bounds5.left;
+      else if (item2.right > bounds5.right) strip.scrollLeft += item2.right - bounds5.right;
+    }
+  }
+  function openResultLightbox(imageId = selectedImage(activeFrame(session2))?.id) {
+    const images = resultPresentation().result.images.map((item2) => item2.image), index2 = images.findIndex((image) => image.id === imageId);
+    if (index2 < 0) return;
+    followGeneration = false;
+    clearGenerationFollow();
+    cancelFrameSwipe();
+    lightbox?.close();
+    lightbox = openIllustrationLightbox({
+      image: images[index2],
+      images,
+      initialIndex: index2,
+      container: root,
+      onChange: (image) => {
+        const frame = session2.workspace.frames.find((item2) => item2.adoptedId === image.id);
+        if (frame) activate2(frame.id, { locateResult: false });
+      },
+      onClose: () => {
+        lightbox = null;
+      }
+    });
+  }
+  function showResultModification() {
+    const frame = activeFrame(session2), image = selectedImage(frame);
+    showSheet("\u4FEE\u6539\u8FD9\u5E45", `<p class="t-unified-task-summary">${escapeIllustrationHtml(frame.title)}${image ? " \xB7 \u5F53\u524D\u91C7\u7528\u56FE\u5DF2\u4FDD\u5B58" : " \xB7 \u5C1A\u672A\u91C7\u7528\u56FE\u7247"}</p>
+            <div class="t-unified-result-modifications">${command("change-candidate", frame.candidateIds.length ? "\u66F4\u6362\u91C7\u7528\u56FE" : "\u7EE7\u7EED\u751F\u6210\u8FD9\u5E45")}${command("adjust", "\u4FEE\u6539\u753B\u9762\u4E0E\u63D0\u793A\u8BCD")}${image ? command("image-position", "\u8C03\u6574\u56FE\u7247\u4F4D\u7F6E") : ""}</div>
+            <p class="t-unified-task-summary">\u66F4\u6362\u5019\u9009\u6216\u4FEE\u6539\u63D0\u793A\u8BCD\u4F1A\u8FD4\u56DE\u5236\u4F5C\u6B65\u9AA4\u3002\u5DF2\u6709\u56FE\u7247\u4FDD\u7559\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u91CD\u65B0\u751F\u56FE\u3002</p>`, "result-modify");
+  }
+  function showImagePosition(frameId = activeFrame(session2)?.id) {
+    const frame = session2.workspace.frames.find((item2) => item2.id === frameId), image = selectedImage(frame);
+    if (!image) return;
+    positionFrameId = frame.id;
+    positionImageId = image.id;
+    positionReturnMode = sheetMode === "performance" ? "performance" : "";
+    const anchor = imageAnchor(frame, image, session2.source);
+    positionAnchor = anchor >= 0 ? anchor : -1;
+    showSheet("\u8C03\u6574\u56FE\u7247\u4F4D\u7F6E", `<p class="t-unified-task-summary">${escapeIllustrationHtml(frame.title)}\u3002\u70B9\u51FB\u6B63\u6587\u4E2D\u7684\u4E00\u6BB5\u4F5C\u4E3A\u56FE\u7247\u8D77\u70B9\uFF1A\u540C\u65F6\u5F71\u54CD\u56FE\u6587\u63D2\u56FE\u4F4D\u7F6E\u4E0E\u6F14\u51FA\u6362\u666F\uFF0C\u56FE\u7247\u6D4F\u89C8\u548C\u6253\u5305\u987A\u5E8F\u4E5F\u4F1A\u540C\u6B65\u66F4\u65B0\u3002\u4E0D\u4F1A\u4FEE\u6539\u53D6\u666F\u63D0\u793A\u8BCD\u6216\u91CD\u65B0\u751F\u56FE\u3002</p>
+            <div class="t-unified-position-units" role="group" aria-label="\u6B63\u6587\u4E0A\u4E0B\u6587\uFF0C\u9009\u62E9\u56FE\u7247\u8D77\u70B9">${session2.source.units.map((unit, index2) => `<button type="button" class="t-unified-position-unit" data-image-anchor="${index2}" aria-pressed="${index2 === positionAnchor}"><strong>\u7B2C ${index2 + 1} \u6BB5</strong><span>${escapeIllustrationHtml(unit.text)}</span></button>`).join("")}</div>
+            <p class="t-unified-position-status" data-role="position-status" role="status" aria-live="polite"></p>
+            <div class="t-unified-sheet-footer">${command("apply-image-position", "\u786E\u8BA4\u56FE\u7247\u4F4D\u7F6E", true)}</div>`, "position");
+    setDisabled("apply-image-position", positionAnchor < 0 || busy(session2) || hasPending(session2));
+    requestAnimationFrame(() => {
+      if (!disposed && sheetMode === "position") role("sheet-body").querySelector('[data-image-anchor][aria-pressed="true"]')?.scrollIntoView({ block: "center" });
+    });
+  }
+  function showPerformance() {
+    const { rows, performance: performance2 } = resultPresentation(), problematic = new Set(performance2.frameIds);
+    const sequence2 = performance2.ready ? performance2.document.shots.map((shot) => {
+      const asset = performance2.document.assets.find((item2) => item2.id === shot.imageId);
+      const image = asset?.image || null, row = rows.find((item2) => item2.image?.id === image?.id);
+      const anchor = session2.source.units.findIndex((unit) => unit.id === shot.beats[0]?.unitIds[0]);
+      return { ...row, image, anchor, title: shot.title || row?.frame.title || "\u6B63\u6587\u5F00\u7BC7" };
+    }) : rows.map((row) => ({ ...row, title: row.frame.title }));
+    showSheet("\u89C6\u89C9\u5C0F\u8BF4\u6F14\u51FA", `<p class="t-unified-performance-summary" data-role="performance-summary" role="status">${escapeIllustrationHtml(performance2.message)}</p>
+            <p class="t-unified-task-summary">\u6309\u6B63\u6587\u4F4D\u7F6E\u4F9D\u6B21\u6362\u666F\uFF0C\u64AD\u653E\u5B8C\u6574\u6B63\u6587\u3002\u7B2C\u4E00\u5F20\u56FE\u4E4B\u524D\u7684\u6B63\u6587\u4F1A\u7167\u5E38\u64AD\u653E\uFF0C\u4E0D\u63D0\u524D\u663E\u793A\u540E\u9762\u7684\u56FE\u7247\u3002</p>
+            <div class="t-unified-performance-sequence">${sequence2.map(({ frame, index: index2, image, anchor, title }) => `<section class="t-unified-performance-shot${problematic.has(frame?.id) ? " needs-position" : ""}">
+                ${image ? `<img src="${escapeIllustrationHtml(image.filePath)}" alt="" loading="lazy">` : `<span class="t-unified-performance-empty">${icon("image")}</span>`}<div><h3>${frame ? `\u753B\u9762 ${index2 + 1} \xB7 ` : ""}${escapeIllustrationHtml(title)}</h3><p>${!frame ? "\u4FDD\u7559\u6B63\u6587\uFF0C\u6682\u4E0D\u663E\u793A\u80CC\u666F\u56FE\u7247" : !image ? "\u5C1A\u672A\u91C7\u7528\u56FE\u7247" : anchor < 0 ? "\u5C1A\u672A\u786E\u8BA4\u56FE\u7247\u4F4D\u7F6E" : `\u4ECE\u7B2C ${anchor + 1} \u6BB5\u5F00\u59CB`}</p>${anchor >= 0 ? `<blockquote>${escapeIllustrationHtml(session2.source.units[anchor].text.slice(0, 160))}${session2.source.units[anchor].text.length > 160 ? "\u2026" : ""}</blockquote>` : ""}</div>
+                ${frame ? `<button type="button" class="t-btn" ${image ? `data-position-frame="${frame.id}"` : `data-resume-frame="${frame.id}"`}>${image ? problematic.has(frame.id) ? "\u786E\u8BA4\u4F4D\u7F6E" : "\u8C03\u6574\u4F4D\u7F6E" : "\u7EE7\u7EED\u5236\u4F5C"}</button>` : ""}</section>`).join("")}</div>
+            <footer class="t-unified-sheet-footer">${command("start-performance", "\u5F00\u59CB\u6F14\u51FA", true)}</footer>`, "performance");
+    setDisabled("start-performance", !performance2.ready || busy(session2));
+  }
   async function download(image, name) {
     const response = await fetch(image.filePath);
     if (!response.ok) throw new Error("\u56FE\u7247\u8BFB\u53D6\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002");
@@ -41013,9 +41612,9 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
     setTimeout(() => URL.revokeObjectURL(url2), 1e4);
   }
   async function downloadAll() {
-    const entries = session2.workspace.frames.map((frame, index2) => ({ frame, index: index2, image: selectedImage(frame) })).filter((item2) => item2.image);
+    const entries = resultPresentation().rows.filter((item2) => item2.image);
     const files = [];
-    for (const { frame, index: index2, image } of entries) {
+    for (const [index2, { frame, image }] of entries.entries()) {
       const response = await fetch(image.filePath);
       if (!response.ok) throw new Error("\u56FE\u7247\u8BFB\u53D6\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002");
       const blob = await response.blob();
@@ -41035,16 +41634,17 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
       notice("\u8BF7\u5148\u7B49\u5F85\u5F53\u524D\u5236\u4F5C\u4EFB\u52A1\u5B8C\u6210\uFF0C\u518D\u5F00\u59CB\u6F14\u51FA\u3002");
       return;
     }
-    const progress2 = imagingProgress(session2.workspace, imageList(session2));
-    if (progress2.total < 2 || !progress2.ready) {
-      notice("\u5168\u90E8\u753B\u9762\u90FD\u6709\u5DF2\u4FDD\u5B58\u7684\u91C7\u7528\u56FE\u540E\uFF0C\u624D\u5F00\u653E\u89C6\u89C9\u5C0F\u8BF4\u6F14\u51FA\u3002");
+    const performance2 = resultPresentation().performance;
+    if (!performance2.ready) {
+      showPerformance();
       return;
     }
-    const document2 = buildImagingStoryboard(session2.workspace, imageList(session2), session2.source);
+    rememberFrameScroll();
+    closeSheet();
     if (!player2) player2 = createStoryboardPlayer(role("player"), { onExit: exitPlayer });
     root.classList.add("is-unified-playing");
     role("player").hidden = false;
-    player2.setDocument(document2);
+    player2.setDocument(performance2.document);
     player2.setActive(true);
     player2.focus();
   }
@@ -41053,6 +41653,7 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
     role("player").hidden = true;
     root.classList.remove("is-unified-playing");
     refresh();
+    restoreFrameScroll();
     if (session2?.dirty && !busy(session2)) void save();
   }
   function openProfiles(message = "") {
@@ -41270,13 +41871,18 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
       button5.setAttribute("aria-current", Number(button5.dataset.step) === step ? "step" : "false");
     }
     root.classList.toggle("is-unified-reading", readerOpen && step === 2);
+    root.classList.toggle("is-unified-results", step === 4);
     role("setup-fields").hidden = !ready;
     role("empty").hidden = ready || loading;
     role("source-state").hidden = !ready && !loading;
     const multiple = ready && step > 1 && session2.workspace.frames.length > 1;
-    role("rail").hidden = !multiple;
-    role("swipe-hint").hidden = !multiple || step === 2 && readerOpen || step === 4 && resultView === "text";
-    role("workspace").classList.toggle("has-rail", multiple);
+    role("rail").hidden = !multiple || step === 4;
+    role("swipe-hint").hidden = !multiple || step === 2 && readerOpen || step === 4;
+    role("workspace").classList.toggle("has-rail", multiple && step !== 4);
+    actions("performance").forEach((button5) => {
+      button5.hidden = step !== 4 || !multiple;
+    });
+    root.classList.toggle("is-frame-browsing", canBrowseFrames());
     if (!ready) {
       setDisabled("primary", true);
       (_a = role("notice")).textContent || (_a.textContent = loading ? "\u6B63\u5728\u8BFB\u53D6\u5185\u5BB9\u2026" : "");
@@ -41363,50 +41969,58 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
       button5.hidden = !frame.candidateIds.length;
     });
     renderTaskSheet(generationState);
-    role("result-overview").textContent = `${session2.source.title} \xB7 ${progress2.total} \u4E2A\u4E0D\u540C\u753B\u9762 \xB7 \u5DF2\u91C7\u7528 ${progress2.adopted} / ${progress2.total}`;
-    role("incomplete").hidden = progress2.ready;
-    role("incomplete").textContent = `\u8FD8\u6709 ${progress2.total - progress2.adopted} \u4E2A\u753B\u9762\u672A\u91C7\u7528\u5DF2\u4FDD\u5B58\u7684\u56FE\u7247\u3002\u5DF2\u6709\u6210\u679C\u53EF\u67E5\u770B\u6216\u5BFC\u51FA\uFF1B\u6F14\u51FA\u9700\u5168\u90E8\u753B\u9762\u5C31\u7EEA\u3002`;
-    role("result-images").hidden = resultView !== "images";
-    role("result-text").hidden = resultView !== "text";
-    for (const mode of ["images", "text"]) actions(`result-${mode}`).forEach((button5) => button5.setAttribute("aria-pressed", String(resultView === mode)));
-    const finalImage = role("result-image");
-    finalImage.hidden = !adopted;
-    if (adopted && finalImage.getAttribute("src") !== adopted.filePath) finalImage.src = adopted.filePath;
-    if (!adopted) finalImage.removeAttribute("src");
-    role("result-placeholder").hidden = Boolean(adopted);
-    role("result-placeholder").textContent = pending5 ? "\u56FE\u7247\u4ECD\u5F85\u4FDD\u5B58\uFF0C\u8BF7\u8FD4\u56DE\u7B2C\u4E09\u6B65\u91CD\u8BD5\u4FDD\u5B58\u3002" : "\u8FD9\u4E00\u5E45\u5C1A\u672A\u91C7\u7528\u56FE\u7247\uFF0C\u8BF7\u8FD4\u56DE\u7B2C\u4E09\u6B65\u9009\u56FE\u3002";
-    role("result-title").textContent = frame.title;
-    const adoptedAnchor = adopted ? imageAnchor(frame, adopted, session2.source) : -1;
-    role("result-range").textContent = adopted ? adoptedAnchor >= 0 ? `\u91C7\u7528\u56FE\u6362\u666F\u4F4D\u7F6E\uFF1A\u539F\u6587\u7B2C ${adoptedAnchor + 1} \u6BB5` : "\u65E7\u7248\u91C7\u7528\u56FE\u5C1A\u672A\u786E\u8BA4\u7CBE\u786E\u539F\u6587\u4F4D\u7F6E\uFF1B\u53EF\u4EE5\u67E5\u770B\u548C\u5BFC\u51FA\u56FE\u7247\u3002" : rangeLabel(frame, session2.source);
-    actions("image-position").forEach((button5) => {
-      button5.hidden = !adopted;
-      button5.disabled = working || hasPending(session2);
-      button5.textContent = adoptedAnchor >= 0 ? "\u8C03\u6574\u6F14\u51FA\u4F4D\u7F6E" : "\u4E3A\u65E7\u56FE\u786E\u8BA4\u64AD\u653E\u4F4D\u7F6E";
-    });
-    setDisabled("expand-result", !adopted);
-    setDisabled("download-current", !adopted);
-    setDisabled("download-all", !progress2.adopted);
-    if (step === 4 && resultView === "text") {
-      const key = JSON.stringify(session2.workspace.frames.map((item2) => [item2.title, item2.adoptedId]));
-      if (key !== lastResultKey) {
-        role("result-text").innerHTML = buildImagingResult(session2.workspace, imageList(session2), session2.source).html;
-        lastResultKey = key;
+    if (step === 4) {
+      const { rows, result, performance: performance2 } = resultPresentation();
+      session2.resultActiveId = frame.id;
+      role("result-work-title").textContent = session2.source.title;
+      role("result-overview").textContent = `${session2.writing ? "\u6B63\u5728\u4FDD\u5B58\u4FEE\u6539\u2026" : session2.dirty ? "\u6709\u4FEE\u6539\u5C1A\u672A\u4FDD\u5B58" : progress2.adopted ? "\u91C7\u7528\u7ED3\u679C\u5DF2\u4FDD\u5B58" : "\u5C1A\u672A\u91C7\u7528\u56FE\u7247"} \xB7 \u5DF2\u91C7\u7528 ${progress2.adopted} / ${progress2.total}`;
+      role("incomplete").hidden = progress2.ready;
+      role("incomplete-text").textContent = `\u8FD8\u6709 ${progress2.total - progress2.adopted} \u5E45\u672A\u91C7\u7528\u56FE\u7247\u3002\u5DF2\u6709\u6210\u679C\u53EF\u4EE5\u89C2\u770B\u548C\u4E0B\u8F7D\u3002`;
+      role("result-images").hidden = resultView !== "images";
+      role("result-text").hidden = resultView !== "text";
+      for (const mode of ["images", "text"]) actions(`result-${mode}`).forEach((button5) => button5.setAttribute("aria-pressed", String(resultView === mode)));
+      const finalImage = role("result-image");
+      role("result-viewer").hidden = !adopted;
+      if (adopted && finalImage.getAttribute("src") !== adopted.filePath) finalImage.src = adopted.filePath;
+      if (!adopted) finalImage.removeAttribute("src");
+      finalImage.alt = frame.title;
+      role("result-viewer").setAttribute("aria-label", `${frame.title}\uFF0C\u653E\u5927\u67E5\u770B\u6574\u7EC4\u91C7\u7528\u56FE`);
+      role("result-placeholder").hidden = Boolean(adopted);
+      role("result-placeholder").textContent = pending5 ? "\u56FE\u7247\u5DF2\u7ECF\u751F\u6210\uFF0C\u4FDD\u5B58\u6210\u529F\u540E\u5373\u53EF\u91C7\u7528\u3002\u8FD4\u56DE\u300C\u751F\u6210\u300D\u6B65\u9AA4\u91CD\u8BD5\u4FDD\u5B58\u3002" : frame.candidateIds.length ? "\u8FD9\u5E45\u5DF2\u6709\u5019\u9009\u56FE\uFF0C\u5C1A\u672A\u91C7\u7528\u3002\u70B9\u51FB\u300C\u4FEE\u6539\u8FD9\u5E45\u300D\u9009\u62E9\u56FE\u7247\u3002" : "\u8FD9\u5E45\u5C1A\u672A\u751F\u6210\u56FE\u7247\u3002\u70B9\u51FB\u300C\u4FEE\u6539\u8FD9\u5E45\u300D\u7EE7\u7EED\u5236\u4F5C\u3002";
+      role("result-title").textContent = frame.title;
+      role("result-caption-note").textContent = !adopted ? "\u5C1A\u672A\u91C7\u7528\u56FE\u7247" : resultView === "text" ? "\u70B9\u51FB\u4E0B\u65B9\u753B\u9762\uFF0C\u53EF\u5B9A\u4F4D\u6B63\u6587\u4E2D\u7684\u63D2\u56FE\u3002" : rows.length > 1 ? `\u7B2C ${rows.findIndex((item2) => item2.frame.id === frame.id) + 1} \u5F20 / ${rows.length} \xB7 \u70B9\u51FB\u56FE\u7247\u653E\u5927\u67E5\u770B` : "\u70B9\u51FB\u56FE\u7247\u653E\u5927\u67E5\u770B";
+      renderResultStrip(rows);
+      setDisabled("expand-result", !adopted);
+      setDisabled("modify-result", working || hasPending(session2));
+      setDisabled("complete-results", working);
+      setDisabled("performance", working);
+      actions("performance").forEach((button5) => {
+        button5.classList.toggle("needs-attention", !performance2.ready);
+        button5.title = performance2.message;
+      });
+      setDisabled("start-performance", !performance2.ready || working);
+      setDisabled("apply-image-position", positionAnchor < 0 || working || hasPending(session2));
+      if (resultView === "text" && resultCacheKey !== lastResultKey) {
+        const top = role("result-scroll").scrollTop;
+        role("result-text").innerHTML = result.html;
+        lastResultKey = resultCacheKey;
+        role("result-scroll").scrollTop = top;
       }
     }
     const framesToPrepare = session2.workspace.frames.filter((item2) => !imagingFramePrepared(item2, session2.workspace.settings));
     const preparationLabel = framesToPrepare.length === progress2.total ? manual ? "\u51C6\u5907\u5168\u90E8\u753B\u9762\u63D0\u793A\u8BCD" : "AI \u51C6\u5907\u5168\u90E8\u753B\u9762" : `\u66F4\u65B0 ${framesToPrepare.length} \u5E45\u753B\u9762\u63D0\u793A\u8BCD`;
-    const primary = step === 1 ? "\u4E0B\u4E00\u6B65\uFF1A\u786E\u5B9A\u753B\u9762" : step === 2 ? framesToPrepare.length ? preparationLabel : "\u4E0B\u4E00\u6B65\uFF1A\u751F\u6210\u56FE\u7247" : step === 3 ? generationState.action.label : "\u5BFC\u51FA\u56FE\u6587\u4F5C\u54C1";
-    const secondary = step === 1 || step === 3 ? "" : step === 2 ? "\u8FD4\u56DE\u8BBE\u7F6E" : progress2.total > 1 ? "\u5F00\u59CB\u6F14\u51FA" : "";
+    const primary = step === 1 ? "\u4E0B\u4E00\u6B65\uFF1A\u786E\u5B9A\u753B\u9762" : step === 2 ? framesToPrepare.length ? preparationLabel : "\u4E0B\u4E00\u6B65\uFF1A\u751F\u6210\u56FE\u7247" : step === 3 ? generationState.action.label : resultView === "text" ? "\u5BFC\u51FA\u56FE\u6587\u4F5C\u54C1" : progress2.total > 1 ? "\u6253\u5305\u4E0B\u8F7D\u91C7\u7528\u56FE" : "\u4E0B\u8F7D\u56FE\u7247";
+    const secondary = step === 1 || step === 3 ? "" : step === 2 ? "\u8FD4\u56DE\u8BBE\u7F6E" : resultView === "images" && progress2.total > 1 ? "\u4E0B\u8F7D\u5F53\u524D\u56FE\u7247" : "";
     setLabel("primary", primary);
     setLabel("secondary", secondary);
     actions("secondary").forEach((button5) => {
       button5.hidden = !secondary;
     });
     setDisabled("primary", step === 3 ? generationState.action.kind === "wait" : working || step < 4 && hasPending(session2) || step === 2 && missingSelections || step === 4 && !progress2.adopted);
-    setDisabled("secondary", step === 4 && (working || !progress2.ready || progress2.total < 2));
-    const defaultNote = step === 1 ? "\u53EA\u786E\u5B9A\u5236\u4F5C\u8BBE\u7F6E\uFF0C\u4E0D\u9009\u666F\u3001\u4E0D\u751F\u56FE\u3002" : step === 2 ? missingSelections ? `\u5DF2\u9009 ${session2.workspace.frames.filter((item2) => item2.selection).length} / ${progress2.total} \u5E45\uFF0C\u8BF7\u5728\u539F\u6587\u4E2D\u7EE7\u7EED\u53D6\u666F\u3002` : `\u5DF2\u51C6\u5907 ${progress2.prepared} / ${progress2.total} \u4E2A\u753B\u9762\u3002` : step === 3 ? "" : "\u7ED3\u679C\u7ED1\u5B9A\u5236\u4F5C\u65F6\u7684\u5B8C\u6574\u6B63\u6587\u3002";
-    role("notice").hidden = step === 3 && (!session2.notice || working || Boolean(issue));
-    role("notice").textContent = step === 3 ? session2.notice || "" : session2.externalJob ? "\u8FD9\u4E00\u8F6E\u6B63\u5728\u81EA\u52A8\u914D\u56FE\uFF0C\u8BF7\u7B49\u5B83\u5B8C\u6210\uFF0C\u907F\u514D\u91CD\u590D\u8BF7\u6C42\u3002" : session2.job?.status || session2.notice || defaultNote;
+    setDisabled("secondary", step === 4 && (working || !adopted));
+    const defaultNote = step === 1 ? "\u53EA\u786E\u5B9A\u5236\u4F5C\u8BBE\u7F6E\uFF0C\u4E0D\u9009\u666F\u3001\u4E0D\u751F\u56FE\u3002" : step === 2 ? missingSelections ? `\u5DF2\u9009 ${session2.workspace.frames.filter((item2) => item2.selection).length} / ${progress2.total} \u5E45\uFF0C\u8BF7\u5728\u539F\u6587\u4E2D\u7EE7\u7EED\u53D6\u666F\u3002` : `\u5DF2\u51C6\u5907 ${progress2.prepared} / ${progress2.total} \u4E2A\u753B\u9762\u3002` : "";
+    role("notice").hidden = step === 4 ? !session2.resultNotice : step === 3 && (!session2.notice || working || Boolean(issue));
+    role("notice").textContent = step === 4 ? session2.resultNotice || "" : step === 3 ? session2.notice || "" : session2.externalJob ? "\u8FD9\u4E00\u8F6E\u6B63\u5728\u81EA\u52A8\u914D\u56FE\uFF0C\u8BF7\u7B49\u5B83\u5B8C\u6210\uFF0C\u907F\u514D\u91CD\u590D\u8BF7\u6C42\u3002" : session2.job?.status || session2.notice || defaultNote;
   }
   async function initialize() {
     try {
@@ -41463,6 +42077,7 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
       }
       if (disposed) return;
       session2 = sessions.get(key);
+      resultView = session2.resultView || "images";
       if (!session2.participantsEdited && !busy(session2) && !hasPending(session2)) {
         const profiles = matchCharacterProfiles(readCharacterProfiles(getExtData()), { cardKey: source2.cardKey, text: source2.units.map((unit) => unit.text).join("\n\n") });
         const participants = profiles.map(composeProfileBlock).join("\n\n");
@@ -41509,7 +42124,10 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
       role("notice").textContent = formatIllustrationError(error4);
     } finally {
       loading = false;
-      if (!disposed) refresh();
+      if (!disposed) {
+        refresh();
+        restoreFrameScroll();
+      }
     }
   }
   async function dispatch(name) {
@@ -41562,10 +42180,12 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
           activate2(action.frameId, { keepReaderOpen: false });
           goStep(2);
         } else if (action.kind === "results") goStep(4);
-      } else await exportAsHtmlFile(buildImagingResult(session2.workspace, imageList(session2), session2.source).html, session2.source.title);
+      } else if (resultView === "text") await exportAsHtmlFile(resultPresentation().result.html, session2.source.title);
+      else if (session2.workspace.frames.length > 1) await downloadAll();
+      else if (selectedImage(frame)) await download(selectedImage(frame), frame.title);
     } else if (name === "secondary") {
-      if (session2.step === 4) await perform();
-      else goStep(session2.step === 2 ? 1 : 2);
+      if (session2.step === 4 && selectedImage(frame)) await download(selectedImage(frame), frame.title);
+      else if (session2.step !== 4) goStep(session2.step === 2 ? 1 : 2);
     } else if (name.startsWith("mode-") || name.startsWith("policy-") || name.startsWith("ratio-")) {
       if (!guardMutation()) return;
       const [prefix, value] = name.split("-");
@@ -41599,8 +42219,17 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
     } else if (name === "cancel") {
       if (session2.job?.controller && (session2.job.kind !== "generate" || session2.job.stage === "generating")) session2.job.controller.abort();
       else session2.externalJob?.controller?.abort();
-    } else if (name === "adjust") goStep(2);
-    else if (name === "change-candidate") goStep(3);
+    } else if (name === "adjust" || name === "change-candidate") {
+      closeSheet();
+      goStep(name === "adjust" ? 2 : 3);
+    } else if (name === "modify-result") {
+      if (guardMutation()) showResultModification();
+    } else if (name === "complete-results") {
+      const missing = resultPresentation().rows.find((item2) => !item2.image)?.frame;
+      if (missing) activate2(missing.id, { locateResult: false });
+      goStep(3);
+    } else if (name === "performance") showPerformance();
+    else if (name === "start-performance") await perform();
     else if (name === "edit-selection") {
       rememberFrameScroll();
       readerOpen = true;
@@ -41633,13 +42262,20 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
       closeSheet();
       goStep(4);
     } else if (name === "result-images" || name === "result-text") {
+      rememberFrameScroll();
+      cancelFrameSwipe();
       resultView = name === "result-text" ? "text" : "images";
+      session2.resultView = resultView;
       refresh();
-    } else if (name === "expand-candidate" || name === "expand-result") {
-      const display = name === "expand-candidate" ? generationDisplay(frame) : null;
-      const image = name === "expand-result" ? selectedImage(frame) : display.image || (display.path ? { filePath: display.path, draft: frame.draft } : null);
+      restoreFrameScroll();
+    } else if (name === "expand-result") openResultLightbox();
+    else if (name === "expand-candidate") {
+      const display = generationDisplay(frame);
+      const image = display.image || (display.path ? { filePath: display.path, draft: frame.draft } : null);
       if (image) {
         followGeneration = false;
+        clearGenerationFollow();
+        cancelFrameSwipe();
         lightbox?.close();
         lightbox = openIllustrationLightbox({ image, container: root, onClose: () => {
           lightbox = null;
@@ -41647,105 +42283,186 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
       }
     } else if (name === "download-current" && selectedImage(frame)) await download(selectedImage(frame), frame.title);
     else if (name === "download-all") await downloadAll();
-    else if (name === "image-position" && selectedImage(frame)) {
-      const anchor = imageAnchor(frame, selectedImage(frame), session2.source);
-      showSheet("\u786E\u8BA4\u6F14\u51FA\u6362\u666F\u4F4D\u7F6E", `<p>\u8BF7\u660E\u786E\u9009\u62E9\u6F14\u51FA\u5207\u5230\u8FD9\u5F20\u56FE\u7684\u6B63\u6587\u8D77\u70B9\u3002\u591A\u4E2A\u753B\u9762\u53EF\u5206\u522B\u6307\u5B9A\u4E0D\u540C\u6362\u666F\u4F4D\u7F6E\uFF0C\u4E0D\u6539\u53D6\u666F\u63D0\u793A\u8BCD\uFF0C\u4E5F\u4E0D\u4F1A\u91CD\u65B0\u751F\u56FE\u3002</p><select class="t-input" data-field="image-anchor">${session2.source.units.map((unit, index2) => `<option value="${index2}" ${index2 === Math.max(0, anchor) ? "selected" : ""}>\u7B2C ${index2 + 1} \u6BB5\uFF1A${escapeIllustrationHtml(unit.text.slice(0, 70))}</option>`).join("")}</select>${command("apply-image-position", "\u786E\u8BA4\u8FD9\u5F20\u56FE\u7684\u4F4D\u7F6E", true)}`);
-    } else if (name === "apply-image-position" && selectedImage(frame) && guardMutation()) {
-      const index2 = Number(field3("image-anchor").value);
-      if (!Number.isInteger(index2) || index2 < 0 || index2 >= session2.source.units.length) throw new Error("\u8BF7\u9009\u62E9\u6709\u6548\u7684\u539F\u6587\u4F4D\u7F6E\u3002");
-      frame.legacyAnchors || (frame.legacyAnchors = {});
-      frame.legacyAnchors[frame.adoptedId] = index2;
-      frame.playbackPositionEdited = true;
+    else if (name === "image-position" && guardMutation()) showImagePosition();
+    else if (name === "apply-image-position" && sheetMode === "position" && guardMutation()) {
+      const positioned = session2.workspace.frames.find((item2) => item2.id === positionFrameId);
+      if (!positioned || positioned.adoptedId !== positionImageId) throw new Error("\u91C7\u7528\u56FE\u5DF2\u6539\u53D8\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u56FE\u7247\u4F4D\u7F6E\u3002");
+      if (!Number.isInteger(positionAnchor) || positionAnchor < 0 || positionAnchor >= session2.source.units.length) throw new Error("\u8BF7\u9009\u62E9\u6709\u6548\u7684\u539F\u6587\u4F4D\u7F6E\u3002");
+      const returnMode = positionReturnMode;
+      positioned.legacyAnchors || (positioned.legacyAnchors = {});
+      positioned.legacyAnchors[positionImageId] = positionAnchor;
+      positioned.playbackPositionEdited = true;
       markDirty(session2);
-      lastResultKey = "";
+      role("position-status").textContent = "\u6B63\u5728\u4FDD\u5B58\u56FE\u7247\u4F4D\u7F6E\u2026";
+      const saved = await save("\u56FE\u7247\u4F4D\u7F6E\u5DF2\u4FDD\u5B58\u3002");
+      if (disposed || sheetMode !== "position") return;
+      if (!saved) {
+        role("position-status").textContent = `\u4FDD\u5B58\u672A\u6210\u529F\uFF0C\u53EF\u91CD\u8BD5\u3002${session2.notice}`;
+        return;
+      }
       closeSheet();
-      await save();
+      if (returnMode === "performance") showPerformance();
     }
   }
-  const swipeSurface = role("workspace");
-  swipeSurface.addEventListener("touchstart", (event) => {
-    frameSwipe = null;
-    if (event.touches.length !== 1 || !canBrowseFrames() || composing || !(compactView?.matches ?? window.innerWidth <= 1100)) return;
+  const swipeSurface = role("workspace"), swipeHint = role("swipe-hint");
+  const isFrameTouchSurface = (target2) => swipeSurface.contains(target2) || swipeHint.contains(target2);
+  root.addEventListener("touchstart", (event) => {
+    if (frameTouchActive && event.touches.length !== 1) {
+      cancelFrameSwipe();
+      return;
+    }
+    if (!isFrameTouchSurface(event.target) || !canBrowseFrames() || !(compactView?.matches ?? window.innerWidth <= 1100)) return;
+    cancelFrameSwipe();
+    clearTimeout(generationFollowTimer);
+    generationFollowTimer = 0;
+    if (!frameTouchActive) frameTouchDragged = false;
+    frameTouchActive = true;
+    if (event.touches.length !== 1 || composing) return;
     const control = event.target.closest("input,textarea,select,button,a,summary,[contenteditable]");
     if (control && !control.classList.contains("t-unified-image-viewer")) return;
     if (event.target.closest(".t-visual-selection,.t-unified-selection-frames,.t-unified-candidates,.t-unified-text-result")) return;
     if (window.getSelection?.()?.isCollapsed === false) return;
-    const touch = event.touches[0];
-    if (touch.clientX < 20 || touch.clientX > window.innerWidth - 20) return;
+    const touch = event.touches[0], scroller = frameScrollContainer();
+    if (!scroller || touch.clientX < 20 || touch.clientX > window.innerWidth - 20) return;
     frameSwipe = {
       identifier: touch.identifier,
       x: touch.clientX,
       y: touch.clientY,
+      dx: 0,
+      dy: 0,
+      offset: 0,
       axis: "",
+      scroller,
+      scrollTop: scroller.scrollTop,
+      scrollLeft: scroller.scrollLeft,
+      width: swipeSurface.clientWidth,
       step: session2.step,
       workspaceId: session2.workspace.id,
       frameId: activeFrame(session2).id,
-      startedAt: performance.now()
+      samples: [{ x: touch.clientX, time: performance.now() }]
     };
   }, { ...eventOptions, passive: true });
-  swipeSurface.addEventListener("touchmove", (event) => {
+  root.addEventListener("touchmove", (event) => {
     const gesture = frameSwipe;
     if (!gesture) return;
     if (event.touches.length !== 1 || !frameSwipeValid(gesture)) {
-      frameSwipe = null;
+      cancelFrameSwipe();
       return;
     }
     const touch = event.touches[0];
     if (touch.identifier !== gesture.identifier) {
-      frameSwipe = null;
+      cancelFrameSwipe();
       return;
     }
-    const dx = Math.abs(touch.clientX - gesture.x), dy = Math.abs(touch.clientY - gesture.y);
+    recordFrameSwipe(gesture, touch);
     if (!gesture.axis) {
-      if (dx < 16 && dy < 16) return;
-      if (dx <= dy * 1.5) {
-        frameSwipe = null;
-        return;
+      gesture.axis = frameSwipeIntent(gesture);
+      if (gesture.axis === "horizontal") {
+        frameTouchDragged = true;
+        followGeneration = false;
+        clearGenerationFollow();
       }
-      gesture.axis = "horizontal";
     }
-    if (!event.cancelable) {
-      frameSwipe = null;
+    if (gesture.axis !== "horizontal") return;
+    if (event.cancelable) event.preventDefault();
+    dragFrame(gesture);
+  }, { ...eventOptions, passive: false });
+  root.addEventListener("touchend", (event) => {
+    if (!frameTouchActive && !frameSwipe) return;
+    if (event.touches.length) {
+      cancelFrameSwipe();
       return;
     }
-    event.preventDefault();
-  }, { ...eventOptions, passive: false });
-  swipeSurface.addEventListener("touchend", (event) => {
+    frameTouchActive = false;
     const gesture = frameSwipe;
     frameSwipe = null;
-    if (!gesture || event.touches.length || gesture.axis !== "horizontal" || !frameSwipeValid(gesture)) return;
-    const touch = Array.from(event.changedTouches).find((item2) => item2.identifier === gesture.identifier);
-    if (!touch || performance.now() - gesture.startedAt > 1e3) return;
-    const dx = touch.clientX - gesture.x, dy = touch.clientY - gesture.y;
-    const threshold = Math.min(80, Math.max(48, swipeSurface.clientWidth * 0.16));
-    if (Math.abs(dx) < threshold || Math.abs(dx) <= Math.abs(dy) * 1.5) return;
-    suppressFrameClickUntil = performance.now() + 450;
-    if (switchFrame(dx < 0 ? 1 : -1)) {
-      if (role("swipe-hint").getClientRects().length) role("swipe-hint").focus({ preventScroll: true });
-      else focusSelectionFrame();
+    if (frameTouchDragged) suppressFrameClickUntil = performance.now() + FRAME_SWIPE.clickDelay;
+    frameTouchDragged = false;
+    const touch = gesture && Array.from(event.changedTouches).find((item2) => item2.identifier === gesture.identifier);
+    if (gesture && touch && gesture.axis !== "vertical" && frameSwipeValid(gesture)) {
+      recordFrameSwipe(gesture, touch);
+      gesture.axis || (gesture.axis = frameSwipeIntent(gesture));
+      if (gesture.axis === "horizontal") {
+        followGeneration = false;
+        clearGenerationFollow();
+        suppressFrameClickUntil = performance.now() + FRAME_SWIPE.clickDelay;
+        const last = gesture.samples[gesture.samples.length - 1];
+        const recent = gesture.samples.find((sample) => last.time - sample.time <= FRAME_SWIPE.velocityWindow) || last;
+        const velocity = (last.x - recent.x) / Math.max(1, last.time - recent.time);
+        const distance2 = Math.abs(gesture.dx), threshold = Math.min(48, Math.max(32, gesture.width * 0.1));
+        const flick = distance2 >= FRAME_SWIPE.flickDistance && Math.abs(velocity) >= FRAME_SWIPE.flickVelocity && velocity * gesture.dx > 0;
+        const switched = (distance2 >= threshold || flick) && switchFrame(gesture.dx < 0 ? 1 : -1);
+        settleFrameSwipe(gesture, switched);
+        if (switched) {
+          if (session2.step === 4) role("result-strip").querySelector('[aria-pressed="true"]')?.focus({ preventScroll: true });
+          else if (swipeHint.getClientRects().length) swipeHint.focus({ preventScroll: true });
+          else focusSelectionFrame();
+        }
+      } else clearFrameMotion();
+    } else clearFrameMotion();
+    resumeGenerationFollow();
+  }, { ...eventOptions, passive: true });
+  root.addEventListener("touchcancel", (event) => {
+    cancelFrameSwipe();
+    if (frameTouchDragged) suppressFrameClickUntil = performance.now() + FRAME_SWIPE.clickDelay;
+    if (!event.touches.length) {
+      frameTouchActive = false;
+      frameTouchDragged = false;
+      resumeGenerationFollow();
     }
   }, { ...eventOptions, passive: true });
-  swipeSurface.addEventListener("touchcancel", () => {
-    frameSwipe = null;
-  }, { ...eventOptions, passive: true });
-  swipeSurface.addEventListener("click", (event) => {
-    if (event.detail !== 0 && performance.now() < suppressFrameClickUntil) {
+  root.addEventListener("click", (event) => {
+    if (isFrameTouchSurface(event.target) && event.detail !== 0 && performance.now() < suppressFrameClickUntil) {
       event.preventDefault();
       event.stopPropagation();
     }
   }, { ...eventOptions, capture: true });
   root.addEventListener("compositionstart", () => {
     composing = true;
-    frameSwipe = null;
+    cancelFrameSwipe();
   }, eventOptions);
   root.addEventListener("compositionend", () => {
     composing = false;
+    resumeGenerationFollow();
   }, eventOptions);
   root.addEventListener("click", (event) => {
     const step = event.target.closest("[data-step]");
     if (step && !step.disabled) {
       if (Number(step.dataset.step) === 2 && session2?.step === 1) void applySetup().catch((error4) => notice(formatIllustrationError(error4)));
       else goStep(Number(step.dataset.step));
+      return;
+    }
+    const resultFrame = event.target.closest("[data-result-frame]");
+    if (resultFrame) {
+      activate2(resultFrame.dataset.resultFrame);
+      return;
+    }
+    const illustration = event.target.closest("[data-imaging-frame]");
+    if (illustration && role("result-text").contains(illustration) && event.target.closest("a")) {
+      event.preventDefault();
+      const id4 = illustration.dataset.imagingFrame;
+      if (activate2(id4, { locateResult: false })) openResultLightbox(selectedImage(activeFrame(session2))?.id);
+      return;
+    }
+    const position = event.target.closest("[data-image-anchor]");
+    if (position && sheetMode === "position") {
+      if (!guardMutation()) return;
+      positionAnchor = Number(position.dataset.imageAnchor);
+      for (const button6 of role("sheet-body").querySelectorAll("[data-image-anchor]")) button6.setAttribute("aria-pressed", String(button6 === position));
+      role("position-status").textContent = "";
+      setDisabled("apply-image-position", positionAnchor < 0);
+      return;
+    }
+    const positionFrame = event.target.closest("[data-position-frame]");
+    if (positionFrame) {
+      if (guardMutation() && activate2(positionFrame.dataset.positionFrame, { locateResult: false })) showImagePosition(positionFrame.dataset.positionFrame);
+      return;
+    }
+    const resumeFrame = event.target.closest("[data-resume-frame]");
+    if (resumeFrame) {
+      activate2(resumeFrame.dataset.resumeFrame, { locateResult: false });
+      closeSheet();
+      goStep(3);
       return;
     }
     const selectionFrame = event.target.closest("[data-selection-frame]");
@@ -41768,6 +42485,7 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
       frame2.focusedId = id4;
       viewingCandidates.set(frame2.id, id4);
       followGeneration = false;
+      clearGenerationFollow();
       newCandidateIds.get(frame2.id)?.delete(id4);
       if (adoptionFailures.get(frame2.id)?.imageId !== id4) adoptionFailures.delete(frame2.id);
       refresh();
@@ -41801,6 +42519,13 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
   }, eventOptions);
   root.addEventListener("keydown", (event) => {
     if (event.defaultPrevented) return;
+    if (event.target.closest("[data-result-frame]") && !event.isComposing && !event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+      event.preventDefault();
+      const frames2 = resultFrames(session2), index2 = frames2.indexOf(activeFrame(session2));
+      const next = event.key === "Home" ? frames2[0] : event.key === "End" ? frames2.at(-1) : frames2[index2 + (event.key === "ArrowRight" ? 1 : -1)];
+      if (next && activate2(next.id)) role("result-strip").querySelector('[aria-pressed="true"]')?.focus({ preventScroll: true });
+      return;
+    }
     if (event.target === role("swipe-hint") && !event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey && ["ArrowLeft", "ArrowRight"].includes(event.key)) {
       event.preventDefault();
       switchFrame(event.key === "ArrowRight" ? 1 : -1);
@@ -41831,9 +42556,16 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
       }
     }
   }, eventOptions);
+  role("result-scroll").addEventListener("scroll", () => {
+    if (session2?.step === 4 && resultView === "text") session2.resultReadingTop = role("result-scroll").scrollTop;
+  }, { ...eventOptions, passive: true });
   function close() {
     if (disposed) return;
+    rememberFrameScroll();
     disposed = true;
+    cancelFrameSwipe();
+    clearGenerationFollow();
+    frameTouchActive = false;
     picker.rememberScroll();
     picker.destroy();
     lightbox?.close();
@@ -41868,7 +42600,7 @@ function openUnifiedImagingWindow(targetOrTargets, initialIndex = 0, options2 = 
   actions("settings")[0].focus({ preventScroll: true });
   return { close };
 }
-var sessions, TITLES, icon, command, imageList, activeFrame, notify2, busy, hasPending, safeName2;
+var sessions, TITLES, FRAME_SWIPE, icon, command, imageList, resultFrames, browsingFrames, activeFrame, notify2, busy, hasPending, safeName2;
 var init_unifiedImagingWindow = __esm({
   "src/ui/unifiedImagingWindow.js"() {
     init_imagingData();
@@ -41897,10 +42629,13 @@ var init_unifiedImagingWindow = __esm({
     init_storyboardPlayer();
     sessions = /* @__PURE__ */ new Map();
     TITLES = ["", "\u5236\u4F5C\u8BBE\u7F6E", "\u786E\u5B9A\u753B\u9762", "\u751F\u6210\u56FE\u7247", "\u7ED3\u679C\u5C55\u793A"];
+    FRAME_SWIPE = { intentDistance: 10, directionRatio: 1.2, flickDistance: 24, flickVelocity: 0.35, velocityWindow: 120, clickDelay: 450 };
     icon = (name) => `<i class="fa-solid fa-${name}" aria-hidden="true"></i>`;
     command = (name, label2, primary = false) => `<button type="button" class="t-btn${primary ? " primary" : ""}" data-command="${name}">${label2}</button>`;
     imageList = (session2) => [...new Map([...session2.workspace?.images || [], ...session2.record?.images || []].map((image) => [image.id, image])).values()];
-    activeFrame = (session2) => session2?.workspace?.frames.find((frame) => frame.id === session2.workspace.activeId) || session2?.workspace?.frames[0];
+    resultFrames = (session2) => session2?.workspace ? imagingResultFrames(session2.workspace, imageList(session2), session2.source).map((item2) => item2.frame) : [];
+    browsingFrames = (session2) => session2?.step === 4 ? resultFrames(session2) : session2?.workspace?.frames || [];
+    activeFrame = (session2) => session2?.workspace?.frames.find((frame) => frame.id === (session2.step === 4 ? session2.resultActiveId : session2.workspace.activeId)) || browsingFrames(session2)[0];
     notify2 = (session2) => {
       for (const listener of session2.listeners) listener();
     };
@@ -97938,6 +98673,7 @@ function showContinuationRoundInMain(chatId, scriptId, branchKey, roundKey) {
   const scriptName = target.session.scriptName || GlobalState.runtimeScripts.find((s) => s.id === scriptId)?.name || "\u573A\u666F";
   lockDisplayToContent(target.round.content, scriptId, scriptName, target.round.generationId);
   renderGeneratedContent(target.round.content, scriptName);
+  updateScriptTitleDisplay();
   GlobalState.lastFavId = null;
   updateSceneHistoryNav();
   if (typeof window.updateRunButtonsState === "function") window.updateRunButtonsState();
@@ -98726,6 +99462,7 @@ async function openMainWindow() {
       $("#t-new-content-indicator").remove();
       updateSceneHistoryNav();
       updateRunButtonsState();
+      updateScriptTitleDisplay();
     }
   });
   window.updateSceneHistoryNav = updateSceneHistoryNav;
@@ -98833,13 +99570,14 @@ function updateWorkshopFeedbackButton() {
 }
 function updateScriptTitleDisplay() {
   updateTheaterStage();
-  const scriptId = GlobalState.lastGeneratedScriptId;
+  const display = getCurrentDisplayContent();
+  const scriptId = display?.scriptId || GlobalState.lastGeneratedScriptId;
   if (!scriptId) return;
   const script = GlobalState.runtimeScripts.find((s) => s.id === scriptId);
   if (!script) {
-    $("#t-lbl-name").text("\u672A\u77E5\u5267\u672C");
-    $("#t-lbl-cat").text("\u5DF2\u5220\u9664").removeClass("is-category").addClass("is-missing");
-    $("#t-lbl-desc-mini").text("\u8BE5\u5267\u672C\u53EF\u80FD\u5DF2\u88AB\u5220\u9664");
+    $("#t-lbl-name").text(display?.scriptName || "\u672A\u77E5\u5267\u672C");
+    $("#t-lbl-cat").text("\u4E0D\u5728\u5217\u8868").removeClass("is-category").addClass("is-missing");
+    $("#t-lbl-desc-mini").text("\u8BE5\u5267\u672C\u4E0D\u5728\u5F53\u524D\u5267\u672C\u5217\u8868\u4E2D");
     return;
   }
   $("#t-lbl-name").text(script.name);
