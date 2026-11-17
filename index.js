@@ -31222,14 +31222,55 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 #t-scene-advance-panel .tsa-itinerary-nodes::-webkit-scrollbar,\r
 #t-scene-advance-panel .tsa-itinerary-tools::-webkit-scrollbar { display: none; }\r
 \r
-/* \u5927\u7EB2\u4EC5\u5728\u5F53\u524D\u60C5\u8282\u533A\u5DE6\u53F3\u6ED1\u52A8\u6D4F\u89C8\uFF1B\u5B9E\u9645\u8FDB\u5EA6\u4E0E\u6D4F\u89C8\u4F4D\u7F6E\u4ECD\u5206\u522B\u6807\u6CE8\u3002 */\r
+/* \u6458\u8981\u6700\u591A\u4E09\u884C\uFF1B\u5DE6\u53F3\u6ED1\u52A8\u6D4F\u89C8\u4E0E\u67E5\u770B\u5168\u6587\u5404\u7528\u81EA\u5DF1\u7684\u5165\u53E3\u3002 */\r
 .tsa-panel .tsa-scene-browser { touch-action: pan-y; cursor: grab; user-select: none; }\r
 .tsa-panel .tsa-current-scene.tsa-scene-browser:focus-visible { outline: 2px solid var(--t-studio-gold); outline-offset: 4px; }\r
 .tsa-panel.tsa-is-swiping .tsa-scene-browser { cursor: grabbing; }\r
-.tsa-panel .tsa-scene-copy .tsa-scene-full-plot, .tsa-panel .tsa-scene-copy .tsa-scene-foreshadow { white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; max-height: none; -webkit-line-clamp: unset; }\r
-.tsa-panel .tsa-scene-copy .tsa-scene-foreshadow { margin-top: 9px; font-size: 11px; }\r
-.tsa-panel .tsa-scene-foreshadow span { color: var(--t-studio-teal); }\r
-.tsa-panel .tsa-scene-browse-hint { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 13px; font-size: 10px; color: var(--t-studio-muted); }\r
+.tsa-panel .tsa-scene-copy .tsa-scene-full-plot { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; max-height: 5.55em; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere; }\r
+.tsa-panel .tsa-scene-browse-hint { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 13px; font-size: 10px; color: var(--t-studio-muted); }\r
+.tsa-panel .tsa-scene-browse-status { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; overflow-wrap: anywhere; }\r
+.tsa-panel .tsa-scene-swipe-hint { color: var(--t-studio-faint); }\r
+.tsa-panel .tsa-scene-view-full { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; min-width: 64px; min-height: 44px; padding: 0 4px; border: 0; border-radius: 4px; background: transparent; color: var(--t-studio-gold-muted); font-size: 11px; }\r
+.tsa-panel .tsa-scene-view-full:hover { color: var(--t-studio-gold); }\r
+\r
+/* \u72EC\u7ACB\u534A\u5C4F\u9605\u8BFB\u5C42\u4E0D\u52A0\u5165\u6D88\u606F\u5E03\u5C40\uFF0C\u5168\u6587\u4E0E\u4F0F\u7B14\u53EA\u5728\u5185\u5C42\u6EDA\u52A8\u3002 */\r
+.t-root.tsa-scene-detail {\r
+    position: fixed;\r
+    inset: auto 0 0;\r
+    width: min(760px, calc(100% - 32px));\r
+    height: min(56vh, 560px);\r
+    height: min(56dvh, 560px);\r
+    max-width: calc(100% - 32px);\r
+    max-height: calc(100dvh - 16px);\r
+    margin: 0 auto;\r
+    padding: 0;\r
+    border: 1px solid var(--t-studio-gold-border);\r
+    border-bottom: 0;\r
+    border-radius: 14px 14px 0 0;\r
+    background: var(--t-studio-bg);\r
+    color: var(--t-studio-text);\r
+    box-shadow: var(--t-shadow-lg);\r
+    overflow: hidden;\r
+    overscroll-behavior: contain;\r
+    text-align: left;\r
+    line-height: 1.65;\r
+    text-shadow: none;\r
+}\r
+.t-root.tsa-scene-detail[open] { display: flex; flex-direction: column; }\r
+.t-root.tsa-scene-detail::backdrop { background: var(--t-color-scrim); }\r
+.tsa-scene-detail .tsa-scene-detail-head { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 8px 12px 8px 20px; border-bottom: 1px solid var(--t-studio-line); background: var(--t-studio-raised); }\r
+.tsa-scene-detail .tsa-scene-detail-heading { display: grid; flex: 1; gap: 2px; min-width: 0; }\r
+.tsa-scene-detail .tsa-scene-detail-heading strong { font-size: 13px; font-weight: 500; color: var(--t-studio-gold); }\r
+.tsa-scene-detail .tsa-scene-detail-heading span { font-size: 10px; color: var(--t-studio-muted); overflow-wrap: anywhere; }\r
+.tsa-scene-detail .tsa-scene-detail-close { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--t-studio-muted); font: inherit; font-size: 16px; cursor: pointer; box-shadow: none; text-shadow: none; }\r
+.tsa-scene-detail .tsa-scene-detail-close:hover { color: var(--t-studio-gold); background: var(--t-studio-gold-soft); }\r
+.tsa-scene-detail .tsa-scene-detail-body { flex: 1; min-height: 0; padding: 18px 20px max(20px, env(safe-area-inset-bottom)); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: thin; scrollbar-color: var(--t-studio-gold-border) transparent; }\r
+.tsa-scene-detail .tsa-scene-detail-body h3 { margin: 0 0 14px; font: 22px/1.5 var(--t-font-global); color: var(--t-studio-text); overflow-wrap: anywhere; }\r
+.tsa-scene-detail .tsa-scene-detail-time { margin: 0 0 12px; font-size: 11px; color: var(--t-studio-gold-muted); white-space: pre-wrap; overflow-wrap: anywhere; }\r
+.tsa-scene-detail .tsa-scene-detail-plot, .tsa-scene-detail .tsa-scene-detail-foreshadow p { margin: 0; font-size: 14px; line-height: 1.9; color: var(--t-studio-muted); white-space: pre-wrap; overflow-wrap: anywhere; }\r
+.tsa-scene-detail .tsa-scene-detail-foreshadow { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--t-studio-line); }\r
+.tsa-scene-detail .tsa-scene-detail-foreshadow h4 { margin: 0 0 8px; font-size: 12px; font-weight: 500; color: var(--t-studio-teal); }\r
+.tsa-scene-detail .tsa-scene-detail-close:focus-visible, .tsa-scene-detail .tsa-scene-detail-body:focus-visible { outline: 2px solid var(--t-studio-gold); outline-offset: -3px; }\r
 .tsa-panel .tsa-pacing-updated { color: var(--t-studio-teal); font-size: 8px; }\r
 .tsa-panel .tsa-combine-toggle { display: inline-flex; align-items: center; gap: 7px; min-height: 32px; font-size: 11px; color: var(--t-studio-muted); cursor: pointer; }\r
 .tsa-panel .tsa-combine-toggle input { appearance: none; position: relative; width: 32px; height: 18px; padding: 0; margin: 0; border: 1px solid var(--t-studio-line); border-radius: 20px; background: var(--t-studio-deep); cursor: pointer; flex-shrink: 0; }\r
@@ -31296,6 +31337,8 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     .tsa-panel .tsa-bb-ev-span { font-size: 10px; max-width: 70px; overflow-wrap: anywhere; }\r
 }\r
 @media (max-width: 600px) {\r
+    .tsa-scene-detail .tsa-scene-detail-head { padding-left: 16px; }\r
+    .tsa-scene-detail .tsa-scene-detail-body { padding-inline: 16px; }\r
     #chat .mes .tsa-strip { padding: 11px 12px; gap: 7px; }\r
     #chat .mes .tsa-strip .tsa-strip-subtitle { display: none; }\r
     #chat .mes .tsa-strip .tsa-strip-title { font-size: 11px; letter-spacing: 1px; }\r
@@ -31662,7 +31705,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184607], "04-features/toolbox-settings.css": [184656, 189061], "04-features/main-window.css": [189105, 234004], "04-features/main-window-legacy.css": [234055, 257921], "04-features/script-picker.css": [257967, 264462], "04-features/wi-selector.css": [264506, 282332], "04-features/continuation.css": [282377, 306246], "04-features/queue.css": [306284, 312844], "04-features/content-editor.css": [312891, 315198], "04-features/illustration.css": [315243, 342551], "04-features/visual-selection.css": [342600, 347859], "04-features/storyboard.css": [347902, 364982], "04-features/echo-imaging.css": [365027, 439135], "04-features/settings-drawer.css": [439183, 457417], "04-features/settings.css": [457458, 485484], "04-features/manager.css": [485524, 498822], "04-features/workshop.css": [498863, 521645], "04-features/favs.css": [521682, 563166], "04-features/debug.css": [563204, 579969], "04-features/story-outline.css": [580015, 614321], "04-features/outline-entry-menu.css": [614372, 621125], "04-features/rewrite.css": [621165, 672064], "04-features/paragraph-editor.css": [672113, 675896], "04-features/reader.css": [675935, 685294], "04-features/chat-book.css": [685336, 691877], "04-features/story-memory.css": [691922, 739309], "04-features/retrieval.css": [739351, 751317], "04-features/character-evolution.css": [751369, 786043], "04-features/story-memory-notifications.css": [786102, 789314], "04-features/story-timetrace.css": [789362, 807494], "04-features/tts.css": [807530, 843219], "04-features/confirm-dialog.css": [843266, 847264], "04-features/image-cropper.css": [847310, 851168], "04-features/st-embedded.css": [851212, 882894], "04-features/scene-advance.css": [882940, 911540], "04-features/theater-midnight.css": [911589, 936917] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184607], "04-features/toolbox-settings.css": [184656, 189061], "04-features/main-window.css": [189105, 234004], "04-features/main-window-legacy.css": [234055, 257921], "04-features/script-picker.css": [257967, 264462], "04-features/wi-selector.css": [264506, 282332], "04-features/continuation.css": [282377, 306246], "04-features/queue.css": [306284, 312844], "04-features/content-editor.css": [312891, 315198], "04-features/illustration.css": [315243, 342551], "04-features/visual-selection.css": [342600, 347859], "04-features/storyboard.css": [347902, 364982], "04-features/echo-imaging.css": [365027, 439135], "04-features/settings-drawer.css": [439183, 457417], "04-features/settings.css": [457458, 485484], "04-features/manager.css": [485524, 498822], "04-features/workshop.css": [498863, 521645], "04-features/favs.css": [521682, 563166], "04-features/debug.css": [563204, 579969], "04-features/story-outline.css": [580015, 614321], "04-features/outline-entry-menu.css": [614372, 621125], "04-features/rewrite.css": [621165, 672064], "04-features/paragraph-editor.css": [672113, 675896], "04-features/reader.css": [675935, 685294], "04-features/chat-book.css": [685336, 691877], "04-features/story-memory.css": [691922, 739309], "04-features/retrieval.css": [739351, 751317], "04-features/character-evolution.css": [751369, 786043], "04-features/story-memory-notifications.css": [786102, 789314], "04-features/story-timetrace.css": [789362, 807494], "04-features/tts.css": [807530, 843219], "04-features/confirm-dialog.css": [843266, 847264], "04-features/image-cropper.css": [847310, 851168], "04-features/st-embedded.css": [851212, 882894], "04-features/scene-advance.css": [882940, 915214], "04-features/theater-midnight.css": [915263, 940591] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -58164,6 +58207,16 @@ function resolveViewedSceneIndex(state) {
   viewedSceneIndex = Math.max(0, Math.min(viewedSceneIndex, items.length - 1));
   return viewedSceneIndex;
 }
+function sceneBrowseContext(state, index2) {
+  return JSON.stringify([
+    pacingUiEpoch,
+    state.mode,
+    state.sourcePlanId || "",
+    state.planId || "",
+    Number(state.progress?.itemIndex) || 0,
+    index2
+  ]);
+}
 function readProgressFromSettings() {
   const { plan } = resolveSceneSource(getExtData());
   if (!plan) return null;
@@ -58416,8 +58469,10 @@ function buildCurrentScene(state) {
             <div class="tsa-scene-heading"><span class="tsa-scene-number">${String(index2 + 1).padStart(2, "0")}</span><h3>${escapeHtmlText3(current3.title || "\u672A\u547D\u540D\u60C5\u8282")}</h3></div>
             ${current3.time ? `<div class="tsa-scene-time">${escapeHtmlText3(current3.time)}</div>` : ""}
             <p class="tsa-scene-full-plot">${escapeHtmlText3(current3.plot || "(\u7A7A)")}</p>
-            ${current3.foreshadowing ? `<p class="tsa-scene-foreshadow"><span>\u4F0F\u7B14\uFF1A</span>${escapeHtmlText3(current3.foreshadowing)}</p>` : ""}
-            <div class="tsa-scene-browse-hint"><span>${String(index2 + 1).padStart(2, "0")} / ${state.items.length} \xB7 ${isCurrent ? "\u5B9E\u9645\u5F53\u524D\u5E55" : `\u4EC5\u6D4F\u89C8\uFF0C\u5B9E\u9645\u505C\u5728\u7B2C ${actualIndex + 1} \u5E55`}</span><span>\u5DE6\u53F3\u6ED1\u52A8\u67E5\u770B\u524D\u540E\u5927\u7EB2</span></div>
+            <div class="tsa-scene-browse-hint">
+                <div class="tsa-scene-browse-status"><span>${String(index2 + 1).padStart(2, "0")} / ${state.items.length} \xB7 ${isCurrent ? "\u5B9E\u9645\u5F53\u524D\u5E55" : `\u4EC5\u6D4F\u89C8\uFF0C\u5B9E\u9645\u505C\u5728\u7B2C ${actualIndex + 1} \u5E55`}</span><span class="tsa-scene-swipe-hint">\u5DE6\u53F3\u6ED1\u52A8\u67E5\u770B\u524D\u540E\u5927\u7EB2</span></div>
+                <button type="button" class="tsa-scene-view-full" id="tsa-scene-view-full" data-scene-context="${escapeHtmlText3(sceneBrowseContext(state, index2))}" aria-haspopup="dialog" aria-controls="${SCENE_DETAIL_ID}">\u67E5\u770B\u5168\u6587</button>
+            </div>
         </div>${projectionArt()}</div>${itinerary}
     </div>`;
 }
@@ -58504,6 +58559,9 @@ function buildTransitionHtml(state) {
 function buildPanelHtml(state) {
   syncTransitionContext(state);
   const bbInfo = getActiveBlindboxInfo();
+  if (sceneDetail && (!sceneDetail.panel.isConnected || bbInfo || panelMode !== "recommend" || sceneDetail.context !== sceneBrowseContext(state, resolveViewedSceneIndex(state)))) {
+    closeSceneDetail({ restoreFocus: false });
+  }
   if (bbInfo) {
     return `<div id="${PANEL_ID}" class="tsa-panel tsa-studio is-blindbox">${buildBlindboxBody(bbInfo)}</div>`;
   }
@@ -58808,6 +58866,7 @@ async function refreshPanel() {
   syncStripProgress(progressFromState(state));
 }
 function destroyPanel() {
+  closeSceneDetail({ restoreFocus: false });
   if (transitionEditing) void commitTransitionEditDraft();
   transitionOpen = false;
   transitionViewedIndex = -1;
@@ -59107,6 +59166,7 @@ function receiveModelPacing(result, request) {
   void refreshPanel();
 }
 function invalidatePacingUiRequests() {
+  closeSceneDetail({ restoreFocus: false });
   pacingUiEpoch++;
   pacingRequestSerial++;
   pacingDraftRevision++;
@@ -59187,6 +59247,93 @@ async function onBrowseScene(delta, panel) {
     if (epoch4 === pacingUiEpoch) sceneBrowseBusy = false;
   }
 }
+function closeSceneDetail(options2 = {}) {
+  sceneDetail?.close(options2);
+}
+async function onViewSceneDetail(panel, button6) {
+  if (sceneDetail || !panel.isConnected || !button6.isConnected) return;
+  const epoch4 = pacingUiEpoch;
+  const context7 = button6.dataset.sceneContext;
+  try {
+    const api = await loadApi();
+    if (epoch4 !== pacingUiEpoch || !panel.isConnected || !button6.isConnected || sceneDetail) return;
+    const state = api.getSceneAdvanceState();
+    const index2 = resolveViewedSceneIndex(state);
+    const current3 = state.items?.[index2];
+    if (!current3 || getActiveBlindboxInfo() || panelMode !== "recommend" || context7 !== sceneBrowseContext(state, index2)) {
+      await refreshPanel();
+      return;
+    }
+    const actualIndex = Math.max(0, Math.min(Number(state.progress?.itemIndex) || 0, state.items.length - 1));
+    const dialog = document.createElement("dialog");
+    dialog.id = SCENE_DETAIL_ID;
+    dialog.className = "t-root tsa-scene-detail";
+    dialog.setAttribute("aria-modal", "true");
+    dialog.setAttribute("aria-labelledby", `${SCENE_DETAIL_ID}-title`);
+    dialog.innerHTML = `
+            <div class="tsa-scene-detail-head">
+                <div class="tsa-scene-detail-heading"><strong>\u5927\u7EB2\u5168\u6587</strong><span>${String(index2 + 1).padStart(2, "0")} / ${state.items.length} \xB7 ${index2 === actualIndex ? "\u5B9E\u9645\u5F53\u524D\u5E55" : `\u4EC5\u6D4F\u89C8\uFF0C\u5B9E\u9645\u505C\u5728\u7B2C ${actualIndex + 1} \u5E55`}</span></div>
+                <button type="button" class="tsa-scene-detail-close" aria-label="\u5173\u95ED\u5927\u7EB2\u5168\u6587" autofocus><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <div class="tsa-scene-detail-body" tabindex="0" role="region" aria-label="\u5927\u7EB2\u5168\u6587\u5185\u5BB9">
+                <h3 id="${SCENE_DETAIL_ID}-title">${escapeHtmlText3(current3.title || "\u672A\u547D\u540D\u60C5\u8282")}</h3>
+                ${current3.time ? `<p class="tsa-scene-detail-time">${escapeHtmlText3(current3.time)}</p>` : ""}
+                <p class="tsa-scene-detail-plot">${escapeHtmlText3(current3.plot || "(\u7A7A)")}</p>
+                ${current3.foreshadowing ? `<section class="tsa-scene-detail-foreshadow"><h4>\u4F0F\u7B14</h4><p>${escapeHtmlText3(current3.foreshadowing)}</p></section>` : ""}
+            </div>`;
+    let closed = false;
+    const close = ({ restoreFocus = true } = {}) => {
+      if (closed) return;
+      closed = true;
+      if (sceneDetail?.close === close) sceneDetail = null;
+      releaseFloatingWindow(close);
+      if (dialog.open) dialog.close();
+      dialog.remove();
+      if (restoreFocus && !isFloatingWindowDisplaced() && panel.isConnected) {
+        panel.querySelector("#tsa-scene-view-full")?.focus({ preventScroll: true });
+      }
+    };
+    sceneDetail = { context: context7, panel, close };
+    const isOutside = (event) => {
+      const rect = dialog.getBoundingClientRect();
+      return event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
+    };
+    let backdropPressed = false;
+    dialog.addEventListener("pointerdown", (event) => {
+      backdropPressed = event.target === dialog && isOutside(event);
+    });
+    dialog.addEventListener("pointercancel", () => {
+      backdropPressed = false;
+    });
+    dialog.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (event.target.closest(".tsa-scene-detail-close") || backdropPressed && event.target === dialog && isOutside(event)) close();
+      backdropPressed = false;
+    });
+    dialog.addEventListener("keydown", (event) => event.stopPropagation());
+    dialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      close();
+    });
+    dialog.addEventListener("close", () => close());
+    for (const eventName of ["wheel", "touchmove"]) {
+      dialog.addEventListener(eventName, (event) => {
+        if (!event.target.closest(".tsa-scene-detail-body")) event.preventDefault();
+      }, { passive: false });
+    }
+    try {
+      claimFloatingWindow(close);
+      document.body.append(dialog);
+      dialog.showModal();
+    } catch (error4) {
+      close({ restoreFocus: false });
+      throw error4;
+    }
+  } catch (error4) {
+    TitaniaLogger.warn("\u5927\u7EB2\u5168\u6587\u6253\u5F00\u5931\u8D25", error4?.message || String(error4));
+    if (window.toastr) toastr.warning("\u6682\u65F6\u65E0\u6CD5\u6253\u5F00\u5927\u7EB2\u5168\u6587\uFF0C\u8BF7\u91CD\u8BD5", "\u5267\u60C5\u63A8\u8FDB");
+  }
+}
 function bindSceneBrowseGestures(panel) {
   let gesture = null;
   let suppressClickUntil = 0;
@@ -59201,7 +59348,7 @@ function bindSceneBrowseGestures(panel) {
     const target = event.target.closest(".tsa-current-scene.tsa-scene-browser");
     if (!target || !panel.contains(target) || event.isPrimary === false || event.button !== 0) return;
     if (event.target.closest("button, input, select, textarea, a, label")) return;
-    gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, epoch: pacingUiEpoch };
+    gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, epoch: pacingUiEpoch, moved: false };
     panel.setPointerCapture(event.pointerId);
     event.stopPropagation();
   });
@@ -59209,6 +59356,7 @@ function bindSceneBrowseGestures(panel) {
     if (!gesture || gesture.id !== event.pointerId) return;
     const dx = event.clientX - gesture.x;
     const dy = event.clientY - gesture.y;
+    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) gesture.moved = true;
     if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.35) {
       panel.classList.add("tsa-is-swiping");
       if (event.cancelable) event.preventDefault();
@@ -59219,8 +59367,8 @@ function bindSceneBrowseGestures(panel) {
     const previous = clearGesture();
     const dx = event.clientX - previous.x;
     const dy = event.clientY - previous.y;
+    if (previous.moved || Math.abs(dx) > 10 || Math.abs(dy) > 10) suppressClickUntil = Date.now() + 300;
     if (previous.epoch !== pacingUiEpoch || Math.abs(dx) < 42 || Math.abs(dx) <= Math.abs(dy) * 1.35) return;
-    suppressClickUntil = Date.now() + 300;
     void onBrowseScene(dx < 0 ? 1 : -1, panel);
   });
   panel.addEventListener("pointercancel", (event) => {
@@ -59259,6 +59407,9 @@ function bindPanelNode(panel) {
     if (event.target.closest('button, input, select, textarea, a, label, [role="button"]')) return;
     destroyPanel();
     getStrip()?.focus({ preventScroll: true });
+  });
+  $panel.on("click", "#tsa-scene-view-full", function() {
+    void onViewSceneDetail(panel, this);
   });
   $panel.on("keydown", ".tsa-current-scene.tsa-scene-browser", function(event) {
     if (event.target !== this || event.ctrlKey || event.metaKey || event.altKey || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
@@ -59477,13 +59628,14 @@ function initSceneAdvanceBubble() {
   scheduleRefreshStrips(300);
   TitaniaLogger.info("\u5267\u60C5\u63A8\u8FDB\u6A2A\u6761\u5DF2\u521D\u59CB\u5316");
 }
-var STRIP_CLASS, PANEL_ID, PLANS_KEY, ACTIVE_PLAN_KEY, listenersBound2, refreshQueued, apiPromise, expandedForMesid, generating3, opening, restoring, viewedSceneIndex, viewedSceneSource, viewedSceneProgress, sceneBrowseBusy, pacingUiEpoch, pacingRequestSerial, pacingDraftRevision, pacingResultUnread, bbStageOpenIdx, bbFlowOpen, panelMode, pacingResult, pacingDraft, pacingAnalyzing, transitionOpen, transitionViewedIndex, transitionViewContext, transitionRenderedContext, transitionViewSerial, transitionRequestSerial, transitionEditContext, transitionEditTarget, transitionDraft, transitionCount, transitionEditing, transitionEditDraft, transitionGenerating, PACING_PRESETS, BB_STAGE_LABELS, bbStageLabel;
+var STRIP_CLASS, PANEL_ID, SCENE_DETAIL_ID, PLANS_KEY, ACTIVE_PLAN_KEY, listenersBound2, refreshQueued, apiPromise, expandedForMesid, generating3, opening, restoring, viewedSceneIndex, viewedSceneSource, viewedSceneProgress, sceneBrowseBusy, sceneDetail, pacingUiEpoch, pacingRequestSerial, pacingDraftRevision, pacingResultUnread, bbStageOpenIdx, bbFlowOpen, panelMode, pacingResult, pacingDraft, pacingAnalyzing, transitionOpen, transitionViewedIndex, transitionViewContext, transitionRenderedContext, transitionViewSerial, transitionRequestSerial, transitionEditContext, transitionEditTarget, transitionDraft, transitionCount, transitionEditing, transitionEditDraft, transitionGenerating, PACING_PRESETS, BB_STAGE_LABELS, bbStageLabel;
 var init_sceneAdvanceBubble = __esm({
   "src/ui/sceneAdvanceBubble.js"() {
     init_storage();
     init_logger();
     init_echoIcons();
     init_chatScrollChain();
+    init_floatingWindow();
     init_pacingInjection();
     init_sceneAdvanceSource();
     init_blindboxPlan();
@@ -59494,6 +59646,7 @@ var init_sceneAdvanceBubble = __esm({
     init_unlockChime();
     STRIP_CLASS = "titania-scene-advance-strip";
     PANEL_ID = "t-scene-advance-panel";
+    SCENE_DETAIL_ID = "t-scene-advance-detail";
     PLANS_KEY = "story_outline_plans";
     ACTIVE_PLAN_KEY = "story_outline_active_plan_id";
     listenersBound2 = false;
@@ -59507,6 +59660,7 @@ var init_sceneAdvanceBubble = __esm({
     viewedSceneSource = "";
     viewedSceneProgress = -1;
     sceneBrowseBusy = false;
+    sceneDetail = null;
     pacingUiEpoch = 0;
     pacingRequestSerial = 0;
     pacingDraftRevision = 0;
@@ -100333,6 +100487,7 @@ async function openMainWindow() {
   }
   loadContextDataAsync();
   updateSceneHistoryNav();
+  updateFavButtonUI();
   updateRunButtonsState();
   updateQueueButtonUI();
 }
