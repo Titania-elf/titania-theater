@@ -66629,6 +66629,14 @@ var init_storyOutlineWindow = __esm({
 });
 
 // src/core/textRewriteCore.js
+function latestRewriteReplyIndex(chat2) {
+  if (!Array.isArray(chat2)) return -1;
+  for (let index2 = chat2.length - 1; index2 >= 0; index2--) {
+    const message = chat2[index2];
+    if (message && !message.is_user && !message.is_system && !message.is_hidden && !message.extra?.is_hidden && !message.disabled) return index2;
+  }
+  return -1;
+}
 function normalizeToken(s) {
   return String(s || "").replace(/\s+/g, " ").trim().toLowerCase();
 }
@@ -67751,9 +67759,9 @@ var init_rewriteRulesEditor = __esm({
 });
 
 // src/core/textRewritePatch.js
-function isProtectedRewriteElement(name, attributes = "", whitelist = [], exclusions = []) {
+function isProtectedRewriteElement(name, attributes = "", _whitelist = [], exclusions = []) {
   const tag = String(name).toLowerCase();
-  return isProtectedTextElement(tag, attributes, exclusions) || WRITE_PROTECTED_TAGS.has(tag) || !REWRITE_STATIC_TAGS.has(tag) && !whitelist.includes(tag) || /\bon[\w]+\s*=|\b(?:contenteditable|data-[\w-]+)\b/i.test(attributes) || /\b(?:class|id)\s*=\s*["'][^"']*(?:状态|status|state|stats|card|panel|widget|render|component)[^"']*["']/i.test(attributes);
+  return tag === TEXT_COMMENT_TAG || isProtectedTextElement(tag, attributes, exclusions);
 }
 function mapRewriteUnits(projection, units) {
   let cursor = 0;
@@ -67774,25 +67782,6 @@ function mapRewriteUnits(projection, units) {
       reason: protectedSource ? "\u6B63\u6587\u4F4D\u4E8E\u4E0D\u652F\u6301\u5B89\u5168\u5199\u56DE\u7684\u6E90\u6587\u5BB9\u5668\u5185\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" : run2 ? "" : "\u8BE5\u5355\u5143\u8DE8\u8D8A\u6807\u7B7E\u6216\u53D7\u4FDD\u62A4\u533A\u57DF\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8"
     };
   });
-}
-function prepareSourcePatch(mappedUnit, after, { allowUntouchedFormatting = false } = {}) {
-  const { run: run2 } = mappedUnit;
-  const original = String(mappedUnit.text || "");
-  const before = original.trim();
-  const local = mappedUnit.local + original.length - original.trimStart().length;
-  const replacement = String(after ?? "").trim();
-  let reason = mappedUnit.reason;
-  if (run2?.elements?.some((item2) => item2.tag === TEXT_COMMENT_TAG)) reason = "\u6CE8\u91CA\u6CA1\u6709\u53EF\u5BF9\u5E94\u7684\u53EF\u89C1\u6B63\u6587\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8";
-  if (run2?.unsupportedEntity) reason = "\u6B63\u6587\u5305\u542B\u6682\u4E0D\u652F\u6301\u7684\u5B57\u7B26\u5B9E\u4F53";
-  const markup = /[`*_~\\<>]|\[[^\]]*\]|^\s*(?:#{1,6}\s|>\s|[-+]\s|\d+[.)]\s)/m;
-  if (run2 && markup.test(allowUntouchedFormatting ? original : run2.text)) reason = "\u76EE\u6807\u53E5\u5305\u542B Markdown \u6216\u5D4C\u5957\u683C\u5F0F\uFF0C\u9700\u8981\u4E13\u7528\u9002\u914D\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8";
-  if (markup.test(replacement) || /[\r\n]/.test(replacement)) reason = "\u6539\u5199\u7ED3\u679C\u5305\u542B\u683C\u5F0F\u6216\u6362\u884C\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8";
-  if (!run2 || local < 0 || run2.text.slice(local, local + before.length) !== before) reason || (reason = "\u539F\u6587\u4F4D\u7F6E\u65E0\u6CD5\u53EF\u9760\u5BF9\u5E94");
-  if (reason) return { reason };
-  const first = run2.map[local];
-  const last = run2.map[local + before.length - 1];
-  if (!first || !last || local > 0 && run2.map[local - 1].end > first.start || local + before.length < run2.map.length && run2.map[local + before.length].start < last.end) return { reason: "\u66FF\u6362\u8303\u56F4\u5207\u5F00\u4E86\u5B57\u7B26\u5B9E\u4F53" };
-  return { start: first.start, end: last.end, after: replacement.replace(/&/g, "&amp;"), before, replacement, run: run2, local, reason: "" };
 }
 function deletionEditsWithEmptyFormatting(unit) {
   const edits = (unit.edits || []).map((edit) => ({ ...edit }));
@@ -67831,39 +67820,35 @@ function markdownDeletionReason(run2, from, to, mode) {
   }
   return "";
 }
-function prepareDeleteSourcePatches(projection, unit, after) {
+function prepareProjectionSourcePatches(projection, unit, after, action) {
   const text11 = String(unit.text || ""), start = unit.projectionStart;
   if (!Number.isInteger(start) || start < 0 || projection.text.slice(start, start + text11.length) !== text11) {
-    return { patches: [], reason: "\u5220\u9664\u76EE\u6807\u7684\u539F\u6587\u4F4D\u7F6E\u5DF2\u53D8\u5316\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
-  }
-  if (!Array.isArray(unit.edits)) {
-    const patch = prepareSourcePatch(unit, after);
-    return { patches: patch.reason ? [] : [patch], after, reason: patch.reason || "" };
+    return { patches: [], reason: `${action}\u76EE\u6807\u7684\u539F\u6587\u4F4D\u7F6E\u5DF2\u53D8\u5316\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8` };
   }
   let boundary2 = 0;
   for (const edit of unit.edits) {
     if (!Number.isInteger(edit.start) || !Number.isInteger(edit.end) || edit.start < boundary2 || edit.end <= edit.start || edit.end > text11.length || typeof edit.after !== "string" || /[<>\r\n]/.test(edit.after)) {
-      return { patches: [], reason: "\u5220\u9664\u8865\u4E01\u8303\u56F4\u6216\u66FF\u6362\u5185\u5BB9\u65E0\u6548\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
+      return { patches: [], reason: `${action}\u8865\u4E01\u8303\u56F4\u6216\u66FF\u6362\u5185\u5BB9\u65E0\u6548\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8` };
     }
     boundary2 = edit.end;
   }
-  if (applyDeleteEdits(text11, unit.edits) !== after) return { patches: [], reason: "\u5220\u9664\u9884\u89C8\u4E0E\u539F\u6587\u8865\u4E01\u4E0D\u4E00\u81F4" };
-  const edits = deletionEditsWithEmptyFormatting(unit), patches = [];
+  if (applyDeleteEdits(text11, unit.edits) !== after) return { patches: [], reason: `${action}\u9884\u89C8\u4E0E\u539F\u6587\u8865\u4E01\u4E0D\u4E00\u81F4` };
+  const edits = action === "\u5220\u9664" ? deletionEditsWithEmptyFormatting(unit) : unit.edits, patches = [];
   for (const edit of edits) {
     const from = start + edit.start, to = start + edit.end;
     let covered = 0;
     for (const run2 of projection.runs) {
       const partStart = Math.max(from, run2.projectionStart), partEnd = Math.min(to, run2.projectionEnd);
       if (partEnd <= partStart) continue;
-      if (run2.elements?.some((item2) => item2.tag === TEXT_COMMENT_TAG || isProtectedRewriteElement(item2.tag, item2.attributes, projection.whitelist, projection.exclusions))) {
-        return { patches: [], reason: "\u5220\u9664\u76EE\u6807\u4F4D\u4E8E\u6CE8\u91CA\u3001\u52A8\u6001\u7EC4\u4EF6\u6216\u4E0D\u652F\u6301\u5B89\u5168\u5199\u56DE\u7684\u6E90\u6587\u5BB9\u5668\u5185\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
+      if (run2.elements?.some((item2) => isProtectedRewriteElement(item2.tag, item2.attributes, projection.whitelist, projection.exclusions))) {
+        return { patches: [], reason: `${action}\u76EE\u6807\u4F4D\u4E8E\u6CE8\u91CA\u6216\u6B63\u6587\u6392\u9664\uFF0F\u4FDD\u62A4\u533A\u57DF\u5185\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8` };
       }
       const local = partStart - run2.projectionStart, stop4 = partEnd - run2.projectionStart;
       const reason = markdownDeletionReason(run2, local, stop4, unit.deleteMode);
-      if (reason) return { patches: [], reason };
+      if (reason) return { patches: [], reason: reason.replace(/^删除/, action) };
       const first = run2.map[local], last = run2.map[stop4 - 1];
       if (!first || !last || local > 0 && run2.map[local - 1].end > first.start || stop4 < run2.map.length && run2.map[stop4].start < last.end) {
-        return { patches: [], reason: "\u5220\u9664\u8303\u56F4\u5207\u5F00\u4E86\u5B57\u7B26\u5B9E\u4F53\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
+        return { patches: [], reason: `${action}\u8303\u56F4\u5207\u5F00\u4E86\u5B57\u7B26\u5B9E\u4F53\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8` };
       }
       const replacement = covered ? "" : edit.after;
       patches.push({
@@ -67878,9 +67863,28 @@ function prepareDeleteSourcePatches(projection, unit, after) {
       });
       covered += partEnd - partStart;
     }
-    if (covered !== edit.end - edit.start) return { patches: [], reason: "\u5220\u9664\u8303\u56F4\u8DE8\u8D8A\u4E86\u6B63\u6587\u7ED3\u6784\u6216\u53D7\u4FDD\u62A4\u533A\u57DF\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
+    if (covered !== edit.end - edit.start) return { patches: [], reason: `${action}\u8303\u56F4\u8DE8\u8D8A\u4E86\u6B63\u6587\u7ED3\u6784\u6216\u53D7\u4FDD\u62A4\u533A\u57DF\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8` };
   }
   return { patches, after: applyDeleteEdits(text11, edits), reason: "" };
+}
+function prepareRewriteSourcePatches(projection, unit, after) {
+  const original = String(unit.text || ""), before = original.trim(), replacement = String(after ?? "").trim();
+  if (!before) return { patches: [], reason: "\u76EE\u6807\u53E5\u6CA1\u6709\u53EF\u5B9A\u4F4D\u7684\u6B63\u6587" };
+  if (REWRITE_MARKUP.test(before)) return { patches: [], reason: "\u76EE\u6807\u53E5\u5305\u542B Markdown\uFF0C\u9700\u8981\u4FDD\u6301\u683C\u5F0F\u8FB9\u754C\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
+  if (REWRITE_MARKUP.test(replacement) || /[\r\n]/.test(replacement)) return { patches: [], reason: "\u6539\u5199\u7ED3\u679C\u5305\u542B\u683C\u5F0F\u6216\u6362\u884C\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
+  const leading = original.length - original.trimStart().length;
+  const edits = [{ start: leading, end: leading + before.length, after: replacement }];
+  const prepared = prepareProjectionSourcePatches(projection, { ...unit, edits, deleteMode: "rewrite" }, applyDeleteEdits(original, edits), "\u6539\u5199");
+  return { ...prepared, after: replacement };
+}
+function prepareDeleteSourcePatches(projection, unit, after) {
+  if (!Array.isArray(unit.edits)) {
+    const text11 = String(unit.text || ""), before = text11.trim(), leading = text11.length - text11.trimStart().length;
+    const edits = before ? [{ start: leading, end: leading + before.length, after: String(after ?? "").trim() }] : [];
+    const mapped = { ...unit, edits, deleteMode: unit.deleteMode || "sentence" };
+    return prepareProjectionSourcePatches(projection, mapped, applyDeleteEdits(text11, edits), "\u5220\u9664");
+  }
+  return prepareProjectionSourcePatches(projection, unit, after, "\u5220\u9664");
 }
 function applySourcePatches(raw, patches) {
   let output = raw;
@@ -67892,165 +67896,18 @@ function applySourcePatches(raw, patches) {
   }
   return output;
 }
-var REWRITE_STATIC_TAGS, WRITE_PROTECTED_TAGS;
+var REWRITE_MARKUP;
 var init_textRewritePatch = __esm({
   "src/core/textRewritePatch.js"() {
     init_textExtraction();
     init_textRewriteCore();
-    REWRITE_STATIC_TAGS = /* @__PURE__ */ new Set([
-      "p",
-      "div",
-      "span",
-      "q",
-      "em",
-      "strong",
-      "i",
-      "b",
-      "u",
-      "s",
-      "del",
-      "mark",
-      "small",
-      "sub",
-      "sup",
-      "blockquote",
-      "section",
-      "article",
-      "main",
-      "content",
-      "dialogue",
-      "narration",
-      "\u6B63\u6587",
-      "\u5BF9\u8BDD",
-      "\u65C1\u767D",
-      "echo-tts"
-    ]);
-    WRITE_PROTECTED_TAGS = /* @__PURE__ */ new Set(["html", "body", "a", "details", "table", TEXT_COMMENT_TAG]);
-  }
-});
-
-// src/ui/textRewriteDom.js
-function collectRewriteTextGroups(container, whitelist = [], exclusions = []) {
-  const groups = [];
-  let current3 = { text: "", spans: [] };
-  const flush = () => {
-    if (current3.text.trim()) groups.push(current3);
-    current3 = { text: "", spans: [] };
-  };
-  const append = (text11, node3 = null) => {
-    current3.spans.push({ node: node3, start: current3.text.length, end: current3.text.length + text11.length, original: text11 });
-    current3.text += text11;
-  };
-  const visit = (element3) => {
-    for (const child of element3.childNodes) {
-      if (child.nodeType === 3) {
-        append(child.data, child);
-        continue;
-      }
-      if (child.nodeType !== 1) continue;
-      if (child.classList.contains("t-tts-controls") && child.hasAttribute("data-echo-tts-ui")) continue;
-      if (exclusions.includes(child.tagName.toLowerCase())) {
-        flush();
-        continue;
-      }
-      if (child.tagName === "BR") {
-        append("\n");
-        continue;
-      }
-      const attributes = Array.from(child.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ");
-      const style = child.ownerDocument.defaultView?.getComputedStyle(child);
-      const component = Object.keys(child).some((key) => /^(?:__vue|__react|_reactRoot)/.test(key));
-      if (component || child.hidden || child.getAttribute("aria-hidden") === "true" || style?.display === "none" || style?.visibility === "hidden" || isProtectedRewriteElement(child.tagName, attributes, whitelist, exclusions)) {
-        flush();
-        continue;
-      }
-      const block = BLOCK_TAGS.has(child.tagName) || ["block", "flex", "grid", "table", "list-item"].includes(style?.display);
-      if (block) flush();
-      visit(child);
-      if (block) flush();
-    }
-  };
-  const rootStyle = container?.ownerDocument.defaultView?.getComputedStyle(container);
-  const rootComponent = container && Object.keys(container).some((key) => /^(?:__vue|__react|_reactRoot)/.test(key));
-  if (container && !rootComponent && !container.closest('[hidden], [aria-hidden="true"], .TH-render, [contenteditable="true"]') && rootStyle?.display !== "none" && rootStyle?.visibility !== "hidden") visit(container);
-  flush();
-  return groups;
-}
-function locateRewriteRange(groups, projection, patch) {
-  const run2 = patch.run;
-  const anchor = run2.text.trim();
-  if (!anchor || projection.runs.filter((item2) => item2.text.trim() === anchor).length !== 1) return { reason: "\u91CD\u590D\u6BB5\u843D\u65E0\u6CD5\u786E\u5B9A\u663E\u793A\u987A\u5E8F\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
-  const matches3 = [];
-  for (const group3 of groups) {
-    let cursor = 0;
-    let start2;
-    while ((start2 = group3.text.indexOf(anchor, cursor)) >= 0) {
-      matches3.push({ group: group3, start: start2 });
-      cursor = start2 + anchor.length;
-    }
-  }
-  if (matches3.length !== 1) return { reason: matches3.length ? "\u663E\u793A\u4E2D\u5B58\u5728\u591A\u4E2A\u76F8\u540C\u6B63\u6587\uFF0C\u65E0\u6CD5\u552F\u4E00\u5B9A\u4F4D" : "\u5F53\u524D\u524D\u7AEF\u672A\u663E\u793A\u53EF\u5BF9\u5E94\u7684\u9759\u6001\u6B63\u6587\uFF08\u53EF\u80FD\u5728 iframe \u6216\u52A8\u6001\u7EC4\u4EF6\u4E2D\uFF09" };
-  const { group: group2, start } = matches3[0];
-  const leading = run2.text.length - run2.text.trimStart().length;
-  const from = start + patch.local - leading;
-  const to = from + patch.before.length;
-  if (from < start || to > start + anchor.length || group2.text.slice(from, to) !== patch.before) return { reason: "\u539F\u6587\u7A7A\u767D\u6216\u663E\u793A\u683C\u5F0F\u65E0\u6CD5\u53EF\u9760\u5BF9\u5E94" };
-  const covered = group2.spans.filter((span) => span.end > from && span.start < to);
-  if (!covered.length || covered.some((span) => !span.node)) return { reason: "\u66FF\u6362\u8303\u56F4\u8DE8\u8D8A\u524D\u7AEF\u6362\u884C\u7ED3\u6784\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
-  return { group: group2, from, to, covered, reason: "" };
-}
-function buildRewriteDomChanges(plans) {
-  const edits = /* @__PURE__ */ new Map();
-  for (const { patch, range: range3 } of plans) {
-    range3.covered.forEach((span, index2) => {
-      const list = edits.get(span.node) || [];
-      list.push({ start: Math.max(0, range3.from - span.start), end: Math.min(span.original.length, range3.to - span.start), after: index2 === 0 ? patch.replacement : "" });
-      edits.set(span.node, list);
-    });
-  }
-  return Array.from(edits, ([node3, list]) => {
-    const original = node3.data;
-    let after = original;
-    let boundary2 = original.length;
-    for (const edit of list.sort((a, b) => b.start - a.start)) {
-      if (edit.end > boundary2) throw new Error("\u663E\u793A\u8865\u4E01\u8303\u56F4\u53D1\u751F\u91CD\u53E0");
-      after = after.slice(0, edit.start) + edit.after + after.slice(edit.end);
-      boundary2 = edit.start;
-    }
-    return { node: node3, parent: node3.parentNode, original, after };
-  });
-}
-function rewriteDomStillMatches(container, changes) {
-  return !!container?.isConnected && changes.every((change) => container.contains(change.node) && change.node.parentNode === change.parent && change.node.data === change.original);
-}
-function applyRewriteDomChanges(changes) {
-  for (const change of changes) change.node.data = change.after;
-}
-function rollbackRewriteDomChanges(changes) {
-  for (const change of changes) {
-    if (change.node.parentNode === change.parent && change.node.data === change.after) change.node.data = change.original;
-  }
-}
-function rangeForRewriteMatch(document2, match) {
-  if (match.reason || !match.covered?.length) return null;
-  const first = match.covered[0];
-  const last = match.covered.at(-1);
-  const range3 = document2.createRange();
-  range3.setStart(first.node, match.from - first.start);
-  range3.setEnd(last.node, match.to - last.start);
-  return range3;
-}
-var BLOCK_TAGS;
-var init_textRewriteDom = __esm({
-  "src/ui/textRewriteDom.js"() {
-    init_textRewritePatch();
-    BLOCK_TAGS = /* @__PURE__ */ new Set(["P", "DIV", "BLOCKQUOTE", "SECTION", "ARTICLE", "MAIN"]);
+    REWRITE_MARKUP = /[`*_~\\<>]|\[[^\]]*\]|^\s*(?:#{1,6}\s|>\s|[-+]\s|\d+[.)]\s)/m;
   }
 });
 
 // src/core/textRewriteWriteback.js
 function chatKey(ctx2) {
-  return JSON.stringify([ctx2?.chatId, ctx2?.groupId, ctx2?.characters?.[ctx2?.characterId]?.avatar]);
+  return JSON.stringify([ctx2?.chatId, ctx2?.groupId, (ctx2?.character || ctx2?.characters?.[ctx2?.characterId])?.avatar]);
 }
 function sourceFields2(message) {
   const fields5 = [];
@@ -68077,6 +67934,7 @@ function captureRewriteTarget(ctx2, index2, projection, container) {
     message,
     projection,
     container,
+    name: message.name,
     swipe: message.swipe_id,
     swipes: message.swipes,
     swipeInfo: message.swipe_info,
@@ -68085,109 +67943,34 @@ function captureRewriteTarget(ctx2, index2, projection, container) {
     reason: snapshot.reason
   };
 }
-function rewriteTargetStillMatches(target, current3, expectedSource = target.projection.raw) {
-  if (!current3 || current3.chat !== target.chat || current3.chatMetadata !== target.metadata || chatKey(current3) !== target.key || current3.chat[target.index] !== target.message || target.message.swipe_id !== target.swipe || target.message.swipes !== target.swipes || target.message.swipe_info !== target.swipeInfo) return false;
-  const snapshot = sourceFields2(target.message);
-  return !snapshot.reason && snapshot.fields.length === target.fields.length && snapshot.fields.every((field3, i) => field3.object === target.fields[i].object && field3.key === target.fields[i].key && field3.original === (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : expectedSource));
-}
-async function persistRewriteTarget(target, rewritten, host8) {
-  if (!rewriteTargetStillMatches(target, host8.getContext(), rewritten)) throw new Error("\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
-  const ctx2 = target.ctx;
-  const group2 = ctx2.groupId != null && ctx2.groupId !== "";
-  const character = ctx2.characters?.[ctx2.characterId];
-  if (!ctx2.chatId || !group2 && !character?.avatar) throw new Error("\u5F53\u524D\u804A\u5929\u65E0\u6CD5\u786E\u8BA4\u4FDD\u5B58\u7ED3\u679C");
-  await host8.save();
-  if (!rewriteTargetStillMatches(target, host8.getContext(), rewritten)) throw new Error("\u4FDD\u5B58\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
-  const response = await host8.fetch(group2 ? "/api/chats/group/get" : "/api/chats/get", {
-    method: "POST",
-    headers: host8.getHeaders(),
-    cache: "no-store",
-    body: JSON.stringify(group2 ? { id: ctx2.chatId } : { ch_name: character.name, file_name: ctx2.chatId, avatar_url: character.avatar })
-  });
-  if (!response.ok) throw new Error("\u804A\u5929\u56DE\u8BFB\u5931\u8D25");
-  const saved = await response.json();
-  const offset = Array.isArray(saved) && own3(saved[0], "chat_metadata") ? 1 : 0;
-  const message = Array.isArray(saved) ? saved[target.index + offset] : null;
-  const fields5 = message ? sourceFields2(message) : { fields: [], reason: "\u672A\u627E\u5230\u4FDD\u5B58\u7684\u697C\u5C42" };
-  if (fields5.reason || fields5.fields.length !== target.fields.length || fields5.fields.some((field3, i) => field3.key !== target.fields[i].key || field3.original !== (target.fields[i].cache && target.fields[i].original == null ? target.fields[i].original : rewritten))) throw new Error("\u697C\u5C42\u8865\u4E01\u672A\u6210\u529F\u4FDD\u5B58");
-  if (JSON.stringify(message?.extra?.[LOCAL_TEXT_REVISION_KEY]) !== JSON.stringify(target.message.extra?.[LOCAL_TEXT_REVISION_KEY])) {
-    throw new Error("\u6B63\u6587\u4FEE\u8BA2\u7684\u5206\u6790\u6CBF\u7528\u8BB0\u5F55\u672A\u5B8C\u6574\u4FDD\u5B58");
-  }
-  if (!rewriteTargetStillMatches(target, host8.getContext(), rewritten)) throw new Error("\u56DE\u8BFB\u671F\u95F4\u804A\u5929\u6216\u539F\u6587\u5DF2\u53D8\u5316");
-}
 function rewriteSnapshotStillMatches(target, current3) {
-  if (!current3 || current3.chat !== target.chat || current3.chatMetadata !== target.metadata || chatKey(current3) !== target.key || current3.chat[target.index] !== target.message || target.message.swipe_id !== target.swipe || target.message.swipes !== target.swipes || target.message.swipe_info !== target.swipeInfo || String(target.message.mes ?? target.message.message ?? "") !== target.projection.raw) return false;
-  const snapshot = sourceFields2(target.message);
-  return !snapshot.reason && snapshot.fields.length === target.fields.length && snapshot.fields.every((field3, index2) => field3.object === target.fields[index2].object && field3.key === target.fields[index2].key && field3.original === target.fields[index2].original);
-}
-function sourceDisplayState(target, groups) {
-  const independentDisplay = target.fields.some((field3) => field3.cache && field3.original != null && field3.original !== target.projection.raw);
-  const interactive = [...target.container.querySelectorAll("*")].find((element3) => !element3.closest("[data-echo-tts-ui]") && (element3.matches('iframe, .TH-render, [contenteditable="true"], [contenteditable=""], [inert], [data-state], [data-status], [data-widget]') || element3.shadowRoot || Object.keys(element3).some((key) => /^(?:__vue|__react|_reactRoot)/.test(key))));
-  return {
-    independentDisplay,
-    interactive: !!interactive,
-    canRefresh(patch) {
-      if (!groups.length || interactive) return false;
-      if (independentDisplay) return true;
-      const source2 = patch.run.text.trim();
-      const formatted = source2.replace(/(\*\*|__|~~|\*|_)([^*_~\r\n]+)\1/g, "$2").replace(/^\s*(?:#{1,6}\s+|>\s+|[-+]\s+|\d+[.)]\s+)/gm, "").trim();
-      return groups.some((group2) => group2.text.includes(source2) || formatted !== source2 && group2.text.includes(formatted));
-    }
-  };
-}
-function planSourceDisplay(target, groups, patches, state) {
-  const displayPlans = [];
-  let needsRefresh = false;
-  for (const patch of patches) {
-    const range3 = locateRewriteRange(groups, target.projection, patch);
-    if (range3.reason) {
-      if (!state.canRefresh(patch)) return {
-        reason: state.interactive ? `${range3.reason}\uFF1B\u672C\u697C\u542B iframe \u6216\u52A8\u6001\u6B63\u6587\uFF0C\u4E0D\u80FD\u901A\u8FC7\u91CD\u7ED8\u731C\u6D4B\u5BF9\u5E94\u4F4D\u7F6E` : range3.reason,
-        displayPlans: [],
-        needsRefresh: false
-      };
-      needsRefresh = true;
-    } else displayPlans.push({ patch, range: range3 });
-  }
-  return { reason: "", displayPlans, needsRefresh };
+  return !!current3 && current3.chat === target.chat && current3.chatMetadata === target.metadata && chatKey(current3) === target.key && latestRewriteReplyIndex(current3.chat) === target.index && current3.chat[target.index] === target.message && target.message.name === target.name && Number(target.message.swipe_id ?? 0) === Number(target.swipe ?? 0) && String(target.message.mes ?? target.message.message ?? "") === target.projection.raw && !sourceFields2(target.message).reason;
 }
 function preflightRewriteUnits(target, units, options2) {
   const current3 = options2.getContext();
   let reason = options2.isGenerating?.() ? "\u9152\u9986\u6B63\u5728\u751F\u6210\uFF0C\u672A\u8BF7\u6C42 AI" : target.reason || "";
-  if (!reason && (!current3?.chatId || !current3.chatMetadata || !current3.groupId && !current3.characters?.[current3.characterId]?.avatar)) reason = "\u5F53\u524D\u804A\u5929\u65E0\u6CD5\u786E\u8BA4\u4FDD\u5B58\u5F52\u5C5E\uFF0C\u672A\u8BF7\u6C42 AI";
+  if (!reason && (!current3?.chatId || !current3.chatMetadata || !current3.groupId && !(current3.character || current3.characters?.[current3.characterId])?.avatar)) reason = "\u5F53\u524D\u804A\u5929\u65E0\u6CD5\u786E\u8BA4\u4FDD\u5B58\u5F52\u5C5E\uFF0C\u672A\u8BF7\u6C42 AI";
   if (!reason && [target.message.extra, target.message.swipe_info?.[Number(target.swipe ?? 0)]?.extra].some((extra) => extra != null && (typeof extra !== "object" || Array.isArray(extra)))) reason = "\u672C\u697C\u9644\u52A0\u6570\u636E\u5F02\u5E38\uFF0C\u4E0D\u80FD\u5B89\u5168\u4FDD\u5B58\uFF0C\u672A\u8BF7\u6C42 AI";
-  if (!reason && !rewriteSnapshotStillMatches(target, current3)) reason = "\u804A\u5929\u3001swipe \u6216\u539F\u6587\u5DF2\u53D8\u5316";
-  if (!reason && (!target.container?.isConnected || options2.getContainer() !== target.container)) reason = "\u672C\u697C\u663E\u793A\u5DF2\u53D8\u5316\u6216\u5C1A\u672A\u6302\u8F7D";
-  const mapped = mapRewriteUnits(target.projection, units);
-  const groups = reason ? [] : collectRewriteTextGroups(target.container, target.projection.whitelist, target.projection.exclusions);
-  const state = reason ? null : sourceDisplayState(target, groups);
-  return mapped.map((unit) => {
+  if (!reason && !rewriteSnapshotStillMatches(target, current3)) reason = "\u6700\u65B0\u56DE\u590D\u3001\u804A\u5929\u3001swipe \u6216\u539F\u6587\u5DF2\u53D8\u5316";
+  if (!reason && options2.getContainer && !options2.getContainer()?.isConnected) reason = "\u6700\u65B0\u56DE\u590D\u697C\u5C42\u5C1A\u672A\u6302\u8F7D";
+  return mapRewriteUnits(target.projection, units).map((unit) => {
     if (!unit.hit) return unit;
     if (reason) return { ...unit, ready: false, preflightReason: reason };
-    const patch = prepareSourcePatch(unit, "\u6539\u5199\u9884\u68C0\u67E5", { allowUntouchedFormatting: true });
-    if (patch.reason) return { ...unit, ready: false, preflightReason: patch.reason };
-    const display = planSourceDisplay(target, groups, [patch], state);
-    return { ...unit, ready: !display.reason, preflightReason: display.reason, displayMode: display.needsRefresh ? "floor-render" : "in-place" };
+    const prepared = prepareRewriteSourcePatches(target.projection, unit, "\u6539\u5199\u9884\u68C0\u67E5");
+    return { ...unit, reason: prepared.reason, ready: !prepared.reason, preflightReason: prepared.reason, displayMode: "floor-render" };
   });
 }
 async function commitThroughSourceTransaction(target, entries, options2, failAll) {
   if (options2.isCurrent && !options2.isCurrent()) return failAll("\u6539\u5199\u4EFB\u52A1\u6216\u6267\u884C\u6A21\u5F0F\u5DF2\u53D8\u5316\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8", "busy");
-  if (!rewriteSnapshotStillMatches(target, options2.getContext())) return failAll("\u804A\u5929\u3001swipe \u6216\u539F\u6587\u5DF2\u53D8\u5316\uFF0C\u672C\u6B21\u7ED3\u679C\u4EC5\u4FDD\u7559\u9884\u89C8", "source");
-  if (!target.container?.isConnected || options2.getContainer() !== target.container) return failAll("\u5F53\u524D\u697C\u5C42\u663E\u793A\u5DF2\u53D8\u5316\u6216\u5C1A\u672A\u6302\u8F7D\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8", "display");
-  const groups = collectRewriteTextGroups(target.container, target.projection.whitelist, target.projection.exclusions);
-  const plans = [], displayPlans = [];
-  const state = sourceDisplayState(target, groups);
-  let inPlace = true;
+  if (!rewriteSnapshotStillMatches(target, options2.getContext())) return failAll("\u6700\u65B0\u56DE\u590D\u3001\u804A\u5929\u3001swipe \u6216\u539F\u6587\u5DF2\u53D8\u5316\uFF0C\u672C\u6B21\u7ED3\u679C\u4EC5\u4FDD\u7559\u9884\u89C8", "source");
+  const plans = [];
   for (const entry of entries) {
     if (entry.after === entry.before) {
       entry.status = "unchanged";
       entry.reason = "\u7ED3\u679C\u4E0E\u539F\u6587\u76F8\u540C";
       continue;
     }
-    const prepared = options2.action === "delete" ? prepareDeleteSourcePatches(target.projection, entry.unit, entry.after) : (() => {
-      const patch = prepareSourcePatch(entry.unit, entry.after, { allowUntouchedFormatting: true });
-      return { patches: patch.reason ? [] : [patch], after: patch.replacement, reason: patch.reason };
-    })();
+    const prepared = options2.action === "delete" ? prepareDeleteSourcePatches(target.projection, entry.unit, entry.after) : prepareRewriteSourcePatches(target.projection, entry.unit, entry.after);
     if (prepared.reason) {
       entry.reason = prepared.reason;
       entry.stage = "source";
@@ -68199,26 +67982,10 @@ async function commitThroughSourceTransaction(target, entries, options2, failAll
       entry.reason = "\u7ED3\u679C\u4E0E\u539F\u6587\u76F8\u540C";
       continue;
     }
-    const display = planSourceDisplay(target, groups, patches, state);
-    if (display.reason) {
-      entry.reason = display.reason;
-      entry.stage = "display";
-      continue;
-    }
     entry.after = prepared.after;
     plans.push({ entry, patches });
-    displayPlans.push(...display.displayPlans);
-    if (display.needsRefresh) inPlace = false;
   }
   if (!plans.length) return { entries, applied: 0, preview: entries.filter((entry) => entry.status === "preview").length };
-  const changes = inPlace ? buildRewriteDomChanges(displayPlans) : null;
-  const displayEdit = changes ? {
-    assertCurrent() {
-      if (options2.getContainer() !== target.container || !rewriteDomStillMatches(target.container, changes)) throw new Error("\u5199\u56DE\u524D\u672C\u697C\u663E\u793A\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u6267\u884C\u3002");
-    },
-    apply: () => applyRewriteDomChanges(changes),
-    rollback: () => rollbackRewriteDomChanges(changes)
-  } : null;
   commitsInFlight.add(target.chat);
   try {
     const sourcePatches = plans.flatMap((plan) => plan.patches);
@@ -68229,7 +67996,6 @@ async function commitThroughSourceTransaction(target, entries, options2, failAll
     ] } : null;
     const result = await options2.commitSourcePatches(target, sourcePatches, {
       action: options2.action,
-      displayEdit,
       marks: plans.map((plan) => ({ before: plan.entry.before, after: plan.entry.after })),
       rewriteAttempt,
       guard: options2.isCurrent || null,
@@ -68237,7 +68003,7 @@ async function commitThroughSourceTransaction(target, entries, options2, failAll
     });
     for (const plan of plans) {
       plan.entry.status = result.changed ? "applied" : "unchanged";
-      plan.entry.reason = result.changed ? result.displayMode === "in-place" ? "\u5DF2\u539F\u4F4D\u5199\u56DE\uFF0C\u5176\u4ED6\u697C\u5C42\u4E0D\u53D8" : "\u5DF2\u5B89\u5168\u5199\u56DE\u5E76\u66F4\u65B0\u672C\u697C\uFF0C\u5A92\u4F53\u5DF2\u4FDD\u7559" : "\u7ED3\u679C\u4E0E\u539F\u6587\u76F8\u540C";
+      plan.entry.reason = result.changed ? result.warning ? "\u6B63\u6587\u5DF2\u4FDD\u5B58\uFF0C\u663E\u793A\u6062\u590D\u60C5\u51B5\u89C1\u63D0\u793A" : "\u5DF2\u4FDD\u5B58\u5E76\u4EC5\u5237\u65B0\u6700\u65B0\u56DE\u590D\u697C\u5C42\uFF0C\u6863\u6848\u4E0E\u5A92\u4F53\u5DF2\u4FDD\u7559" : "\u7ED3\u679C\u4E0E\u539F\u6587\u76F8\u540C";
     }
     return { entries, applied: result.changed ? plans.length : 0, preview: entries.filter((entry) => entry.status === "preview").length, warning: result.warning || "" };
   } catch (cause) {
@@ -68246,7 +68012,8 @@ async function commitThroughSourceTransaction(target, entries, options2, failAll
     commitsInFlight.delete(target.chat);
   }
 }
-async function commitRewritePatches(target, units, replacements, options2) {
+async function commitRewritePatches(target, units, replacements, options2 = {}) {
+  options2 = { ...options2, action: options2.action === "delete" ? "delete" : "rewrite" };
   const mapped = mapRewriteUnits(target.projection, units);
   const entries = mapped.filter((unit) => replacements.has(unit.unitIndex)).map((unit) => ({
     unitIndex: unit.unitIndex,
@@ -68263,123 +68030,23 @@ async function commitRewritePatches(target, units, replacements, options2) {
     }
     return { entries, applied: 0, preview: entries.length, reason, stage };
   };
-  const busy2 = options2.isGenerating?.();
-  if (busy2) return failAll("\u9152\u9986\u6B63\u5728\u751F\u6210\uFF0C\u8BF7\u7ED3\u675F\u751F\u6210\u540E\u91CD\u8BD5", "busy");
+  if (options2.isGenerating?.()) return failAll("\u9152\u9986\u6B63\u5728\u751F\u6210\uFF0C\u8BF7\u7ED3\u675F\u751F\u6210\u540E\u91CD\u8BD5", "busy");
   if (commitsInFlight.has(target.chat)) return failAll("\u4E0A\u4E00\u6279\u8865\u4E01\u4ECD\u5728\u4FDD\u5B58\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5", "busy");
   if (target.reason) return failAll(target.reason, "source");
-  if (options2.commitSourcePatches) {
-    try {
-      return await commitThroughSourceTransaction(target, entries, options2, failAll);
-    } catch (cause) {
-      return failAll(String(cause?.message || cause));
-    }
-  }
-  if (target.fields.some((field3) => !(field3.cache && field3.original == null) && field3.original !== target.projection.raw)) return failAll("\u6D88\u606F\u539F\u6587\u3001swipe \u6216\u72EC\u7ACB\u663E\u793A\u7F13\u5B58\u4E0D\u4E00\u81F4\uFF0C\u9700\u8981\u4E13\u7528\u9002\u914D");
-  if (!rewriteTargetStillMatches(target, options2.getContext())) return failAll("\u804A\u5929\u3001swipe \u6216\u539F\u6587\u5DF2\u53D8\u5316\uFF0C\u672C\u6B21\u7ED3\u679C\u4EC5\u4FDD\u7559\u9884\u89C8");
-  if (!target.container?.isConnected || options2.getContainer() !== target.container) return failAll("\u5F53\u524D\u697C\u5C42\u663E\u793A\u5DF2\u53D8\u5316\u6216\u5C1A\u672A\u6302\u8F7D\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8");
-  const groups = collectRewriteTextGroups(target.container, target.projection.whitelist, target.projection.exclusions);
-  const plans = [];
-  for (const entry of entries) {
-    if (entry.after === entry.before) {
-      entry.status = "unchanged";
-      entry.reason = "\u7ED3\u679C\u4E0E\u539F\u6587\u76F8\u540C";
-      continue;
-    }
-    const patch = prepareSourcePatch(entry.unit, entry.after);
-    if (patch.reason) {
-      entry.reason = patch.reason;
-      continue;
-    }
-    if (patch.before === patch.replacement) {
-      entry.status = "unchanged";
-      entry.reason = "\u7ED3\u679C\u4E0E\u539F\u6587\u76F8\u540C";
-      continue;
-    }
-    const range3 = locateRewriteRange(groups, target.projection, patch);
-    if (range3.reason) {
-      entry.reason = range3.reason;
-      continue;
-    }
-    entry.after = patch.replacement;
-    plans.push({ patch, range: range3, entry });
-  }
-  if (!plans.length) return { entries, applied: 0, preview: entries.filter((entry) => entry.status === "preview").length };
-  const changes = buildRewriteDomChanges(plans);
-  const rewritten = applySourcePatches(target.projection.raw, plans.map((plan) => plan.patch));
-  if (!rewriteTargetStillMatches(target, options2.getContext()) || options2.getContainer() !== target.container || !rewriteDomStillMatches(target.container, changes)) return failAll("\u5199\u56DE\u524D\u539F\u6587\u6216\u663E\u793A\u5DF2\u53D8\u5316\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8");
-  const writes3 = target.fields.filter((field3) => !(field3.cache && field3.original == null)).map((field3) => ({ ...field3, after: rewritten, had: true }));
-  const revision = prepareAnalysisTextRevision(target.ctx, target.message, rewritten, options2.action === "delete" ? "delete" : "edit");
-  const previousExtra = target.message.extra;
-  const hadExtra = own3(target.message, "extra");
-  if (!previousExtra || typeof previousExtra !== "object") target.message.extra = {};
-  const metadata = target.message.extra;
-  const metadataPatch = {
-    [options2.action === "delete" ? "titania_delete_done" : "titania_rewrite_done"]: true,
-    [LOCAL_TEXT_REVISION_KEY]: revision
-  };
-  if (options2.action !== "delete") metadataPatch.titania_rewrite_marks = plans.map((plan) => ({ before: plan.entry.before, after: plan.entry.after }));
-  for (const [key, after] of Object.entries(metadataPatch)) writes3.push({ object: metadata, key, original: metadata[key], had: own3(metadata, key), after });
-  const swipeExtra = target.message.swipe_info?.[target.swipe]?.extra;
-  if (swipeExtra && typeof swipeExtra === "object" && !Array.isArray(swipeExtra)) writes3.push({
-    object: swipeExtra,
-    key: LOCAL_TEXT_REVISION_KEY,
-    original: swipeExtra[LOCAL_TEXT_REVISION_KEY],
-    had: own3(swipeExtra, LOCAL_TEXT_REVISION_KEY),
-    after: revision
-  });
-  commitsInFlight.add(target.chat);
-  const release = beginLocalTextRevision();
+  if (typeof options2.commitSourcePatches !== "function") return failAll("\u5F53\u524D\u73AF\u5883\u7F3A\u5C11\u697C\u5C42\u4FDD\u5B58\u4E8B\u52A1\uFF0C\u672A\u5199\u56DE\u6216\u4FEE\u6539\u663E\u793A", "save");
   try {
-    for (const write of writes3) write.object[write.key] = write.after;
-    applyRewriteDomChanges(changes);
-    try {
-      await options2.persist(target, rewritten);
-    } catch (cause) {
-      for (const write of writes3) if (write.object[write.key] === write.after && (write.object !== target.message || target.message.swipe_id === target.swipe)) {
-        if (write.had) write.object[write.key] = write.original;
-        else delete write.object[write.key];
-      }
-      if (previousExtra !== metadata && target.message.extra === metadata && !Object.keys(metadata).length) {
-        if (hadExtra) target.message.extra = previousExtra;
-        else delete target.message.extra;
-      }
-      rollbackRewriteDomChanges(changes);
-      let restoreError = "";
-      if (rewriteTargetStillMatches(target, options2.getContext()) && options2.restore) {
-        try {
-          await options2.restore(target);
-        } catch (restoreCause) {
-          restoreError = `\uFF1B\u539F\u6587\u6062\u590D\u7684\u4FDD\u5B58\u4E5F\u672A\u80FD\u786E\u8BA4\uFF1A${restoreCause.message || restoreCause}`;
-        }
-      }
-      return failAll(`\u4FDD\u5B58\u672A\u80FD\u786E\u8BA4\uFF0C\u5DF2\u64A4\u56DE\u672C\u6B21\u4ECD\u672A\u53D8\u5316\u7684\u8865\u4E01\uFF1A${cause.message || cause}${restoreError}`);
-    }
-    acknowledgeLocalTextRevision(target.ctx);
-    for (const plan of plans) {
-      plan.entry.status = "applied";
-      plan.entry.reason = "\u5DF2\u5B89\u5168\u5199\u56DE";
-    }
-    let notificationError = "";
-    try {
-      await options2.notify?.(target);
-    } catch (cause) {
-      notificationError = String(cause.message || cause);
-    }
-    return { entries, applied: plans.length, preview: entries.filter((entry) => entry.status === "preview").length, notificationError };
-  } finally {
-    release();
-    commitsInFlight.delete(target.chat);
+    return await commitThroughSourceTransaction(target, entries, options2, failAll);
+  } catch (cause) {
+    return failAll(String(cause?.message || cause));
   }
 }
 var own3, commitsInFlight;
 var init_textRewriteWriteback = __esm({
   "src/core/textRewriteWriteback.js"() {
     init_textRewritePatch();
-    init_analysisSourceEdits();
     init_textRewriteCore();
     init_textRewritePrompts();
     init_localTextRevisions();
-    init_textRewriteDom();
     own3 = (object11, key) => Object.prototype.hasOwnProperty.call(object11 || {}, key);
     commitsInFlight = /* @__PURE__ */ new WeakSet();
   }
@@ -68778,21 +68445,23 @@ function initParagraphMediaView() {
 }
 async function refreshParagraphMessage(target) {
   const ctx2 = getContext();
-  if (ctx2?.chat !== target.chat || ctx2.chatMetadata !== target.metadata || ctx2.chat[target.index] !== target.message || Number(target.message.swipe_id ?? 0) !== target.swipe) return;
+  if (ctx2?.chat !== target.chat || ctx2.chatMetadata !== target.metadata || ctx2.chat[target.index] !== target.message || Number(target.message.swipe_id ?? 0) !== target.swipe || target.latestReplyOnly && latestRewriteReplyIndex(ctx2.chat) !== target.index) return false;
   updateMessageBlock(target.index, target.message);
   const event = target.message.is_user ? event_types8.USER_MESSAGE_RENDERED : event_types8.CHARACTER_MESSAGE_RENDERED;
   if (event) await eventSource8.emit(event, target.index);
   const current3 = getContext();
-  if (current3?.chat === target.chat && current3.chat[target.index] === target.message && Number(target.message.swipe_id ?? 0) === target.swipe) {
+  if (current3?.chat === target.chat && current3.chat[target.index] === target.message && Number(target.message.swipe_id ?? 0) === target.swipe && (!target.latestReplyOnly || latestRewriteReplyIndex(current3.chat) === target.index)) {
     const element3 = document.querySelector(`#chat .mes[mesid="${target.index}"]`);
     if (element3) mediaShelf(element3, target.message, target.index);
   }
+  return true;
 }
 var initialized5, queued, observed, signatures, getContext;
 var init_paragraphMessageView = __esm({
   "src/ui/paragraphMessageView.js"() {
     init_dom();
     init_paragraphMedia();
+    init_textRewriteCore();
     initialized5 = false;
     queued = false;
     observed = null;
@@ -71735,7 +71404,7 @@ function collectTextGroups(container, exclusions) {
         continue;
       }
       const display = child.ownerDocument.defaultView?.getComputedStyle(child)?.display;
-      const block = BLOCK_TAGS2.has(child.tagName) || /^(?:block|flow-root|flex|grid|table|list-item)$/.test(display);
+      const block = BLOCK_TAGS.has(child.tagName) || /^(?:block|flow-root|flex|grid|table|list-item)$/.test(display);
       if (block) flush();
       visit(child);
       if (block) flush();
@@ -72221,13 +71890,13 @@ function createTtsMessageView(callbacks = {}) {
     destroyed = true;
   } };
 }
-var UI_ATTRIBUTE, FINGERPRINT_ATTRIBUTE, BLOCK_TAGS2, MEDIA_TAGS;
+var UI_ATTRIBUTE, FINGERPRINT_ATTRIBUTE, BLOCK_TAGS, MEDIA_TAGS;
 var init_ttsMessageView = __esm({
   "src/ui/ttsMessageView.js"() {
     init_textExtraction();
     UI_ATTRIBUTE = "data-echo-tts-ui";
     FINGERPRINT_ATTRIBUTE = "data-echo-tts-fingerprint";
-    BLOCK_TAGS2 = /* @__PURE__ */ new Set([
+    BLOCK_TAGS = /* @__PURE__ */ new Set([
       "P",
       "DIV",
       "SECTION",
@@ -76238,16 +75907,16 @@ function saveTarget(target, raw) {
 function preparedStillCurrent(target) {
   return ownerMatches2(target) && target.message.mes === target.projection.raw && target.message.extra === target.extra && target.message.swipes === target.swipes && target.message.swipe_info === target.swipeInfo && target.message.swipes?.[target.swipe] === target.swipeText && target.message.swipe_info?.[target.swipe] === target.swipeRecord && target.message.swipe_info?.[target.swipe]?.extra === target.swipeExtra;
 }
-function commitMessageTextPatches(rewriteTarget, patches, { action = "delete", marks = [], displayEdit = null, rewriteAttempt = null, guard = null, automaticReplyProcessing = false } = {}) {
+function commitMessageTextPatches(rewriteTarget, patches, { action = "delete", marks = [], rewriteAttempt = null, guard = null, automaticReplyProcessing = false } = {}) {
   const ctx2 = getContext2(), { index: index2, message, projection } = rewriteTarget;
   const raw = String(message?.mes ?? "");
-  if (!ctx2?.chatId || !ctx2.chatMetadata || ctx2.chat !== rewriteTarget.chat || ctx2.chatMetadata !== rewriteTarget.metadata || ctx2.chat[index2] !== message || raw !== projection.raw || message.is_system || Number(message.swipe_id ?? 0) !== Number(rewriteTarget.swipe ?? 0)) {
-    return Promise.reject(new Error("\u804A\u5929\u3001\u56DE\u590D\u7248\u672C\u6216\u539F\u6587\u5DF2\u53D8\u5316\uFF0C\u672C\u6B21\u8865\u4E01\u672A\u5199\u56DE\u3002"));
+  if (!ctx2?.chatId || !ctx2.chatMetadata || ctx2.chat !== rewriteTarget.chat || ctx2.chatMetadata !== rewriteTarget.metadata || latestRewriteReplyIndex(ctx2.chat) !== index2 || ctx2.chat[index2] !== message || raw !== projection.raw || Number(message.swipe_id ?? 0) !== Number(rewriteTarget.swipe ?? 0)) {
+    return Promise.reject(new Error("\u6700\u65B0\u56DE\u590D\u3001\u804A\u5929\u3001\u56DE\u590D\u7248\u672C\u6216\u539F\u6587\u5DF2\u53D8\u5316\uFF0C\u672C\u6B21\u8865\u4E01\u672A\u5199\u56DE\u3002"));
   }
   const rules = getToolboxExtraction(getExtData()), currentProjection = extractToolboxProjection(raw, rules);
   if (currentProjection.text !== projection.text || JSON.stringify(currentProjection.whitelist) !== JSON.stringify(projection.whitelist) || JSON.stringify(currentProjection.exclusions) !== JSON.stringify(projection.exclusions)) return Promise.reject(new Error("\u6B63\u6587\u63D0\u53D6\u89C4\u5219\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u6267\u884C\u3002"));
   const element3 = document.querySelector(`#chat .mes[mesid="${index2}"]`), container = element3?.querySelector(".mes_text");
-  if (!container?.isConnected) return Promise.reject(new Error("\u5F53\u524D\u697C\u5C42\u5C1A\u672A\u6302\u8F7D\uFF0C\u672C\u6B21\u7ED3\u679C\u4EC5\u4FDD\u7559\u9884\u89C8\u3002"));
+  if (!container?.isConnected) return Promise.reject(new Error("\u6700\u65B0\u56DE\u590D\u697C\u5C42\u5C1A\u672A\u6302\u8F7D\uFF0C\u672C\u6B21\u7ED3\u679C\u4EC5\u4FDD\u7559\u9884\u89C8\u3002"));
   const target = {
     ctx: captureArchiveContext(ctx2),
     chat: ctx2.chat,
@@ -76258,6 +75927,7 @@ function commitMessageTextPatches(rewriteTarget, patches, { action = "delete", m
     projection,
     sourceAtOpen: raw,
     exactSource: true,
+    latestReplyOnly: true,
     part: { start: 0, end: raw.length, text: raw },
     text: raw,
     rules: JSON.stringify(rules),
@@ -76265,7 +75935,18 @@ function commitMessageTextPatches(rewriteTarget, patches, { action = "delete", m
     element: element3,
     mediaAtOpen: captureParagraphMedia(container, message)
   };
-  return commitParagraphEdit(target, "", { sourcePatches: patches, textAction: action, rewriteMarks: marks, displayEdit, rewriteAttempt, guard, automaticReplyProcessing });
+  const latestReplyCurrent = () => {
+    const current3 = getContext2();
+    return current3?.chat === target.chat && current3.chatMetadata === target.metadata && current3.chat[index2] === message && latestRewriteReplyIndex(current3.chat) === index2 && (!guard || guard());
+  };
+  return commitParagraphEdit(target, "", {
+    sourcePatches: patches,
+    textAction: action,
+    rewriteMarks: marks,
+    rewriteAttempt,
+    guard: latestReplyCurrent,
+    automaticReplyProcessing
+  });
 }
 function commitParagraphEdit(target, replacement, { remove = false, sourcePatches = null, textAction = null, rewriteMarks = [], displayEdit = null, rewriteAttempt = null, guard = null, automaticReplyProcessing = false } = {}) {
   const reason = paragraphEditBusyReason(target);
@@ -76406,7 +76087,10 @@ function commitParagraphEdit(target, replacement, { remove = false, sourcePatche
     }).catch((error4) => console.warn("\u6BB5\u843D\u4FDD\u5B58\u901A\u77E5\u53D1\u9001\u5931\u8D25\uFF0C\u6B63\u6587\u4ECD\u5DF2\u4FDD\u5B58", error4));
     const warnings2 = [];
     try {
-      if (!displayEdit) await refreshParagraphMessage(fresh);
+      if (!displayEdit) {
+        const rendered = await refreshParagraphMessage(fresh);
+        if (fresh.latestReplyOnly && rendered === false) warnings2.push("\u4FDD\u5B58\u540E\u6700\u65B0\u56DE\u590D\u6216\u804A\u5929\u5DF2\u53D8\u5316\uFF0C\u6CA1\u6709\u5237\u65B0\u65E7\u697C\u5C42");
+      }
     } catch (error4) {
       warnings2.push(String(error4?.message || error4));
     }
@@ -76442,10 +76126,98 @@ var init_paragraphEditing = __esm({
     init_localTextRevisions();
     init_tts();
     init_textRewritePatch();
+    init_textRewriteCore();
     ARCHIVES = ["titania_story_memory", "echo_timetrace_v4", "titania_character_evolution"];
     own5 = (object11, key) => Object.prototype.hasOwnProperty.call(object11 || {}, key);
     getContext2 = () => globalThis.SillyTavern?.getContext?.();
     currentSwipe = (message) => Number(message.swipe_id ?? 0);
+  }
+});
+
+// src/ui/textRewriteDom.js
+function collectRewriteTextGroups(container, whitelist = [], exclusions = []) {
+  const groups = [];
+  let current3 = { text: "", spans: [] };
+  const flush = () => {
+    if (current3.text.trim()) groups.push(current3);
+    current3 = { text: "", spans: [] };
+  };
+  const append = (text11, node3 = null) => {
+    current3.spans.push({ node: node3, start: current3.text.length, end: current3.text.length + text11.length, original: text11 });
+    current3.text += text11;
+  };
+  const visit = (element3) => {
+    for (const child of element3.childNodes) {
+      if (child.nodeType === 3) {
+        append(child.data, child);
+        continue;
+      }
+      if (child.nodeType !== 1) continue;
+      if (child.classList.contains("t-tts-controls") && child.hasAttribute("data-echo-tts-ui")) continue;
+      if (exclusions.includes(child.tagName.toLowerCase())) {
+        flush();
+        continue;
+      }
+      if (child.tagName === "BR") {
+        append("\n");
+        continue;
+      }
+      const attributes = Array.from(child.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ");
+      const style = child.ownerDocument.defaultView?.getComputedStyle(child);
+      const component = Object.keys(child).some((key) => /^(?:__vue|__react|_reactRoot)/.test(key));
+      if (component || child.shadowRoot || child.matches('[contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"], [inert]') || child.hidden || child.getAttribute("aria-hidden") === "true" || style?.display === "none" || style?.visibility === "hidden" || isProtectedRewriteElement(child.tagName, attributes, whitelist, exclusions)) {
+        flush();
+        continue;
+      }
+      const block = BLOCK_TAGS2.has(child.tagName) || ["block", "flex", "grid", "table", "list-item"].includes(style?.display);
+      if (block) flush();
+      visit(child);
+      if (block) flush();
+    }
+  };
+  const rootStyle = container?.ownerDocument.defaultView?.getComputedStyle(container);
+  const rootComponent = container && Object.keys(container).some((key) => /^(?:__vue|__react|_reactRoot)/.test(key));
+  if (container && !rootComponent && !container.closest('[hidden], [aria-hidden="true"], .TH-render, [contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"], [inert]') && rootStyle?.display !== "none" && rootStyle?.visibility !== "hidden") visit(container);
+  flush();
+  return groups;
+}
+function locateRewriteRange(groups, projection, patch) {
+  const run2 = patch.run;
+  const anchor = run2.text.trim();
+  if (!anchor || projection.runs.filter((item2) => item2.text.trim() === anchor).length !== 1) return { reason: "\u91CD\u590D\u6BB5\u843D\u65E0\u6CD5\u786E\u5B9A\u663E\u793A\u987A\u5E8F\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
+  const matches3 = [];
+  for (const group3 of groups) {
+    let cursor = 0;
+    let start2;
+    while ((start2 = group3.text.indexOf(anchor, cursor)) >= 0) {
+      matches3.push({ group: group3, start: start2 });
+      cursor = start2 + anchor.length;
+    }
+  }
+  if (matches3.length !== 1) return { reason: matches3.length ? "\u663E\u793A\u4E2D\u5B58\u5728\u591A\u4E2A\u76F8\u540C\u6B63\u6587\uFF0C\u65E0\u6CD5\u552F\u4E00\u5B9A\u4F4D" : "\u5F53\u524D\u524D\u7AEF\u672A\u663E\u793A\u53EF\u5BF9\u5E94\u7684\u9759\u6001\u6B63\u6587\uFF08\u53EF\u80FD\u5728 iframe \u6216\u52A8\u6001\u7EC4\u4EF6\u4E2D\uFF09" };
+  const { group: group2, start } = matches3[0];
+  const leading = run2.text.length - run2.text.trimStart().length;
+  const from = start + patch.local - leading;
+  const to = from + patch.before.length;
+  if (from < start || to > start + anchor.length || group2.text.slice(from, to) !== patch.before) return { reason: "\u539F\u6587\u7A7A\u767D\u6216\u663E\u793A\u683C\u5F0F\u65E0\u6CD5\u53EF\u9760\u5BF9\u5E94" };
+  const covered = group2.spans.filter((span) => span.end > from && span.start < to);
+  if (!covered.length || covered.some((span) => !span.node)) return { reason: "\u66FF\u6362\u8303\u56F4\u8DE8\u8D8A\u524D\u7AEF\u6362\u884C\u7ED3\u6784\uFF0C\u4EC5\u4FDD\u7559\u9884\u89C8" };
+  return { group: group2, from, to, covered, reason: "" };
+}
+function rangeForRewriteMatch(document2, match) {
+  if (match.reason || !match.covered?.length) return null;
+  const first = match.covered[0];
+  const last = match.covered.at(-1);
+  const range3 = document2.createRange();
+  range3.setStart(first.node, match.from - first.start);
+  range3.setEnd(last.node, match.to - last.start);
+  return range3;
+}
+var BLOCK_TAGS2;
+var init_textRewriteDom = __esm({
+  "src/ui/textRewriteDom.js"() {
+    init_textRewritePatch();
+    BLOCK_TAGS2 = /* @__PURE__ */ new Set(["P", "DIV", "BLOCKQUOTE", "SECTION", "ARTICLE", "MAIN"]);
   }
 });
 
@@ -76456,7 +76228,7 @@ __export(rewriteEntryButton_exports, {
   openRewritePanelFromMenu: () => openRewritePanelFromMenu,
   refreshRewriteEntryButton: () => refreshRewriteEntryButton
 });
-import { saveChatConditional as saveChatConditional4, getRequestHeaders as getRequestHeaders10, eventSource as eventSource11, event_types as event_types10 } from "../../../../script.js";
+import { eventSource as eventSource11, event_types as event_types10 } from "../../../../script.js";
 function isEnabled3() {
   const data = getExtData();
   return data?.rewrite_entry?.enabled === true;
@@ -76916,20 +76688,14 @@ function buildRewritePayload(data, sourceText) {
   return { evaluated };
 }
 function getLatestAssistantMessageFromChat() {
-  const ctx2 = globalThis.SillyTavern?.getContext?.();
-  if (!Array.isArray(ctx2?.chat)) return null;
-  for (let i = ctx2.chat.length - 1; i >= 0; i--) {
-    const msg = ctx2.chat[i];
-    if (!msg || msg.is_user || msg.is_system || msg.is_hidden || msg.disabled) continue;
-    const raw = String(msg.mes ?? msg.message ?? "");
-    const settings = ensureRewriteDataShape();
-    const rules = getToolboxExtraction(getExtData());
-    const projection = extractToolboxProjection(raw, rules);
-    const container = getMessageRenderContainer(getChatMessageElementByIndex(i));
-    const target = captureRewriteTarget(ctx2, i, projection, container);
-    return { index: i, msg, content: projection.text, raw, projection, target };
-  }
-  return null;
+  const ctx2 = globalThis.SillyTavern?.getContext?.(), index2 = latestRewriteReplyIndex(ctx2?.chat);
+  if (index2 < 0) return null;
+  const msg = ctx2.chat[index2], raw = String(msg.mes ?? msg.message ?? "");
+  ensureRewriteDataShape();
+  const rules = getToolboxExtraction(getExtData()), projection = extractToolboxProjection(raw, rules);
+  const container = getMessageRenderContainer(getChatMessageElementByIndex(index2));
+  const target = captureRewriteTarget(ctx2, index2, projection, container);
+  return { index: index2, msg, content: projection.text, raw, projection, target };
 }
 function getChatMessageElementByIndex(index2) {
   return $(`#chat .mes[mesid='${index2}']`).last();
@@ -76941,21 +76707,7 @@ async function writeSafeMessagePatches(latest, units, replacements, action, opti
     action,
     getContext: () => globalThis.SillyTavern?.getContext?.(),
     isGenerating: isHostGenerating,
-    getContainer: () => getMessageRenderContainer(getChatMessageElementByIndex(latest.index)),
-    commitSourcePatches: commitMessageTextPatches,
-    persist: (target, rewritten) => persistRewriteTarget(target, rewritten, {
-      getContext: () => globalThis.SillyTavern?.getContext?.(),
-      save: saveChatConditional4,
-      getHeaders: getRequestHeaders10,
-      fetch: (...args) => fetch(...args)
-    }),
-    restore: (target) => persistRewriteTarget(target, target.projection.raw, {
-      getContext: () => globalThis.SillyTavern?.getContext?.(),
-      save: saveChatConditional4,
-      getHeaders: getRequestHeaders10,
-      fetch: (...args) => fetch(...args)
-    }),
-    notify: (target) => eventSource11.emit(TITANIA_TEXT_PATCHED, target.index)
+    commitSourcePatches: commitMessageTextPatches
   });
 }
 function clearAutoRewriteIndicator() {
@@ -106049,7 +105801,7 @@ import { saveSettingsDebounced as saveSettingsDebounced2, eventSource as eventSo
 // src/core/extensionUpdate.js
 init_defaults();
 init_studioTheme();
-import { getRequestHeaders as getRequestHeaders12 } from "../../../../script.js";
+import { getRequestHeaders as getRequestHeaders11 } from "../../../../script.js";
 import { extensionTypes } from "../../../extensions.js";
 var EXTENSION_ID = "third-party/titania-theater";
 var EXTENSION_NAME = "titania-theater";
@@ -106108,7 +105860,7 @@ function getExtensionType() {
 async function updateExtension() {
   const response = await fetch("/api/extensions/update", {
     method: "POST",
-    headers: getRequestHeaders12(),
+    headers: getRequestHeaders11(),
     body: JSON.stringify({
       extensionName: EXTENSION_NAME,
       global: getExtensionType() === "global"
