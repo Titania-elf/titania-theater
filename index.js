@@ -7981,21 +7981,44 @@ var init_registry = __esm({
   }
 });
 
+// src/core/apiFormat.js
+function normalizeApiFormat(profileOrFormat) {
+  const value = typeof profileOrFormat === "string" ? profileOrFormat : profileOrFormat?.api_format ?? profileOrFormat?.rawProfile?.api_format;
+  return value === "gemini" ? "gemini" : "openai";
+}
+function normalizeApiProfileFormat(profile) {
+  return profile?.type !== "internal" && normalizeApiFormat(profile) === "gemini" ? { api_format: "gemini" } : {};
+}
+function normalizeGeminiModelId(model) {
+  return String(model || "").trim().replace(/^models\//, "");
+}
+function apiProfileModel(profile, fallback = "gpt-3.5-turbo") {
+  return normalizeApiFormat(profile) === "gemini" ? normalizeGeminiModelId(profile?.model) : String(profile?.model || fallback).trim() || fallback;
+}
+function normalizeGeminiApiBaseUrl(url2) {
+  return String(url2 || "").trim().replace(/[?#].*$/, "").replace(/\/+$/, "").replace(/\/(?:v1(?:beta\d*)?\/)?models(?:\/[^/]+:(?:streamGenerateContent|generateContent))?$/i, "").replace(/\/v1(?:beta\d*)?$/i, "").replace(/\/+$/, "");
+}
+var init_apiFormat = __esm({
+  "src/core/apiFormat.js"() {
+  }
+});
+
 // src/core/toolboxApiProfiles.js
 function migrateLegacyToolboxApiProfiles(data) {
   var _a;
   data.config || (data.config = {});
   const config2 = data.config;
   const profiles = Array.isArray(config2.profiles) ? config2.profiles.map((p) => ({ ...p })) : [];
-  if (!profiles.length) profiles.push({ id: "default", type: "custom", name: "\u9ED8\u8BA4\u81EA\u5B9A\u4E49", url: text3(config2.url), key: text3(config2.key), model: text3(config2.model) || "gpt-3.5-turbo" });
+  if (!profiles.length) profiles.push({ id: "default", type: "custom", name: "\u9ED8\u8BA4\u81EA\u5B9A\u4E49", url: text3(config2.url), key: text3(config2.key), model: apiProfileModel(config2), ...normalizeApiProfileFormat(config2) });
   if (!profiles.some((p) => p.id === "st_sync")) profiles.unshift({ id: "st_sync", type: "internal", readonly: true, name: "\u8DDF\u968F SillyTavern (\u4E3B\u8FDE\u63A5)" });
   const active7 = profiles.some((p) => p.id === config2.active_profile_id) ? config2.active_profile_id : profiles.find((p) => p.type !== "internal")?.id || "st_sync";
   const add = (source2, feature, label2) => {
     const profile = {
       type: source2.type === "internal" ? "internal" : "custom",
-      url: url(source2.api_url ?? source2.url),
+      url: url(source2.api_url ?? source2.url, source2),
       key: text3(source2.api_key ?? source2.key),
-      model: text3(source2.model) || "gpt-3.5-turbo"
+      model: apiProfileModel(source2),
+      ...normalizeApiProfileFormat(source2)
     };
     if (profile.type === "internal") return "st_sync";
     const same = profiles.find((p) => signature(p) === signature(profile));
@@ -8085,9 +8108,10 @@ function ensureToolboxApiProfiles(data) {
 var url, text3, signature, configured;
 var init_toolboxApiProfiles = __esm({
   "src/core/toolboxApiProfiles.js"() {
-    url = (value) => String(value || "").trim().replace(/\/+$/, "").replace(/\/chat\/completions$/, "").replace(/\/v1\/models$/, "").replace(/\/models$/, "");
+    init_apiFormat();
+    url = (value, profile) => normalizeApiFormat(profile) === "gemini" ? normalizeGeminiApiBaseUrl(value) : String(value || "").trim().replace(/\/+$/, "").replace(/\/chat\/completions$/, "").replace(/\/v1\/models$/, "").replace(/\/models$/, "");
     text3 = (value) => String(value || "").trim();
-    signature = (profile) => JSON.stringify([profile.type === "internal" ? "internal" : "custom", url(profile.url), text3(profile.key), text3(profile.model)]);
+    signature = (profile) => JSON.stringify([profile.type === "internal" ? "internal" : "custom", url(profile.url, profile), text3(profile.key), text3(profile.model), normalizeApiFormat(profile)]);
     configured = (profile) => !!(text3(profile?.api_url ?? profile?.url) || text3(profile?.api_key ?? profile?.key));
   }
 });
@@ -33274,6 +33298,165 @@ var init_context = __esm({
   }
 });
 
+// src/core/geminiRequest.js
+function toGeminiApiBase(url2) {
+  const base = normalizeGeminiApiBaseUrl(url2);
+  let parsed;
+  try {
+    parsed = new URL(base);
+  } catch {
+    throw new Error("Gemini API \u5730\u5740\u65E0\u6548\uFF0C\u8BF7\u586B\u5199\u670D\u52A1\u6839\u5730\u5740\u3002");
+  }
+  if (!["http:", "https:"].includes(parsed.protocol) || parsed.username || parsed.password) {
+    throw new Error("Gemini API \u5730\u5740\u5FC5\u987B\u662F HTTP\uFF0FHTTPS \u5730\u5740\uFF0C\u9274\u6743\u8BF7\u586B\u5199 API Key\u3002");
+  }
+  return base;
+}
+function requireGeminiModelId(model) {
+  const id4 = normalizeGeminiModelId(model);
+  if (!id4 || /[\s/?#]/.test(id4)) {
+    throw new Error("Gemini \u6A21\u578B\u672A\u8BBE\u7F6E\u6216\u683C\u5F0F\u65E0\u6548\uFF0C\u8BF7\u9009\u62E9\u6A21\u578B\uFF0C\u6216\u624B\u52A8\u586B\u5199\u6A21\u578B ID\u3002");
+  }
+  return id4;
+}
+function buildGeminiProxyRequest(options2) {
+  const { url: url2, key = "", model, messages: messages2, stream = false, maxTokens, temperature, omitMaxTokens = false } = options2;
+  if (!Array.isArray(messages2)) throw new Error("ERR_CONFIG: messages \u5FC5\u987B\u662F\u6570\u7EC4");
+  const body = {
+    chat_completion_source: "makersuite",
+    reverse_proxy: toGeminiApiBase(url2),
+    proxy_password: String(key || ""),
+    model: requireGeminiModelId(model),
+    messages: structuredClone(messages2),
+    stream,
+    use_sysprompt: true,
+    use_makersuite_sysprompt: true
+    // Older ST versions use this name.
+  };
+  if (!omitMaxTokens && Number.isFinite(maxTokens)) body.max_tokens = maxTokens;
+  if (temperature !== void 0) body.temperature = temperature;
+  return body;
+}
+function extraField(name) {
+  if (name.startsWith("generationConfig.")) {
+    const field3 = CONFIG_FIELDS[name.slice("generationConfig.".length)];
+    if (field3) return field3;
+  }
+  if (EXTRA_FIELDS.has(name)) return name;
+  throw new Error(`Gemini \u539F\u751F\u65B9\u6848\u4E0D\u652F\u6301\u900F\u4F20\u53C2\u6570\u300C${name}\u300D\u3002\u8BF7\u4F7F\u7528\u5DF2\u652F\u6301\u7684\u751F\u6210\u53C2\u6570\u6216\u5BF9\u5E94 generationConfig \u5B57\u6BB5\uFF1B\u672A\u53D1\u9001\u5FFD\u7565\u53C2\u6570\u7684\u8BF7\u6C42\u3002`);
+}
+function mapExtraBody(extras) {
+  if (Object.keys(extras.includeHeaders).length) {
+    throw new Error("Gemini \u539F\u751F\u65B9\u6848\u7684\u9152\u9986\u8F6C\u53D1\u4E0D\u652F\u6301\u81EA\u5B9A\u4E49\u8BF7\u6C42\u5934\u3002\u8BF7\u6E05\u7A7A\u300C\u5305\u542B\u8BF7\u6C42\u5934\u300D\uFF0C\u9274\u6743\u586B\u5199 API Key\uFF1B\u672A\u53D1\u9001\u5FFD\u7565\u8BF7\u6C42\u5934\u7684\u8BF7\u6C42\u3002");
+  }
+  const includes = {};
+  for (const [name, value] of Object.entries(extras.includeBody)) {
+    if (name !== "generationConfig") includes[extraField(name)] = value;
+  }
+  if (own(extras.includeBody, "generationConfig")) {
+    const config2 = extras.includeBody.generationConfig;
+    if (!plainObject(config2)) throw new Error("Gemini generationConfig \u5FC5\u987B\u662F YAML\uFF0FJSON \u5BF9\u8C61\u3002");
+    for (const [name, value] of Object.entries(config2)) includes[extraField(`generationConfig.${name}`)] = value;
+  }
+  const excludes = [...new Set(extras.excludeBody.map(extraField))];
+  if (excludes.some((name) => ["model", "messages"].includes(name))) {
+    throw new Error("Gemini \u539F\u751F\u8BF7\u6C42\u4E0D\u80FD\u6392\u9664 model \u6216 messages\u3002");
+  }
+  for (const name of ["stream", "include_reasoning", "use_sysprompt"]) {
+    if (own(includes, name) && typeof includes[name] !== "boolean") throw new Error(`Gemini \u53C2\u6570 ${name} \u5FC5\u987B\u662F true \u6216 false\u3002`);
+  }
+  if (own(includes, "messages") && !Array.isArray(includes.messages)) throw new Error("Gemini messages \u5FC5\u987B\u662F\u6D88\u606F\u6570\u7EC4\u3002");
+  if (own(includes, "model")) includes.model = requireGeminiModelId(includes.model);
+  if (own(includes, "stop") && typeof includes.stop === "string") includes.stop = [includes.stop];
+  if (own(includes, "stop") && (!Array.isArray(includes.stop) || includes.stop.some((value) => typeof value !== "string"))) {
+    throw new Error("Gemini stop\uFF0FstopSequences \u5FC5\u987B\u662F\u5B57\u7B26\u4E32\u6216\u5B57\u7B26\u4E32\u6570\u7EC4\u3002");
+  }
+  return { includes, excludes };
+}
+function validateGeminiRequestExtras(extras) {
+  mapExtraBody(extras);
+}
+function applyGeminiRequestExtras(body, extras, { headersOnly = false } = {}) {
+  if (headersOnly) {
+    if (Object.keys(extras.includeHeaders).length) {
+      throw new Error("Gemini \u6A21\u578B\u5217\u8868\u4E0D\u652F\u6301\u81EA\u5B9A\u4E49\u8BF7\u6C42\u5934\uFF0C\u8BF7\u4F7F\u7528 API Key\u3002");
+    }
+    return body;
+  }
+  const { includes, excludes } = mapExtraBody(extras);
+  const result = { ...body, ...includes };
+  for (const name of excludes) delete result[name];
+  if (excludes.includes("stream")) result.stream = false;
+  if (own(includes, "responseSchema") || excludes.includes("responseSchema")) delete result.json_schema;
+  if (excludes.includes("responseMimeType")) {
+    delete result.json_schema;
+    delete result.responseSchema;
+  }
+  if (own(includes, "use_sysprompt")) result.use_makersuite_sysprompt = includes.use_sysprompt;
+  if (excludes.includes("use_sysprompt")) delete result.use_makersuite_sysprompt;
+  return result;
+}
+function geminiReplyText(json, state = null) {
+  const parts = json?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) return "";
+  let text11 = "";
+  for (const part of parts) {
+    if (typeof part?.text === "string") {
+      if (part.thought) {
+        if (state) state.reasoning += part.text;
+      } else text11 += part.text;
+    }
+    if (state && part?.thoughtSignature) state.signature = part.thoughtSignature;
+  }
+  return text11;
+}
+function captureGeminiMetadata(json, diagnostics) {
+  if (!diagnostics) return;
+  const reason = json?.candidates?.[0]?.finishReason;
+  if (reason != null) {
+    diagnostics.gemini_finish_reason = reason;
+    diagnostics.finish_reason = reason === "MAX_TOKENS" ? "length" : reason === "STOP" ? "stop" : String(reason).toLowerCase();
+  }
+  const usage = json?.usageMetadata;
+  if (!usage || typeof usage !== "object") return;
+  diagnostics.gemini_usage = usage;
+  const result = {};
+  if (Number.isFinite(usage.promptTokenCount)) result.prompt_tokens = usage.promptTokenCount;
+  if (Number.isFinite(usage.candidatesTokenCount)) {
+    result.completion_tokens = usage.candidatesTokenCount + (Number.isFinite(usage.thoughtsTokenCount) ? usage.thoughtsTokenCount : 0);
+  }
+  if (Number.isFinite(usage.totalTokenCount)) result.total_tokens = usage.totalTokenCount;
+  if (Number.isFinite(usage.thoughtsTokenCount)) result.completion_tokens_details = { reasoning_tokens: usage.thoughtsTokenCount };
+  if (Object.keys(result).length) diagnostics.usage = result;
+}
+var CONFIG_FIELDS, EXTRA_FIELDS, own, plainObject;
+var init_geminiRequest = __esm({
+  "src/core/geminiRequest.js"() {
+    init_apiFormat();
+    CONFIG_FIELDS = Object.freeze({
+      temperature: "temperature",
+      topP: "top_p",
+      topK: "top_k",
+      maxOutputTokens: "max_tokens",
+      stopSequences: "stop",
+      seed: "seed",
+      responseMimeType: "responseMimeType",
+      responseSchema: "responseSchema"
+    });
+    EXTRA_FIELDS = /* @__PURE__ */ new Set([
+      ...Object.values(CONFIG_FIELDS),
+      "model",
+      "messages",
+      "stream",
+      "reasoning_effort",
+      "include_reasoning",
+      "use_sysprompt"
+    ]);
+    own = (object11, key) => Object.prototype.hasOwnProperty.call(object11, key);
+    plainObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+  }
+});
+
 // src/core/apiRequestExtras.js
 import { yaml } from "../../../../lib.js";
 function normalizeApiRequestExtras(profile) {
@@ -33334,8 +33517,13 @@ function parseHeaders(text11) {
 }
 function parseApiRequestExtras(profile) {
   const text11 = normalizeApiRequestExtras(profile), includeBody = parseObject(text11.custom_include_body, LABELS[0]);
-  if (own(includeBody, "stream") && typeof includeBody.stream !== "boolean") throw new Error("\u5305\u542B\u4E3B\u4F53\u53C2\u6570\u4E2D\u7684 stream \u5FC5\u987B\u662F true \u6216 false\u3002");
+  if (own2(includeBody, "stream") && typeof includeBody.stream !== "boolean") throw new Error("\u5305\u542B\u4E3B\u4F53\u53C2\u6570\u4E2D\u7684 stream \u5FC5\u987B\u662F true \u6216 false\u3002");
   return { includeBody, excludeBody: parseExclusions(text11.custom_exclude_body), includeHeaders: parseHeaders(text11.custom_include_headers) };
+}
+function validateApiRequestExtras(profile) {
+  const extras = parseApiRequestExtras(profile);
+  if (profile?.type !== "internal" && normalizeApiFormat(profile) === "gemini") validateGeminiRequestExtras(extras);
+  return extras;
 }
 function mergeObjects(base, extra) {
   const result = { ...base };
@@ -33344,10 +33532,13 @@ function mergeObjects(base, extra) {
   }
   return result;
 }
-function applyApiRequestExtrasToProxy(body, profile, { headersOnly = false } = {}) {
+function applyApiRequestExtrasToProxy(body, profile, { headersOnly = false, apiFormat = normalizeApiFormat(profile) } = {}) {
   if (!hasApiRequestExtras(profile)) return body;
   const extras = parseApiRequestExtras(profile);
   if (headersOnly && !Object.keys(extras.includeHeaders).length) return body;
+  if (apiFormat === "gemini" && body.chat_completion_source === "makersuite" && body.reverse_proxy) {
+    return applyGeminiRequestExtras(body, extras, { headersOnly });
+  }
   const custom = body.chat_completion_source === "custom";
   const explicitOpenAiProxy = body.chat_completion_source === "openai" && Boolean(body.reverse_proxy);
   if (!custom && !explicitOpenAiProxy) {
@@ -33373,20 +33564,22 @@ function applyApiRequestExtrasToProxy(body, profile, { headersOnly = false } = {
     result.custom_include_body = JSON.stringify(includes);
     result.custom_exclude_body = JSON.stringify(excludes);
     for (const key of ["model", "messages", "stream", "stop", "tools", "tool_choice"]) {
-      if (own(includes, key)) result[key] = includes[key];
+      if (own2(includes, key)) result[key] = includes[key];
     }
     if (excludes.includes("stream")) result.stream = false;
-    if (own(includes, "response_format")) delete result.json_schema;
-    for (const key of ["reasoning_effort", "verbosity"]) if (own(includes, key)) delete result[key];
+    if (own2(includes, "response_format")) delete result.json_schema;
+    for (const key of ["reasoning_effort", "verbosity"]) if (own2(includes, key)) delete result[key];
   }
   return result;
 }
-var API_REQUEST_EXTRA_FIELDS, LABELS, own, object, unsafeKey, headerName;
+var API_REQUEST_EXTRA_FIELDS, LABELS, own2, object, unsafeKey, headerName;
 var init_apiRequestExtras = __esm({
   "src/core/apiRequestExtras.js"() {
+    init_apiFormat();
+    init_geminiRequest();
     API_REQUEST_EXTRA_FIELDS = Object.freeze(["custom_include_body", "custom_exclude_body", "custom_include_headers"]);
     LABELS = ["\u5305\u542B\u4E3B\u4F53\u53C2\u6570", "\u6392\u9664\u4E3B\u4F53\u53C2\u6570", "\u5305\u542B\u8BF7\u6C42\u5934"];
-    own = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+    own2 = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
     object = (value) => value !== null && typeof value === "object" && !Array.isArray(value) && [Object.prototype, null].includes(Object.getPrototypeOf(value));
     unsafeKey = (key) => ["__proto__", "prototype", "constructor"].includes(key);
     headerName = (key) => key.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join("-");
@@ -33397,6 +33590,9 @@ var init_apiRequestExtras = __esm({
 import { openai_setting_names, openai_settings, oai_settings } from "../../../openai.js";
 function normalizeApiBaseUrl(inputUrl) {
   return String(inputUrl || "").trim().replace(/\/+$/, "").replace(/\/chat\/completions$/, "").replace(/\/v1\/models$/, "").replace(/\/models$/, "");
+}
+function normalizeApiProfileUrl(inputUrl, profileOrFormat) {
+  return normalizeApiFormat(profileOrFormat) === "gemini" ? normalizeGeminiApiBaseUrl(inputUrl) : normalizeApiBaseUrl(inputUrl);
 }
 function normalizeApiProfileModelSettings(profile) {
   return {
@@ -33412,7 +33608,7 @@ function ensureMainApiProfiles(config2 = {}) {
   if (profiles.length === 0) {
     profiles = [
       { id: "st_sync", name: "\u{1F517} \u8DDF\u968F SillyTavern (\u4E3B\u8FDE\u63A5)", type: "internal", readonly: true },
-      { id: "default", name: "\u9ED8\u8BA4\u81EA\u5B9A\u4E49", type: "custom", url: cfg.url || "", key: cfg.key || "", model: cfg.model || "gpt-3.5-turbo" }
+      { id: "default", name: "\u9ED8\u8BA4\u81EA\u5B9A\u4E49", type: "custom", url: cfg.url || "", key: cfg.key || "", model: apiProfileModel(cfg), ...normalizeApiProfileFormat(cfg) }
     ];
   }
   profiles = profiles.map((profile, idx) => {
@@ -33426,7 +33622,8 @@ function ensureMainApiProfiles(config2 = {}) {
       readonly: profile?.readonly === true,
       url: String(profile?.url || "").trim(),
       key: String(profile?.key || "").trim(),
-      model: String(profile?.model || "gpt-3.5-turbo").trim() || "gpt-3.5-turbo",
+      model: apiProfileModel(type === "internal" ? { model: profile?.model } : profile),
+      ...normalizeApiProfileFormat({ ...profile, type }),
       ...normalizeApiRequestExtras(profile),
       ...normalizeApiProfileModelSettings(profile),
       ...type === "internal" && profile?.model_override ? { model_override: String(profile.model_override).trim() } : {}
@@ -33449,7 +33646,8 @@ function normalizeRewriteCustomProfiles(inputProfiles = [], fallback = null) {
       name,
       api_url: String(item2?.api_url || "").trim(),
       api_key: String(item2?.api_key || "").trim(),
-      model: String(item2?.model || "").trim()
+      model: apiProfileModel(item2, ""),
+      ...normalizeApiProfileFormat(item2)
     };
   }).filter((item2) => item2.id);
   if (rows.length > 0) return rows;
@@ -33459,7 +33657,8 @@ function normalizeRewriteCustomProfiles(inputProfiles = [], fallback = null) {
     name: "\u65B9\u6848 1",
     api_url: String(base.api_url || "").trim(),
     api_key: String(base.api_key || "").trim(),
-    model: String(base.model || "").trim()
+    model: apiProfileModel(base, ""),
+    ...normalizeApiProfileFormat(base)
   }];
 }
 function resolveModelFromStPreset(preset, sourceText) {
@@ -33506,6 +33705,7 @@ function getStPresetProfiles() {
 var init_apiProfileRegistry = __esm({
   "src/core/apiProfileRegistry.js"() {
     init_apiRequestExtras();
+    init_apiFormat();
   }
 });
 
@@ -34759,14 +34959,15 @@ function toOpenAiBase(url2) {
   if (/^https?:\/\/[^/?#]+$/i.test(base)) return `${base}/v1`;
   return base;
 }
-async function fetchModelList({ url: url2, key = "", statusBody, requestExtras }) {
+async function fetchModelList({ url: url2, key = "", statusBody, requestExtras, apiFormat }) {
   const base = statusBody ? "" : toOpenAiBase(url2);
   if (!statusBody && !base) throw new Error("API \u5730\u5740\u65E0\u6548");
+  if (apiFormat === "gemini" && statusBody) toGeminiApiBase(statusBody.reverse_proxy);
   const body = applyApiRequestExtrasToProxy(statusBody || {
     chat_completion_source: "openai",
     reverse_proxy: base,
     proxy_password: String(key || "")
-  }, requestExtras, { headersOnly: true });
+  }, requestExtras, { headersOnly: true, apiFormat });
   const res = await fetch(ST_STATUS_URL, {
     method: "POST",
     headers: getRequestHeaders3(),
@@ -34800,7 +35001,7 @@ function captureResponseMetadata(json, diagnostics) {
   if (finishReason != null) diagnostics.finish_reason = finishReason;
   if (json?.usage != null) diagnostics.usage = json.usage;
 }
-async function consumeSse(res, { onProgress, signal, source: source2, diagnostics, startedAt }) {
+async function consumeSse(res, { onProgress, signal, source: source2, diagnostics, startedAt, nativeGemini = false }) {
   const eventStream = new EventSourceStream();
   res.body.pipeThrough(eventStream);
   const reader = eventStream.readable.getReader();
@@ -34843,8 +35044,14 @@ async function consumeSse(res, { onProgress, signal, source: source2, diagnostic
       checkResponseError(res, data, diagnostics, json);
       if (json.choices?.[0]?.index > 0) continue;
       captureResponseMetadata(json, diagnostics);
+      if (nativeGemini) {
+        captureGeminiMetadata(json, diagnostics);
+        if (json?.promptFeedback?.blockReason) {
+          throw attachResponseDetails(new Error(`Gemini \u8BF7\u6C42\u88AB\u62E6\u622A\uFF1A${json.promptFeedback.blockReason}`), res, data, diagnostics);
+        }
+      }
       const previousReasoningLength = state.reasoning.length;
-      const chunk = getStreamingReply(json, state, {
+      const chunk = nativeGemini ? geminiReplyText(json, state) : getStreamingReply(json, state, {
         chatCompletionSource: ["openai", "azure_openai"].includes(source2) ? "custom" : source2,
         overrideShowThoughts: true
       });
@@ -34920,10 +35127,14 @@ function checkResponseError(res, text11, diagnostics, parsed) {
   throw attachResponseDetails(error4, res, text11, diagnostics);
 }
 async function sendGenerationRequest(body, options2 = {}) {
-  const { signal = null, onProgress = null, diagnostics = null, allowEmptyStream = false } = options2;
+  const { signal = null, onProgress = null, diagnostics = null, allowEmptyStream = false, nativeGemini = false } = options2;
   assertNotAborted(signal);
   if (!Array.isArray(body.messages)) throw new Error("ERR_CONFIG: messages \u5FC5\u987B\u662F\u6570\u7EC4");
-  body = applyApiRequestExtrasToProxy(body, options2.requestExtras);
+  body = applyApiRequestExtrasToProxy(body, options2.requestExtras, { apiFormat: nativeGemini ? "gemini" : void 0 });
+  if (nativeGemini) {
+    if (!Array.isArray(body.messages)) throw new Error("Gemini messages \u5FC5\u987B\u662F\u6D88\u606F\u6570\u7EC4\u3002");
+    body = { ...body, model: requireGeminiModelId(body.model) };
+  }
   const startedAt = Date.now();
   if (diagnostics) {
     diagnostics.transport = "st_proxy";
@@ -34961,7 +35172,8 @@ async function sendGenerationRequest(body, options2 = {}) {
       signal,
       source: body.chat_completion_source,
       diagnostics,
-      startedAt
+      startedAt,
+      nativeGemini
     });
     if (chunkCount === 0 && allowEmptyStream) return "";
     if (chunkCount === 0) throw new Error("ERR_STREAM_NO_CHUNKS: \u670D\u52A1\u5668\u672A\u8FD4\u56DE\u4EFB\u4F55\u6570\u636E\u5757");
@@ -34980,7 +35192,8 @@ async function sendGenerationRequest(body, options2 = {}) {
   }
   checkResponseError(res, text11, diagnostics, json);
   captureResponseMetadata(json, diagnostics);
-  const content = extractMessageFromData(json, "openai");
+  if (nativeGemini) captureGeminiMetadata(json, diagnostics);
+  const content = nativeGemini && Array.isArray(json?.candidates) ? geminiReplyText(json) : extractMessageFromData(json, "openai");
   if (typeof content !== "string") {
     throw attachResponseDetails(new Error("ERR_INVALID_API_RESPONSE: \u6B63\u6587\u4E0D\u662F\u6587\u672C"), res, text11, diagnostics);
   }
@@ -35044,6 +35257,20 @@ async function sendChatCompletion(options2 = {}) {
   if (suppressProgress && onProgress) onProgress(content);
   return content;
 }
+async function sendGeminiCompletion(options2 = {}) {
+  const body = buildGeminiProxyRequest(options2);
+  const processing = normalizePromptProcessing(options2.promptPostProcessing);
+  if (processing !== null) body.custom_prompt_post_processing = processing;
+  const schema = toStJsonSchema(options2.responseFormat);
+  if (schema) body.json_schema = schema;
+  return sendGenerationRequest(body, {
+    signal: options2.signal ?? null,
+    onProgress: options2.onProgress ?? null,
+    diagnostics: options2.diagnostics ?? null,
+    requestExtras: options2.requestExtras,
+    nativeGemini: true
+  });
+}
 var ST_STATUS_URL, ST_GENERATE_URL;
 var init_relayClient = __esm({
   "src/core/relayClient.js"() {
@@ -35051,6 +35278,7 @@ var init_relayClient = __esm({
     init_logger();
     init_promptProcessing();
     init_apiRequestExtras();
+    init_geminiRequest();
     ST_STATUS_URL = "/api/backends/chat-completions/status";
     ST_GENERATE_URL = "/api/backends/chat-completions/generate";
   }
@@ -35249,13 +35477,18 @@ async function buildTheaterRequest(conn, messages2, options2 = {}) {
   const settings = conn.useSTConnection ? host8 : Object.fromEntries(
     SHARED_SETTINGS.filter((key) => host8[key] !== void 0).map((key) => [key, host8[key]])
   );
-  const model = options2.model || conn.model;
+  const nativeGemini = !conn.useSTConnection && normalizeApiFormat(conn) === "gemini";
+  const model = nativeGemini ? requireGeminiModelId(options2.model || conn.model) : options2.model || conn.model;
   const stream = options2.stream ?? conn.stream ?? true;
-  const base = conn.useSTConnection ? null : toOpenAiBase(conn.url);
+  const base = conn.useSTConnection ? null : nativeGemini ? toGeminiApiBase(conn.url) : toOpenAiBase(conn.url);
   if (!conn.useSTConnection && !base) throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
   if (!conn.useSTConnection) {
-    settings.chat_completion_source = "openai";
+    settings.chat_completion_source = nativeGemini ? "makersuite" : "openai";
     settings.custom_prompt_post_processing = "";
+    if (nativeGemini) {
+      settings.use_sysprompt = true;
+      settings.use_makersuite_sysprompt = true;
+    }
   }
   settings.openai_max_tokens = options2.maxTokens ?? host8.openai_max_tokens ?? 2048;
   settings.temp_openai = options2.temperature ?? host8.temp_openai ?? 0.7;
@@ -35277,12 +35510,20 @@ async function buildTheaterRequest(conn, messages2, options2 = {}) {
   if (!conn.useSTConnection) {
     generate_data.reverse_proxy = base;
     generate_data.proxy_password = String(conn.key || "");
+    if (nativeGemini) {
+      generate_data.use_sysprompt = true;
+      generate_data.use_makersuite_sysprompt = true;
+    }
   }
   return generate_data;
 }
 async function sendTheaterRequest(conn, messages2, options2 = {}) {
   const request = await buildTheaterRequest(conn, messages2, options2);
-  return sendGenerationRequest(request, { ...options2, requestExtras: options2.requestExtras ?? conn.rawProfile });
+  return sendGenerationRequest(request, {
+    ...options2,
+    requestExtras: options2.requestExtras ?? conn.rawProfile,
+    ...!conn.useSTConnection && normalizeApiFormat(conn) === "gemini" ? { nativeGemini: true } : {}
+  });
 }
 var SHARED_SETTINGS;
 var init_theaterRequest = __esm({
@@ -35290,6 +35531,8 @@ var init_theaterRequest = __esm({
     init_legacyTheaterRequest();
     init_promptProcessing();
     init_relayClient();
+    init_apiFormat();
+    init_geminiRequest();
     SHARED_SETTINGS = [
       "temp_openai",
       "freq_pen_openai",
@@ -35345,7 +35588,7 @@ function getActiveConnection() {
   } else {
     url2 = currentProfile.url || "";
     key = currentProfile.key || "";
-    model = currentProfile.model || "gpt-3.5-turbo";
+    model = apiProfileModel(currentProfile);
   }
   return {
     useSTConnection,
@@ -35354,7 +35597,8 @@ function getActiveConnection() {
     key,
     model,
     stream,
-    rawProfile: currentProfile
+    rawProfile: currentProfile,
+    ...normalizeApiProfileFormat(currentProfile)
   };
 }
 async function sendChatRequest(messages2, options2 = {}) {
@@ -35417,7 +35661,8 @@ async function sendChatRequestWithConnection(conn, messages2, options2 = {}) {
     if (!conn.url || !conn.url.trim()) {
       throw new Error("ERR_CONFIG: API URL \u672A\u8BBE\u7F6E");
     }
-    rawContent = await sendChatCompletion({
+    const sendCompletion = normalizeApiFormat(conn) === "gemini" ? sendGeminiCompletion : sendChatCompletion;
+    rawContent = await sendCompletion({
       url: conn.url,
       key: conn.key,
       model,
@@ -35444,6 +35689,13 @@ function validateConnection(conn = getActiveConnection()) {
   }
   if (!conn.key) {
     return { valid: false, error: "API Key \u672A\u8BBE\u7F6E" };
+  }
+  if (normalizeApiFormat(conn) === "gemini") {
+    try {
+      requireGeminiModelId(conn.model);
+    } catch (error4) {
+      return { valid: false, error: error4.message };
+    }
   }
   return { valid: true };
 }
@@ -35482,7 +35734,7 @@ function getConnectionByProfileId(profileId, modelOverride = null) {
   } else {
     url2 = profile.url || "";
     key = profile.key || "";
-    model = modelOverride || profile.model || "gpt-3.5-turbo";
+    model = normalizeApiFormat(profile) === "gemini" ? normalizeGeminiModelId(modelOverride || profile.model) : modelOverride || profile.model || "gpt-3.5-turbo";
   }
   return {
     useSTConnection,
@@ -35492,16 +35744,18 @@ function getConnectionByProfileId(profileId, modelOverride = null) {
     key,
     model,
     stream,
-    rawProfile: profile
+    rawProfile: profile,
+    ...normalizeApiProfileFormat(profile)
   };
 }
 function resolveFeatureModeConnection(featureConfig, data) {
   const mode = String(featureConfig?.profile_mode || "").trim();
   if (mode !== "custom" && mode !== "st") return null;
   const fallback = {
-    api_url: normalizeApiBaseUrl(String(data?.config?.url || "")),
+    api_url: normalizeApiProfileUrl(String(data?.config?.url || ""), data?.config),
     api_key: String(data?.config?.key || ""),
-    model: String(data?.config?.model || "")
+    model: String(data?.config?.model || ""),
+    ...normalizeApiProfileFormat(data?.config)
   };
   const profiles = mode === "st" ? getStPresetProfiles().map((p) => ({
     id: String(p.id || "").trim(),
@@ -35515,15 +35769,16 @@ function resolveFeatureModeConnection(featureConfig, data) {
   const selected = profiles.find((p) => p.id === preferredId) || profiles[0];
   if (!selected) return null;
   const modelOverride = String(featureConfig?.model_override || "").trim();
-  const model = modelOverride || String(selected.model || "").trim() || "gpt-3.5-turbo";
+  const model = normalizeApiFormat(selected) === "gemini" ? normalizeGeminiModelId(modelOverride || selected.model) : modelOverride || String(selected.model || "").trim() || "gpt-3.5-turbo";
   const key = mode === "st" ? String(featureConfig?.st_api_key || "").trim() : String(selected.api_key || "").trim();
   return {
     useSTConnection: false,
     profileName: selected.name,
     profileId: selected.id,
-    url: normalizeApiBaseUrl(String(selected.api_url || "").trim()),
+    url: normalizeApiProfileUrl(String(selected.api_url || "").trim(), selected),
     key,
     model,
+    ...normalizeApiProfileFormat(selected),
     stream: (data.config || {}).stream !== false,
     rawProfile: {
       ...selected,
@@ -35562,6 +35817,13 @@ function validateFeatureConnection(featureKey) {
   if (!conn.key) {
     return { configured: true, valid: false, error: "API Key \u672A\u8BBE\u7F6E" };
   }
+  if (normalizeApiFormat(conn) === "gemini") {
+    try {
+      requireGeminiModelId(conn.model);
+    } catch (error4) {
+      return { configured: true, valid: false, error: error4.message };
+    }
+  }
   return { configured: true, valid: true };
 }
 var init_connection = __esm({
@@ -35570,6 +35832,8 @@ var init_connection = __esm({
     init_logger();
     init_apiProfileRegistry();
     init_relayClient();
+    init_apiFormat();
+    init_geminiRequest();
     init_theaterRequest();
     init_toolboxSettings();
     init_apiRequestExtras();
@@ -37808,6 +38072,14 @@ function modelListRequest(profile) {
   const headers = normalizeApiRequestExtras(profile).custom_include_headers;
   const requestExtras = headers ? { custom_include_headers: headers } : void 0;
   if (profile.type !== "internal") {
+    if (normalizeApiFormat(profile) === "gemini") {
+      const base = normalizeGeminiApiBaseUrl(profile.url);
+      return base ? { apiFormat: "gemini", statusBody: {
+        chat_completion_source: "makersuite",
+        reverse_proxy: base,
+        proxy_password: profile.key || ""
+      }, ...requestExtras ? { requestExtras } : {} } : null;
+    }
     const url2 = normalizeApiBaseUrl(profile.url);
     return url2 ? { url: url2, key: profile.key || "", ...requestExtras ? { requestExtras } : {} } : null;
   }
@@ -37840,6 +38112,7 @@ var init_modelList = __esm({
     init_apiProfileRegistry();
     init_relayClient();
     init_apiRequestExtras();
+    init_apiFormat();
     modelListSignature = (profile) => JSON.stringify(modelListRequest(profile));
   }
 });
@@ -37869,7 +38142,8 @@ function normalizeProfile(profile, idx = 0, defaultModel = "gpt-3.5-turbo") {
     name,
     url: String(profile?.url || "").trim(),
     key: String(profile?.key || "").trim(),
-    model: String(profile?.model || defaultModel).trim() || defaultModel,
+    model: apiProfileModel(type === "internal" ? { model: profile?.model } : profile, defaultModel),
+    ...normalizeApiProfileFormat({ ...profile, type }),
     ...normalizeApiProfileModelSettings(profile),
     ...normalizeApiRequestExtras(profile),
     ...type === "internal" && profile?.model_override ? { model_override: String(profile.model_override).trim() } : {}
@@ -37930,6 +38204,7 @@ function renderApiConnectionEditorHTML(options2 = {}) {
     showStream: false,
     showMaxTokens: false,
     showManualModelInput: false,
+    showApiFormat: false,
     ...options2.flags || {}
   };
   const values = {
@@ -37938,10 +38213,19 @@ function renderApiConnectionEditorHTML(options2 = {}) {
     statusText: "\u586B\u5199 API \u540E\u53EF\u5237\u65B0\u6A21\u578B\u5217\u8868",
     ...options2.values || {}
   };
+  const apiFormatBlock = flags.showApiFormat ? `<div id="${escapeHtml2(ids2.apiFormatWrapId || "")}" class="t-form-group">
+                <label class="t-form-label" for="${escapeHtml2(ids2.apiFormatId || "")}">\u63A5\u53E3\u683C\u5F0F</label>
+                <select id="${escapeHtml2(ids2.apiFormatId || "")}" class="${escapeHtml2(classes.select)}">
+                    <option value="openai">OpenAI \u517C\u5BB9\uFF08\u539F\u6709\u63A5\u53E3\uFF09</option>
+                    <option value="gemini">Gemini \u539F\u751F</option>
+                </select>
+                <p id="${escapeHtml2(ids2.apiFormatHintId || "")}" class="t-conn-hint"></p>
+            </div>` : "";
   const requestExtrasBlock = options2.showRequestExtras === true ? `<details id="${escapeHtml2(ids2.requestExtrasId || "")}" class="t-toolbox-request-extras">
                 <summary>\u9644\u52A0\u8BF7\u6C42\u53C2\u6570</summary>
                 <div class="t-toolbox-request-extras-content">
-                    <p class="t-toolbox-hint">\u6BCF\u4E2A API \u65B9\u6848\u72EC\u7ACB\u4FDD\u5B58\uFF0C\u5207\u6362\u4E0D\u4F1A\u5171\u7528\u586B\u5199\uFF1B\u590D\u5236\u65B9\u6848\u4F1A\u643A\u5E26\u526F\u672C\uFF0C\u4E4B\u540E\u53EF\u5206\u522B\u7F16\u8F91\u3002\u7559\u7A7A\u4E0D\u6539\u53D8\u539F\u6709\u8BF7\u6C42\u884C\u4E3A\u3002\u8DDF\u968F\u4E3B\u8FDE\u63A5\u6216\u53EA\u8BFB\u65B9\u6848\u4E5F\u53EF\u586B\u5199\uFF0C\u4EC5\u4F5C\u7528\u4E8E\u672C\u63D2\u4EF6\u7684\u65B9\u6848\u526F\u672C\uFF0C\u4E0D\u4FEE\u6539\u9152\u9986\u4E3B\u8FDE\u63A5\u7684\u5730\u5740\u6216\u5BC6\u94A5\u3002\u72EC\u7ACB\u81EA\u5B9A\u4E49\u65B9\u6848\u5B8C\u6574\u652F\u6301\uFF1B\u9152\u9986\u6258\u7BA1\u8FDE\u63A5\u9700\u4F7F\u7528\u652F\u6301\u81EA\u5B9A\u4E49\u53C2\u6570\u7684\u6765\u6E90\uFF0C\u4E0D\u652F\u6301\u65F6\u8BF7\u6C42\u4F1A\u660E\u786E\u63D0\u793A\u3002</p>
+                    <p class="t-toolbox-hint">\u6BCF\u4E2A API \u65B9\u6848\u72EC\u7ACB\u4FDD\u5B58\uFF0C\u5207\u6362\u4E0D\u4F1A\u5171\u7528\u586B\u5199\uFF1B\u590D\u5236\u65B9\u6848\u4F1A\u643A\u5E26\u526F\u672C\uFF0C\u4E4B\u540E\u53EF\u5206\u522B\u7F16\u8F91\u3002\u7559\u7A7A\u4E0D\u6539\u53D8\u539F\u6709\u8BF7\u6C42\u884C\u4E3A\u3002\u8DDF\u968F\u4E3B\u8FDE\u63A5\u6216\u53EA\u8BFB\u65B9\u6848\u4E5F\u53EF\u586B\u5199\uFF0C\u4EC5\u4F5C\u7528\u4E8E\u672C\u63D2\u4EF6\u7684\u65B9\u6848\u526F\u672C\uFF0C\u4E0D\u4FEE\u6539\u9152\u9986\u4E3B\u8FDE\u63A5\u7684\u5730\u5740\u6216\u5BC6\u94A5\u3002OpenAI \u517C\u5BB9\u72EC\u7ACB\u65B9\u6848\u5B8C\u6574\u652F\u6301\uFF1BGemini \u539F\u751F\u6309\u751F\u6210\u53C2\u6570\u6620\u5C04\uFF0C\u9152\u9986\u6258\u7BA1\u8FDE\u63A5\u9700\u4F7F\u7528\u652F\u6301\u81EA\u5B9A\u4E49\u53C2\u6570\u7684\u6765\u6E90\u3002\u4E0D\u652F\u6301\u65F6\u4F1A\u660E\u786E\u63D0\u793A\uFF0C\u4E0D\u4F1A\u9759\u9ED8\u5FFD\u7565\u3002</p>
+                    ${flags.showApiFormat ? `<p id="${escapeHtml2(ids2.apiFormatExtrasHintId || "")}" class="t-toolbox-hint" hidden>Gemini \u539F\u751F\u53EF\u586B\u5199 temperature\u3001top_p\u3001top_k\u3001max_tokens\u3001stop\u3001seed\u3001reasoning_effort \u7B49\u751F\u6210\u53C2\u6570\uFF0C\u6216\u5BF9\u5E94\u7684 generationConfig \u5B57\u6BB5\uFF1B\u4E0D\u652F\u6301\u4EFB\u610F\u539F\u751F\u4E3B\u4F53\u5B57\u6BB5\u4E0E\u81EA\u5B9A\u4E49\u8BF7\u6C42\u5934\uFF0C\u9274\u6743\u8BF7\u586B\u4E0A\u65B9 API Key\u3002\u4E0D\u652F\u6301\u7684\u586B\u5199\u4F1A\u963B\u6B62\u8BF7\u6C42\u5E76\u63D0\u793A\u539F\u56E0\u3002</p>` : ""}
                     <label class="t-toolbox-field" for="${escapeHtml2(ids2.requestIncludeBodyId || "")}"><span>\u5305\u542B\u4E3B\u4F53\u53C2\u6570</span>
                         <textarea id="${escapeHtml2(ids2.requestIncludeBodyId || "")}" class="${escapeHtml2(classes.input)} t-toolbox-request-extra-input" rows="4" spellcheck="false" autocapitalize="off" placeholder="temperature: 0.7&#10;reasoning_effort: high" aria-describedby="${escapeHtml2(ids2.requestIncludeBodyId || "")}-hint"></textarea>
                         <small id="${escapeHtml2(ids2.requestIncludeBodyId || "")}-hint">\u586B\u5199\u5BF9\u8C61\uFF0C\u652F\u6301 YAML\uFF08<code>temperature: 0.7</code>\uFF09\u6216 JSON\uFF08<code>{&quot;temperature&quot;:0.7}</code>\uFF09\u3002\u5148\u52A0\u5165\u6216\u8986\u76D6\u4E3B\u4F53\u53C2\u6570\uFF0C\u518D\u6267\u884C\u6392\u9664\uFF1B\u540C\u540D\u53C2\u6570\u4EE5\u6392\u9664\u4E3A\u51C6\u3002</small></label>
@@ -37977,6 +38261,7 @@ function renderApiConnectionEditorHTML(options2 = {}) {
         </div>
         <div style="height:1px; background:var(--t-color-border); margin:20px 0;"></div>
         <div id="${escapeHtml2(ids2.fieldsWrapId || "")}">
+            ${apiFormatBlock}
             <div class="t-form-group">
                 <label class="t-form-label">${escapeHtml2(labels.apiUrl)}</label>
                 <input id="${escapeHtml2(ids2.apiUrlId || "")}" class="${escapeHtml2(classes.input)}" placeholder="${escapeHtml2(placeholders.apiUrl)}">
@@ -38000,10 +38285,11 @@ function createApiConnectionEditor(options2 = {}) {
   const $root = options2.root;
   const ids2 = options2.ids || {};
   const defaultModel = String(options2.defaultModel || "gpt-3.5-turbo").trim() || "gpt-3.5-turbo";
-  const normalizeUrl = typeof options2.normalizeUrl === "function" ? options2.normalizeUrl : normalizeApiBaseUrl;
+  const normalizeUrl = typeof options2.normalizeUrl === "function" ? options2.normalizeUrl : normalizeApiProfileUrl;
   const modelFetcher = typeof options2.modelFetcher === "function" ? options2.modelFetcher : defaultModelFetcher;
   const showManualModelInput = options2.showManualModelInput === true;
   const showRequestExtras = options2.showRequestExtras === true;
+  const showApiFormat = options2.showApiFormat === true;
   const autoFetchDelay = Number.isFinite(Number(options2.autoFetchDelayMs)) ? Number(options2.autoFetchDelayMs) : 500;
   const createProfileIdPrefix = String(options2.profileIdPrefix || "custom").trim() || "custom";
   const statusTexts = {
@@ -38052,10 +38338,11 @@ function createApiConnectionEditor(options2 = {}) {
     autoFetchTimer = null;
   };
   const renderModelOptions = (profile) => {
-    const currentModel = profile.type === "internal" ? profile.model_override || (typeof options2.getInternalModel === "function" ? options2.getInternalModel() : "") || defaultModel : profile.model || defaultModel;
+    const currentModel = profile.type === "internal" ? profile.model_override || (typeof options2.getInternalModel === "function" ? options2.getInternalModel() : "") || defaultModel : apiProfileModel(profile, defaultModel);
     const models = profile.model_list || [];
     const $model = getById($root, ids2.modelId);
     $model.empty();
+    if (!currentModel) $model.append('<option value="">\u8BF7\u9009\u62E9\u6A21\u578B</option>');
     uniqStrings([currentModel, ...models]).forEach((model) => {
       const label2 = model === currentModel && !models.includes(model) ? `${model}\uFF08\u5F53\u524D\uFF09` : model;
       $model.append(`<option value="${escapeHtml2(model)}">${escapeHtml2(label2)}</option>`);
@@ -38090,21 +38377,22 @@ function createApiConnectionEditor(options2 = {}) {
     const $key = getById($root, ids2.apiKeyId);
     const $model = getById($root, ids2.modelId);
     const $modelInput = getById($root, ids2.modelInputId);
-    const previousUrl = normalizeUrl(profile.url);
+    const previousUrl = normalizeUrl(profile.url, profile);
     const previousKey = profile.key;
+    const fallbackModel = normalizeApiFormat(profile) === "gemini" ? "" : defaultModel;
     if ($name.length) {
       profile.name = String($name.val() || "").trim() || profile.name;
     }
     if ($url.length) {
-      profile.url = normalizeUrl($url.val());
+      profile.url = normalizeUrl($url.val(), profile);
     }
     if ($key.length) {
       profile.key = String($key.val() || "").trim();
     }
     if (currentModelMode() === "manual" && $modelInput.length) {
-      profile.model = String($modelInput.val() || "").trim() || defaultModel;
+      profile.model = String($modelInput.val() || "").trim() || fallbackModel;
     } else if ($model.length) {
-      profile.model = String($model.val() || "").trim() || defaultModel;
+      profile.model = String($model.val() || "").trim() || fallbackModel;
     }
     if (profile.url !== previousUrl || profile.key !== previousKey) {
       invalidateModelRequest();
@@ -38143,6 +38431,13 @@ function createApiConnectionEditor(options2 = {}) {
       }
     }
     const isInternal = profile.type === "internal";
+    const isGemini = !isInternal && normalizeApiFormat(profile) === "gemini";
+    if (showApiFormat) {
+      getById($root, ids2.apiFormatWrapId).toggle(!isInternal);
+      getById($root, ids2.apiFormatId).val(isGemini ? "gemini" : "openai").prop("disabled", profile.readonly || isInternal);
+      getById($root, ids2.apiFormatHintId).text(isGemini ? "\u4F7F\u7528 Gemini \u539F\u751F\u63A5\u53E3\uFF0C\u4EC5\u4F5C\u7528\u4E8E\u672C\u65B9\u6848\u3002\u586B\u5199\u670D\u52A1\u6839\u5730\u5740\uFF08\u5982 http://localhost:8080\uFF09\uFF0C\u4E5F\u53EF\u7C98\u8D34 /v1beta \u5730\u5740\uFF1B\u7531\u9152\u9986\u540E\u7AEF\u8BBF\u95EE\uFF0C\u4E0D\u4FEE\u6539\u4E3B\u8FDE\u63A5\u3002\u5207\u6362\u683C\u5F0F\u4F1A\u6E05\u7A7A\u672C\u65B9\u6848\u6A21\u578B\u4E0E\u7F13\u5B58\u5217\u8868\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u6A21\u578B\u3002" : "\u539F\u6709 OpenAI \u517C\u5BB9\u63A5\u53E3\uFF0C\u65E7\u65B9\u6848\u9ED8\u8BA4\u4F7F\u7528\u6B64\u683C\u5F0F\uFF1B\u65B0\u589E Gemini \u65B9\u6848\u4E0D\u4F1A\u6539\u53D8\u5176\u4ED6\u65B9\u6848\u3002");
+      getById($root, ids2.apiFormatExtrasHintId).prop("hidden", !isGemini);
+    }
     const modelInputMode = currentModelMode();
     const editableInternal = isInternal && !!profile.model_override && !profile.readonly;
     if ($name.length) {
@@ -38170,18 +38465,18 @@ function createApiConnectionEditor(options2 = {}) {
       setStatus2(editableInternal ? "\u586B\u5199\u6B64\u65B9\u6848\u4F7F\u7528\u7684\u6A21\u578B ID\u3002\u590D\u5236\u4E3B\u8FDE\u63A5\u53EF\u521B\u5EFA\u53E6\u4E00\u4E2A\u6A21\u578B\u65B9\u6848\u3002" : "\u8DDF\u968F\u9152\u9986\u5F53\u524D\u6A21\u578B\uFF1B\u53EF\u590D\u5236\u6B64\u65B9\u6848\u540E\u6307\u5B9A\u5176\u4ED6\u6A21\u578B\u3002", "muted");
       return;
     }
-    $url.val(profile.url || "").prop("disabled", profile.readonly).prop("placeholder", options2.apiUrlPlaceholder || "https://api.example.com/v1");
-    $key.val(profile.key || "").prop("disabled", profile.readonly).prop("placeholder", options2.apiKeyPlaceholder || "sk-...");
+    $url.val(profile.url || "").prop("disabled", profile.readonly).prop("placeholder", isGemini ? "http://localhost:8080" : options2.apiUrlPlaceholder || "https://api.example.com/v1");
+    $key.val(profile.key || "").prop("disabled", profile.readonly).prop("placeholder", isGemini ? "\u670D\u52A1\u7684 API Key\uFF1B\u65E0\u9274\u6743\u65F6\u6309\u670D\u52A1\u8BF4\u660E\u586B\u975E\u7A7A\u503C" : options2.apiKeyPlaceholder || "sk-...");
     $model.prop("disabled", profile.readonly);
     $modelMode.prop("disabled", profile.readonly || !showManualModelInput).val(modelInputMode);
-    $modelInput.prop("disabled", profile.readonly || modelInputMode !== "manual").val(profile.model || defaultModel);
+    $modelInput.prop("disabled", profile.readonly || modelInputMode !== "manual").val(apiProfileModel(profile, defaultModel)).prop("placeholder", isGemini ? "\u6A21\u578B ID\uFF0C\u4F8B\u5982\uFF1Agemini-2.5-flash" : "\u6A21\u578B ID\uFF0C\u4F8B\u5982\uFF1Agpt-4o");
     $fetchBtn.prop("disabled", modelInputMode === "manual").html('<i class="fa-solid fa-rotate" aria-hidden="true"></i><span>\u5237\u65B0</span>');
     $modelListWrap.toggle(modelInputMode !== "manual");
     $modelManualWrap.toggle(modelInputMode === "manual");
     if ($urlHint.length) $urlHint.hide();
-    if ($tip.length) $tip.text(statusTexts.customTip);
+    if ($tip.length) $tip.text(isGemini ? "\u5F53\u524D\u4F7F\u7528\u72EC\u7ACB Gemini \u539F\u751F\u65B9\u6848\uFF0C\u5730\u5740\u3001\u5BC6\u94A5\u3001\u6A21\u578B\u5747\u4E0D\u8DDF\u968F\u9152\u9986\u4E3B\u8FDE\u63A5\u3002" : statusTexts.customTip);
     renderModelOptions(profile);
-    setStatus2(modelInputMode === "manual" ? statusTexts.manual : profile.model_list?.length ? `\u5DF2\u4FDD\u5B58 ${profile.model_list.length} \u4E2A\u6A21\u578B\uFF0C\u53EF\u76F4\u63A5\u5207\u6362\u6216\u5237\u65B0\u5217\u8868\u3002` : statusTexts.default);
+    setStatus2(modelInputMode === "manual" ? statusTexts.manual : profile.model_list?.length ? `\u5DF2\u4FDD\u5B58 ${profile.model_list.length} \u4E2A\u6A21\u578B\uFF0C\u53EF\u76F4\u63A5\u5207\u6362\u6216\u5237\u65B0\u5217\u8868\u3002` : isGemini && !profile.model ? "\u8BF7\u5237\u65B0 Gemini \u6A21\u578B\u5217\u8868\u5E76\u9009\u62E9\u6A21\u578B\uFF0C\u6216\u5207\u6362\u4E3A\u624B\u52A8\u586B\u5199\u3002" : statusTexts.default);
   };
   const createProfile = () => {
     const customCount = state.profiles.filter((p) => p.type !== "internal").length;
@@ -38201,7 +38496,7 @@ function createApiConnectionEditor(options2 = {}) {
     const profile = findActiveProfile();
     const $fetchBtn = getById($root, ids2.fetchModelsId);
     if (!profile || profile.type !== "internal" && currentModelMode() === "manual") return [];
-    const apiUrl = normalizeUrl(profile.url);
+    const apiUrl = normalizeUrl(profile.url, profile);
     if (!modelListRequest(profile)) {
       setStatus2(statusTexts.missingUrl, "warn");
       if (showToast && window.toastr) window.toastr.warning(statusTexts.missingUrl);
@@ -38320,6 +38615,21 @@ function createApiConnectionEditor(options2 = {}) {
         $input.on("change", persistCurrentProfileInputs);
       }
     }
+    if (showApiFormat) getById($root, ids2.apiFormatId).on("change", () => {
+      const profile = findActiveProfile();
+      if (!profile || profile.type === "internal" || profile.readonly) return;
+      const nextFormat = normalizeApiFormat(getById($root, ids2.apiFormatId).val());
+      if (nextFormat === normalizeApiFormat(profile)) return;
+      persistCurrentProfileInputs();
+      if (nextFormat === "gemini") profile.api_format = "gemini";
+      else delete profile.api_format;
+      profile.url = normalizeUrl(profile.url, profile);
+      profile.model = nextFormat === "gemini" ? "" : defaultModel;
+      delete profile.model_list;
+      invalidateModelRequest();
+      render2();
+      emitChange();
+    });
     $name.on("input", persistCurrentProfileInputs);
     $model.on("change", persistCurrentProfileInputs);
     $modelInput.on("input", persistCurrentProfileInputs);
@@ -38395,6 +38705,7 @@ var REQUEST_EXTRA_INPUT_IDS;
 var init_apiConnectionEditor = __esm({
   "src/ui/shared/apiConnectionEditor.js"() {
     init_apiProfileRegistry();
+    init_apiFormat();
     init_apiRequestExtras();
     init_modelList();
     REQUEST_EXTRA_INPUT_IDS = {
@@ -38446,7 +38757,7 @@ function openToolboxSettingsWindow(initialTab = "api") {
         <main class="t-toolbox-content">
             <section role="tabpanel" id="t-toolbox-page-api" aria-labelledby="t-toolbox-tab-api" data-toolbox-page="api">
                 <p class="t-toolbox-hint">\u7EDF\u4E00\u7BA1\u7406\u5404\u529F\u80FD\u7684\u5730\u5740\u3001\u5BC6\u94A5\u548C\u6A21\u578B\u3002\u539F\u6709\u72EC\u7ACB API \u65B9\u6848\u5DF2\u5F52\u5165\u6B64\u5904\uFF0C\u5404\u529F\u80FD\u53EF\u8DDF\u968F\u5168\u5C40\u9ED8\u8BA4\u6216\u6307\u5B9A\u65B9\u6848\u3002</p>
-                ${renderApiConnectionEditorHTML({ ids, showRequestExtras: true, classes: { input: "t-input t-input--glass", select: "t-input t-input--glass", profileSelect: "t-input t-input--glass" }, flags: { showManualModelInput: true, showCopyProfile: true }, labels: { profile: "\u5168\u5C40\u9ED8\u8BA4 API \u65B9\u6848" } })}
+                ${renderApiConnectionEditorHTML({ ids, showRequestExtras: true, classes: { input: "t-input t-input--glass", select: "t-input t-input--glass", profileSelect: "t-input t-input--glass" }, flags: { showManualModelInput: true, showCopyProfile: true, showApiFormat: true }, labels: { profile: "\u5168\u5C40\u9ED8\u8BA4 API \u65B9\u6848" } })}
                 <p class="t-toolbox-hint">\u5404\u529F\u80FD\u53EF\u5728\u4E0B\u65B9\u6216\u81EA\u5DF1\u7684\u8BBE\u7F6E\u9875\uFF0C\u9009\u62E9\u540C\u4E00\u65B9\u6848\u5185\u7684\u5176\u4ED6\u6A21\u578B\u3002\u529F\u80FD\u8BBE\u7F6E\u9875\u4E5F\u53EF\u83B7\u53D6\u6A21\u578B\u5217\u8868\u6216\u624B\u52A8\u586B\u5199\u6A21\u578B ID\u3002</p>
                 <h3>\u5404\u529F\u80FD\u4F7F\u7528\u7684\u8FDE\u63A5</h3><div class="t-toolbox-usage" data-toolbox-api-usage></div>
                 <p class="t-toolbox-hint">\u6D41\u5F0F\u4F20\u8F93\u5F00\u5173\u4EC5\u7528\u4E8E\u5BF9\u5E94\u529F\u80FD\u7684\u6A21\u578B\u8BF7\u6C42\uFF0C\u5171\u7528 API \u65B9\u6848\u65F6\u4E5F\u53EF\u72EC\u7ACB\u8BBE\u7F6E\u3002\u5173\u95ED\u540E\u7B49\u5F85\u5B8C\u6574\u54CD\u5E94\uFF1B\u89D2\u8272\u914D\u97F3\u7684\u5F00\u5173\u7528\u4E8E\u53F0\u8BCD\u8BC6\u522B\u4E0E\u7FFB\u8BD1\u3002</p>
@@ -38527,6 +38838,7 @@ function openToolboxSettingsWindow(initialTab = "api") {
     activeProfileId: api.active_profile_id,
     showManualModelInput: true,
     showRequestExtras: true,
+    showApiFormat: true,
     autoFetchOnInput: false,
     autoFetchOnProfileSwitch: false,
     getInternalUrl: () => "\u7531\u9152\u9986\u4E3B\u8FDE\u63A5\u7BA1\u7406",
@@ -38578,7 +38890,7 @@ function openToolboxSettingsWindow(initialTab = "api") {
     const errors = [];
     for (const profile of profiles) {
       try {
-        parseApiRequestExtras(profile);
+        validateApiRequestExtras(profile);
       } catch (error4) {
         errors.push(`\u65B9\u6848\u300C${profile.name || profile.id}\u300D\uFF1A${error4?.message || "\u9644\u52A0\u8BF7\u6C42\u53C2\u6570\u65E0\u6548\u3002"}`);
       }
@@ -38751,7 +39063,11 @@ var init_toolboxSettingsWindow = __esm({
       "requestExtras",
       "requestIncludeBody",
       "requestExcludeBody",
-      "requestIncludeHeaders"
+      "requestIncludeHeaders",
+      "apiFormat",
+      "apiFormatWrap",
+      "apiFormatHint",
+      "apiFormatExtrasHint"
     ].map((key) => [`${key}Id`, `t-toolbox-${key}`]));
   }
 });
@@ -54802,7 +55118,7 @@ async function normalizeChatFile(ctx2, file, requestJSON2) {
   if (!group2 || String(group2.chat_id) !== String(ctx2.chatId) || !Array.isArray(group2.chats) || !group2.chats.some((id4) => String(id4) === String(ctx2.chatId))) {
     throw new Error("\u7FA4\u7EC4\u6216\u5176\u5F53\u524D\u804A\u5929\u5DF2\u53D8\u5316\uFF0C\u65E7\u4EFB\u52A1\u5DF2\u505C\u6B62\uFF1B\u6CA1\u6709\u5207\u6362\u7FA4\u7EC4\u804A\u5929\u3002");
   }
-  if (!own2(group2, "chat_metadata") && !own2(group2, "past_metadata")) {
+  if (!own3(group2, "chat_metadata") && !own3(group2, "past_metadata")) {
     if (!file.length) return file;
     throw new Error("\u7FA4\u804A\u6587\u4EF6\u7F3A\u5C11\u9996\u884C\u5143\u6570\u636E\uFF0C\u4E14\u7FA4\u7EC4\u6CA1\u6709\u65E7\u7248\u5143\u6570\u636E\uFF0C\u672A\u731C\u6D4B\u6863\u6848\u6765\u6E90\u3002");
   }
@@ -54825,12 +55141,12 @@ function publishLegacyGroupMetadata(ctx2) {
   const group2 = ctx2?.groups?.find((value) => String(value?.id) === String(ctx2.groupId));
   if (group2 && String(group2.chat_id) === String(ctx2.chatId)) group2.chat_metadata = copy2(ctx2.chatMetadata);
 }
-var legacyFiles, object6, own2, copy2, isGroup, legacyGroupChatFile;
+var legacyFiles, object6, own3, copy2, isGroup, legacyGroupChatFile;
 var init_chatFileCompatibility = __esm({
   "src/core/chatFileCompatibility.js"() {
     legacyFiles = /* @__PURE__ */ new WeakMap();
     object6 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-    own2 = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+    own3 = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
     copy2 = (value) => JSON.parse(JSON.stringify(value));
     isGroup = (ctx2) => ctx2?.groupId != null && ctx2.groupId !== "";
     legacyGroupChatFile = (file) => legacyFiles.get(file);
@@ -55192,7 +55508,8 @@ function integrityMismatchDetail(current3, stored) {
 }
 function mismatchSummary(code2, detail = {}) {
   const subject = (detail.fields || (detail.field ? [detail.field] : [])).map((field3) => archiveLabels[field3]).filter(Boolean).join("\u3001") || "\u76F8\u5173\u6863\u6848";
-  const counts = Number.isInteger(detail.currentFloors) ? `\u5F53\u524D ${detail.currentFloors} \u6761\u6D88\u606F` + (Number.isInteger(detail.savedFloors) ? `\uFF0C\u6587\u4EF6 ${detail.savedFloors} \u6761` : "") : "";
+  const floorRange = (count3) => count3 > 0 ? `\uFF08\u6700\u65B0\u7B2C ${count3 - 1} \u697C\uFF0C\u697C\u5C42\u4ECE 0 \u5F00\u59CB\uFF09` : "\uFF08\u65E0\u697C\u5C42\uFF09";
+  const counts = Number.isInteger(detail.currentFloors) ? `\u5F53\u524D ${detail.currentFloors} \u6761\u6D88\u606F${floorRange(detail.currentFloors)}` + (Number.isInteger(detail.savedFloors) ? `\uFF0C\u6587\u4EF6 ${detail.savedFloors} \u6761\u6D88\u606F${floorRange(detail.savedFloors)}` : "") : "";
   const titles = {
     "file-invalid": "\u804A\u5929\u6587\u4EF6\u7ED3\u6784\u5F02\u5E38",
     "file-empty": "\u5DF2\u4FDD\u5B58\u804A\u5929\u6587\u4EF6\u4E3A\u7A7A",
@@ -55268,11 +55585,11 @@ function archiveWarning(ctx2, key) {
 function archivePending(ctx2, key) {
   return !!ctx2 && !!(fieldState(ctx2, key).pending || fieldState(ctx2, key).loading);
 }
-function nativeJSON(url2, body) {
+function nativeJSON(url2, body, timeoutMs = 15e3) {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open("POST", url2);
-    request.timeout = 15e3;
+    request.timeout = timeoutMs;
     for (const [key, value] of Object.entries(host3.getRequestHeaders())) request.setRequestHeader(key, value);
     request.onload = () => {
       try {
@@ -55286,17 +55603,18 @@ function nativeJSON(url2, body) {
     request.send(JSON.stringify(body));
   });
 }
-async function readChatFile(ctx2) {
+async function readChatFile(ctx2, deadline = null) {
   const group2 = ctx2.groupId != null && ctx2.groupId !== "";
   const url2 = group2 ? "/api/chats/group/get" : "/api/chats/get";
-  return normalizeChatFile(ctx2, await requestJSON(url2, archiveTarget(ctx2)), requestJSON);
+  const request = (url3, body) => requestJSON(url3, body, deadline == null ? 15e3 : deadline - Date.now());
+  return normalizeChatFile(ctx2, await request(url2, archiveTarget(ctx2)), request);
 }
-async function readStableChatFile(ctx2, valid = () => true) {
-  const deadline = Date.now() + 15e3;
+async function readStableChatFile(ctx2, valid = () => true, deadline = Date.now() + 15e3) {
   for (; ; ) {
     if (!archiveContextCurrent(ctx2) || !valid()) throw new Error("\u804A\u5929\u6216\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u6838\u5BF9\u5DF2\u53D6\u6D88\u3002");
+    if (Date.now() >= deadline) throw new Error("\u804A\u5929\u4FDD\u5B58\u5C1A\u672A\u7ED3\u675F\uFF0C\u8BF7\u7B49\u5F85\u4FDD\u5B58\u540E\u91CD\u8BD5\u3002");
     if (!host3.isChatSaving) {
-      const saved = await readChatFile(ctx2);
+      const saved = await readChatFile(ctx2, deadline);
       if (!archiveContextCurrent(ctx2) || !valid()) throw new Error("\u804A\u5929\u6216\u6B63\u6587\u5DF2\u53D8\u5316\uFF0C\u6838\u5BF9\u5DF2\u53D6\u6D88\u3002");
       if (!host3.isChatSaving) return saved;
     }
@@ -55622,36 +55940,47 @@ function restoreArchiveBackup(view2, field3, id4) {
     return { field: field3, label: archiveLabels[field3], records: records(restored) };
   });
 }
-async function prepareArchiveSourceEdit(ctx2) {
-  if (!archiveContextCurrent(ctx2)) throw new Error("\u804A\u5929\u5DF2\u5207\u6362\uFF0C\u672A\u51C6\u5907\u6B63\u6587\u4FEE\u8BA2\u3002");
+async function prepareArchiveSourceEdit(ctx2, { waitForSave = false, valid = () => true } = {}) {
+  if (!archiveContextCurrent(ctx2) || !valid()) throw new Error("\u804A\u5929\u6216\u6B63\u6587\u5904\u7406\u4EFB\u52A1\u5DF2\u53D8\u5316\uFF0C\u672A\u51C6\u5907\u6B63\u6587\u4FEE\u8BA2\u3002");
   for (const field3 of fields2) if (archivePending(ctx2, field3)) throw new Error(archiveWarning(ctx2, field3));
   const signature3 = archiveSources(ctx2.chat), archives = archiveVersions(ctx2.chatMetadata);
-  const saved = await readStableChatFile(ctx2, () => archiveSources(ctx2.chat) === signature3);
-  if (!archiveContextCurrent(ctx2) || archiveSources(ctx2.chat) !== signature3 || archiveVersions(ctx2.chatMetadata) !== archives) throw new Error("\u51C6\u5907\u4FEE\u8BA2\u65F6\u804A\u5929\u6216\u6863\u6848\u5DF2\u53D8\u5316\u3002");
-  if (!Array.isArray(saved) || saved.length && (!saved[0]?.chat_metadata || evidenceSources(saved.slice(1)) !== evidenceSources(ctx2.chat) || archiveVersions(saved[0].chat_metadata) !== archives || ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) || !saved.length && fields2.some((field3) => records(ctx2.chatMetadata[field3]))) {
-    let detail = mismatchReason(ctx2, saved);
-    if (Array.isArray(saved) && saved[0]?.chat_metadata && evidenceSources(saved.slice(1)) === evidenceSources(ctx2.chat)) {
-      if (archiveVersions(saved[0].chat_metadata) !== archives) {
-        detail = { code: "archive-version-mismatch", ...archiveMismatchDetail(archives, archiveVersions(saved[0].chat_metadata)) };
-      } else if (ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) {
-        detail = integrityMismatchDetail(ctx2.chatMetadata, saved[0].chat_metadata);
+  const current3 = () => archiveContextCurrent(ctx2) && valid() && archiveSources(ctx2.chat) === signature3 && archiveVersions(ctx2.chatMetadata) === archives;
+  const deadline = Date.now() + 15e3;
+  let retries = 0;
+  for (; ; ) {
+    const saved = await readStableChatFile(ctx2, current3, deadline);
+    if (!current3()) throw new Error("\u51C6\u5907\u4FEE\u8BA2\u65F6\u804A\u5929\u3001\u6B63\u6587\u5904\u7406\u4EFB\u52A1\u6216\u6863\u6848\u5DF2\u53D8\u5316\u3002");
+    if (!Array.isArray(saved) || saved.length && (!saved[0]?.chat_metadata || evidenceSources(saved.slice(1)) !== evidenceSources(ctx2.chat) || archiveVersions(saved[0].chat_metadata) !== archives || ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) || !saved.length && (waitForSave || fields2.some((field3) => records(ctx2.chatMetadata[field3])))) {
+      let detail = mismatchReason(ctx2, saved);
+      if (Array.isArray(saved) && saved[0]?.chat_metadata && evidenceSources(saved.slice(1)) === evidenceSources(ctx2.chat)) {
+        if (archiveVersions(saved[0].chat_metadata) !== archives) {
+          detail = { code: "archive-version-mismatch", ...archiveMismatchDetail(archives, archiveVersions(saved[0].chat_metadata)) };
+        } else if (ctx2.chatMetadata.integrity && saved[0].chat_metadata.integrity !== ctx2.chatMetadata.integrity) {
+          detail = integrityMismatchDetail(ctx2.chatMetadata, saved[0].chat_metadata);
+        }
       }
+      if (waitForSave && ["source-mismatch", "file-empty"].includes(detail.code) && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, Math.min(250 * 2 ** retries++, 1e3, deadline - Date.now())));
+        continue;
+      }
+      throw new Error(`\u4FEE\u8BA2\u524D\u6838\u5BF9\u672A\u901A\u8FC7\uFF1A${mismatchSummary(detail.code, detail)}\u672A\u8986\u76D6\u539F\u6587\uFF1B\u8BF7\u7B49\u5F85\u4FDD\u5B58\u7ED3\u675F\u6216\u91CD\u65B0\u8FDB\u5165\u804A\u5929\u3002`);
     }
-    throw new Error(`\u4FEE\u8BA2\u524D\u6838\u5BF9\u672A\u901A\u8FC7\uFF1A${mismatchSummary(detail.code, detail)}\u672A\u8986\u76D6\u539F\u6587\uFF1B\u8BF7\u7B49\u5F85\u4FDD\u5B58\u7ED3\u675F\u6216\u91CD\u65B0\u8FDB\u5165\u804A\u5929\u3002`);
+    rememberChatFile(ctx2, saved);
+    checkpoint(ctx2);
+    return;
   }
-  rememberChatFile(ctx2, saved);
-  checkpoint(ctx2);
 }
 function sameSnapshot(ctx2, signature3, base) {
   return archiveContextCurrent(ctx2) && archiveSources(ctx2.chat) === signature3 && fields2.every((key) => ctx2.chatMetadata[key] === base[key]);
 }
-async function requestJSON(url2, body) {
+async function requestJSON(url2, body, timeoutMs = 15e3) {
+  if (timeoutMs <= 0) throw new Error("\u804A\u5929\u4FDD\u5B58\u4E0E\u6765\u6E90\u6838\u5BF9\u8D85\u65F6\uFF0C\u8BF7\u7B49\u5F85\u4FDD\u5B58\u540E\u91CD\u8BD5\u3002");
   if (typeof globalThis.XMLHttpRequest === "function") {
-    const value = await nativeJSON(url2, body);
+    const value = await nativeJSON(url2, body, timeoutMs);
     if (value?.skipped) throw new Error("\u804A\u5929\u4ECD\u5728\u52A0\u8F7D\uFF0C\u6863\u6848\u4FDD\u5B58\u5DF2\u53D6\u6D88\u3002");
     return value;
   }
-  const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 15e3);
+  const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await archiveFetch(url2, {
       method: "POST",
@@ -62468,9 +62797,10 @@ function getOutlineSelectedProfileId() {
 function getOutlineCustomProfiles() {
   const data = getExtData();
   const fallback = {
-    api_url: normalizeApiBaseUrl(String(data?.config?.url || "")),
+    api_url: normalizeApiProfileUrl(String(data?.config?.url || ""), data?.config),
     api_key: String(data?.config?.key || ""),
-    model: String(data?.config?.model || "")
+    model: String(data?.config?.model || ""),
+    ...normalizeApiProfileFormat(data?.config)
   };
   return normalizeRewriteCustomProfiles(data?.[OUTLINE_CUSTOM_PROFILES_KEY], fallback);
 }
@@ -62505,14 +62835,15 @@ function resolveOutlineConnection(model) {
   }
   const profile = getOutlineActiveProfile();
   if (!profile) return null;
-  const apiUrl = normalizeApiBaseUrl(String(profile.api_url || "").trim());
+  const apiUrl = normalizeApiProfileUrl(String(profile.api_url || "").trim(), profile);
   if (!apiUrl) throw new Error("\u8BF7\u5148\u586B\u5199 API \u5730\u5740");
   return {
     useSTConnection: false,
     profileName: "\u6545\u4E8B\u5927\u7EB2",
     url: apiUrl,
     key: String(profile.api_key || "").trim(),
-    model: model || String(profile.model || "").trim()
+    model: model || String(profile.model || "").trim(),
+    ...normalizeApiProfileFormat(profile)
   };
 }
 async function sendOutlineRequest(messages2, options2 = {}) {
@@ -66570,6 +66901,7 @@ var init_storyOutlineWindow = __esm({
     init_toolboxApiSelector();
     init_connection();
     init_apiProfileRegistry();
+    init_apiFormat();
     init_dom();
     init_storage();
     init_toolboxSettings();
@@ -67968,15 +68300,15 @@ function chatKey(ctx2) {
 }
 function sourceFields2(message) {
   const fields5 = [];
-  for (const key of ["mes", "message"]) if (own3(message, key)) fields5.push({ object: message, key, original: message[key] });
+  for (const key of ["mes", "message"]) if (own4(message, key)) fields5.push({ object: message, key, original: message[key] });
   const swipe = message.swipe_id;
   if (Array.isArray(message.swipes) && message.swipes.length) {
     const index2 = Number(swipe ?? 0);
     if (!Number.isInteger(index2) || index2 < 0 || index2 >= message.swipes.length) return { fields: fields5, reason: "\u5F53\u524D swipe \u7F16\u53F7\u65E0\u6548" };
     fields5.push({ object: message.swipes, key: index2, original: message.swipes[index2] });
-    if (own3(message.swipe_info?.[index2]?.extra, "display_text")) fields5.push({ object: message.swipe_info[index2].extra, key: "display_text", original: message.swipe_info[index2].extra.display_text, cache: true });
+    if (own4(message.swipe_info?.[index2]?.extra, "display_text")) fields5.push({ object: message.swipe_info[index2].extra, key: "display_text", original: message.swipe_info[index2].extra.display_text, cache: true });
   }
-  if (own3(message.extra, "display_text")) fields5.push({ object: message.extra, key: "display_text", original: message.extra.display_text, cache: true });
+  if (own4(message.extra, "display_text")) fields5.push({ object: message.extra, key: "display_text", original: message.extra.display_text, cache: true });
   return { fields: fields5, reason: "" };
 }
 function captureRewriteTarget(ctx2, index2, projection, container) {
@@ -68097,14 +68429,14 @@ async function commitRewritePatches(target, units, replacements, options2 = {}) 
     return failAll(String(cause?.message || cause));
   }
 }
-var own3, commitsInFlight;
+var own4, commitsInFlight;
 var init_textRewriteWriteback = __esm({
   "src/core/textRewriteWriteback.js"() {
     init_textRewritePatch();
     init_textRewriteCore();
     init_textRewritePrompts();
     init_localTextRevisions();
-    own3 = (object11, key) => Object.prototype.hasOwnProperty.call(object11 || {}, key);
+    own4 = (object11, key) => Object.prototype.hasOwnProperty.call(object11 || {}, key);
     commitsInFlight = /* @__PURE__ */ new WeakSet();
   }
 });
@@ -68367,13 +68699,13 @@ async function prepareParagraphMedia(target) {
 function makeParagraphWrite(writes3, object11, key, after) {
   const existing = writes3.find((write) => write.object === object11 && write.key === key);
   if (existing) existing.after = after;
-  else writes3.push({ object: object11, key, original: object11[key], after, had: own4(object11, key) });
+  else writes3.push({ object: object11, key, original: object11[key], after, had: own5(object11, key) });
 }
-var PARAGRAPH_MEDIA_KEY, own4, ignoredExtra;
+var PARAGRAPH_MEDIA_KEY, own5, ignoredExtra;
 var init_paragraphMedia = __esm({
   "src/core/paragraphMedia.js"() {
     PARAGRAPH_MEDIA_KEY = "titania_paragraph_media";
-    own4 = (object11, key) => Object.prototype.hasOwnProperty.call(object11 || {}, key);
+    own5 = (object11, key) => Object.prototype.hasOwnProperty.call(object11 || {}, key);
     ignoredExtra = /* @__PURE__ */ new Set([
       PARAGRAPH_MEDIA_KEY,
       "echo_tts",
@@ -76042,7 +76374,7 @@ function commitParagraphEdit(target, replacement, { remove = false, sourcePatche
       const extra = writes3.find((write) => write.object === message && write.key === "extra")?.after || message.extra || {};
       if (!message.extra && !writes3.some((write) => write.object === message && write.key === "extra")) makeParagraphWrite(writes3, message, "extra", extra);
       makeParagraphWrite(writes3, message, "mes", edit.rewritten);
-      if (own5(message, "message")) makeParagraphWrite(writes3, message, "message", edit.rewritten);
+      if (own6(message, "message")) makeParagraphWrite(writes3, message, "message", edit.rewritten);
       if (Array.isArray(message.swipes) && message.swipes.length) makeParagraphWrite(writes3, message.swipes, swipe, edit.rewritten);
       makeParagraphWrite(writes3, extra, LOCAL_TEXT_REVISION_KEY, revision);
       if (textAction) {
@@ -76071,7 +76403,7 @@ function commitParagraphEdit(target, replacement, { remove = false, sourcePatche
       tts.assertCurrent?.();
       displayEdit?.assertCurrent?.();
       if (guard && !guard()) throw new Error("\u5199\u56DE\u524D\u6539\u5199\u4EFB\u52A1\u6216\u6A21\u5F0F\u5DF2\u53D8\u5316\uFF0C\u6CA1\u6709\u4FDD\u5B58\u65E7\u7ED3\u679C\u3002");
-      for (const write of writes3) if (write.object[write.key] !== write.original || own5(write.object, write.key) !== write.had) throw new Error("\u4FDD\u5B58\u524D\u6D88\u606F\u9644\u52A0\u6570\u636E\u5DF2\u53D8\u5316\uFF0C\u8BF7\u518D\u4FDD\u5B58\u4E00\u6B21\u3002");
+      for (const write of writes3) if (write.object[write.key] !== write.original || own6(write.object, write.key) !== write.had) throw new Error("\u4FDD\u5B58\u524D\u6D88\u606F\u9644\u52A0\u6570\u636E\u5DF2\u53D8\u5316\uFF0C\u8BF7\u518D\u4FDD\u5B58\u4E00\u6B21\u3002");
       mutated = true;
       for (const write of writes3) write.object[write.key] = write.after;
       displayEdit?.apply?.();
@@ -76166,7 +76498,7 @@ function commitParagraphEdit(target, replacement, { remove = false, sourcePatche
     };
   });
 }
-var ARCHIVES, own5, getContext2, currentSwipe;
+var ARCHIVES, own6, getContext2, currentSwipe;
 var init_paragraphEditing = __esm({
   "src/core/paragraphEditing.js"() {
     init_contentChangeEvents();
@@ -76185,7 +76517,7 @@ var init_paragraphEditing = __esm({
     init_textRewritePatch();
     init_textRewriteCore();
     ARCHIVES = ["titania_story_memory", "echo_timetrace_v4", "titania_character_evolution"];
-    own5 = (object11, key) => Object.prototype.hasOwnProperty.call(object11 || {}, key);
+    own6 = (object11, key) => Object.prototype.hasOwnProperty.call(object11 || {}, key);
     getContext2 = () => globalThis.SillyTavern?.getContext?.();
     currentSwipe = (message) => Number(message.swipe_id ?? 0);
   }
@@ -76413,7 +76745,14 @@ function getSelectedRewritePromptState() {
 }
 function rewriteSettingsSignature(selected = false) {
   const data = ensureRewriteDataShape(), global = getExtData(), profileId = toolboxProfileId(global, "rewrite");
-  const api = profileId === null ? [data.profile_id, data.custom_profiles, data.api_url, data.api_key, data.model] : global.config?.profiles?.find((profile) => profile.id === (profileId || global.config?.active_profile_id));
+  const api = profileId === null ? [
+    data.profile_id,
+    data.custom_profiles,
+    data.api_url,
+    data.api_key,
+    data.model,
+    ...normalizeApiFormat(data) === "gemini" ? ["gemini"] : []
+  ] : global.config?.profiles?.find((profile) => profile.id === (profileId || global.config?.active_profile_id));
   return JSON.stringify([
     data.enabled,
     data.execution_mode,
@@ -76870,7 +77209,8 @@ async function requestRewriteWithOptions(apiUrl, apiKey, model, messages2, maxTo
     const { sendChatRequestWithConnection: sendChatRequestWithConnection2 } = await Promise.resolve().then(() => (init_connection(), connection_exports));
     return sendChatRequestWithConnection2(options2.connection, messages2, { ...options2, model, maxTokens, respectRequestLimits: true });
   }
-  return sendChatCompletion({
+  const sendCompletion = normalizeApiFormat(options2.connection ?? options2.apiFormat) === "gemini" ? sendGeminiCompletion : sendChatCompletion;
+  return sendCompletion({
     url: apiUrl,
     key: apiKey,
     model,
@@ -77030,6 +77370,7 @@ async function executeRewriteRequest({ data, latest, evaluated, source: source2 
         temperature: REWRITE_TEMPERATURE,
         stream,
         signal: task.controller.signal,
+        ...!connection && normalizeApiFormat(data) === "gemini" ? { apiFormat: "gemini" } : {},
         onProgress: (all) => {
           if (rewriteTaskCurrent(task)) setRawResponse(all);
         }
@@ -77341,6 +77682,13 @@ async function processAutomaticReplyText(task) {
     }
     if (!replyTextTaskCurrent(task)) return { confirmed: false };
     if (!task.controller.signal.aborted && task.plan.signature === rewriteSettingsSignature() && sameTextWithInlineImageSlots(task.source, String(task.message.mes ?? ""))) {
+      const valid = () => replyTextTaskCurrent(task) && !task.controller.signal.aborted && task.plan.signature === rewriteSettingsSignature() && sameTextWithInlineImageSlots(task.source, String(task.message.mes ?? ""));
+      setStatus("\u6B63\u5728\u7B49\u5F85\u672C\u8F6E\u539F\u6587\u4FDD\u5B58\u5B8C\u6210\uFF0C\u518D\u6267\u884C\u81EA\u52A8\u6B63\u6587\u5904\u7406\u3002", "muted");
+      await awaitReplyTextWork(prepareArchiveSourceEdit(captureArchiveContext(globalThis.SillyTavern.getContext()), {
+        waitForSave: true,
+        valid
+      }), task.controller.signal);
+      if (!valid()) throw new DOMException("\u6B63\u6587\u5904\u7406\u4EFB\u52A1\u6216\u8BBE\u7F6E\u5DF2\u53D8\u5316", "AbortError");
       if (task.plan.mode === "auto_delete") {
         isAutoDeleting = true;
         try {
@@ -77365,7 +77713,10 @@ async function processAutomaticReplyText(task) {
   if (!replyTextTaskCurrent(task)) return { confirmed: false };
   const ctx2 = globalThis.SillyTavern?.getContext?.(), source2 = String(task.message.mes ?? "");
   try {
-    await prepareArchiveSourceEdit(captureArchiveContext(ctx2));
+    await prepareArchiveSourceEdit(captureArchiveContext(ctx2), {
+      waitForSave: true,
+      valid: () => replyTextTaskCurrent(task) && String(task.message.mes ?? "") === source2
+    });
     if (!replyTextTaskCurrent(task) || String(task.message.mes ?? "") !== source2) return { confirmed: false };
     return { confirmed: true, source: source2 };
   } catch (error4) {
@@ -78137,6 +78488,7 @@ var init_rewriteEntryButton = __esm({
     init_apiProfileRegistry();
     init_toolboxSettings();
     init_relayClient();
+    init_apiFormat();
     init_textRewriteCore();
     init_textRewritePrompts();
     BTN_ID = "titania-rewrite-entry-btn";
@@ -87199,7 +87551,7 @@ function persistRetrievalIdentities(owner, source2, plan, { signal, verifyOwners
           writes3.push({
             message,
             key,
-            had: own6(message, key),
+            had: own7(message, key),
             before: message[key],
             after: planned[key],
             afterSignature: fullSignature(planned[key])
@@ -87294,7 +87646,7 @@ async function locateRetrievalMessage(owner, result) {
   }
   return row.floor;
 }
-var loadToken, bound2, observedIdentities, SOURCE_SAVE_BUSY, SOURCE_WAIT_MS, SOURCE_WAIT_DELAYS, own6, context7, retrievalExtractionRules, retrievalRulesSignature, extractRetrievalText, canonicalJSON, fullSignature, jsonSnapshot, valueType;
+var loadToken, bound2, observedIdentities, SOURCE_SAVE_BUSY, SOURCE_WAIT_MS, SOURCE_WAIT_DELAYS, own7, context7, retrievalExtractionRules, retrievalRulesSignature, extractRetrievalText, canonicalJSON, fullSignature, jsonSnapshot, valueType;
 var init_retrievalSource = __esm({
   "src/core/retrievalSource.js"() {
     init_defaults();
@@ -87312,7 +87664,7 @@ var init_retrievalSource = __esm({
     SOURCE_SAVE_BUSY = "\u804A\u5929\u6B63\u5728\u4FDD\u5B58\u6216\u4FEE\u6539\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5\u3002";
     SOURCE_WAIT_MS = 8e3;
     SOURCE_WAIT_DELAYS = [200, 500, 1e3, 2e3, 3e3];
-    own6 = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+    own7 = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
     context7 = () => globalThis.SillyTavern?.getContext?.();
     retrievalExtractionRules = () => getToolboxExtraction(extension_settings3?.[extensionName] || {});
     retrievalRulesSignature = () => retrievalDigest(["toolbox-extraction-v1", retrievalExtractionRules()]);
