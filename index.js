@@ -66649,30 +66649,82 @@ function parseCommaList(input) {
 function uniq(arr) {
   return [...new Set(arr)];
 }
-function splitBySentence(text11) {
-  const src = String(text11 || "");
-  if (!src.trim()) return [];
-  const lines = src.split(/\r?\n/);
-  const chunks = [];
-  lines.forEach((line) => {
-    if (!line.trim()) return;
-    const arr = line.split(/(?<=[。！？!?])/u).filter((s) => s.trim());
-    if (arr.length === 0) {
-      chunks.push(line);
-    } else {
-      chunks.push(...arr);
+function splitTextSentences(text11) {
+  const source2 = String(text11 || "");
+  const units = [];
+  let start = 0, cursor = 0;
+  const sentenceStop = (index2) => {
+    if (/[。！？!?]/.test(source2[index2])) return true;
+    if (source2[index2] !== "." || index2 + 1 < source2.length && !/[\s”’"'）)\]】]/.test(source2[index2 + 1])) return false;
+    const token3 = /[A-Za-z.]+$/.exec(source2.slice(start, index2))?.[0] || "";
+    const initial = /^[A-Z]$/.test(token3) && /^\s+[A-Z][a-z]/.test(source2.slice(index2 + 1));
+    return !initial && !/^(?:mr|mrs|ms|dr|prof|sr|jr|st|vs|etc|e\.g|i\.e)$/i.test(token3);
+  };
+  const append = (end) => {
+    const sourceText = source2.slice(start, end), body = sourceText.trim();
+    if (!body) {
+      if (units.length) units.at(-1).sourceText += sourceText;
+      return;
     }
-  });
-  return chunks;
+    const leading = sourceText.length - sourceText.trimStart().length;
+    units.push({
+      unitIndex: units.length + 1,
+      text: body,
+      sourceText,
+      projectionStart: start + leading,
+      projectionEnd: start + leading + body.length,
+      hit: false,
+      hitWords: [],
+      matchedRules: []
+    });
+  };
+  while (cursor < source2.length) {
+    if (sentenceStop(cursor)) {
+      let end = cursor + 1;
+      while (end < source2.length && /[。！？!?….]/.test(source2[end])) end++;
+      while (end < source2.length && /[”’」』）)\]】》〉"']/.test(source2[end])) end++;
+      while (end < source2.length && /\s/.test(source2[end])) end++;
+      append(end);
+      start = end;
+      cursor = end;
+    } else if (/[\r\n\p{Zl}\p{Zp}]/u.test(source2[cursor])) {
+      let end = cursor + 1;
+      while (end < source2.length && /\s/.test(source2[end])) end++;
+      if (source2.slice(start, end).trim() || units.length) {
+        append(end);
+        start = end;
+      }
+      cursor = end;
+    } else cursor++;
+  }
+  if (start < source2.length) append(source2.length);
+  return units;
 }
-function matchKeywordRule(unitText, rule) {
-  const anchorList = parseCommaList(String(rule?.anchor || ""));
-  const extrasList = parseCommaList(String(rule?.extras || ""));
-  if (anchorList.length === 0 || extrasList.length === 0) return false;
-  return String(unitText || "").split(/[\p{P}\r\n\u2028\u2029]+/u).some((clause) => {
-    const source2 = normalizeToken(clause);
-    return anchorList.some((kw) => source2.includes(kw)) && extrasList.some((kw) => source2.includes(kw));
+function splitRuleClauses(text11) {
+  const source2 = String(text11 || ""), clauses = [];
+  let start = 0;
+  const append = (end, sourceEnd, separator) => clauses.push({
+    text: source2.slice(start, end),
+    start,
+    end,
+    sourceEnd,
+    separator,
+    sourceText: source2.slice(start, sourceEnd)
   });
+  for (const boundary2 of source2.matchAll(RULE_CLAUSE_BOUNDARIES)) {
+    const end = boundary2.index, sourceEnd = end + boundary2[0].length;
+    append(end, sourceEnd, boundary2[0]);
+    start = sourceEnd;
+  }
+  if (start < source2.length) append(source2.length, source2.length, "");
+  return clauses;
+}
+function matchClauseWords(text11, triggers, extras = [], excludes = []) {
+  const normalized = normalizeToken(text11);
+  if (excludes.some((word) => normalized.includes(normalizeToken(word)))) return null;
+  const triggerWords = triggers.filter((word) => normalized.includes(normalizeToken(word)));
+  const extraWords = extras.filter((word) => normalized.includes(normalizeToken(word)));
+  return triggerWords.length && (!extras.length || extraWords.length) ? { triggerWords, extraWords } : null;
 }
 function normalizeDeleteMode(mode) {
   const value = String(mode || "").trim().toLowerCase();
@@ -66681,6 +66733,64 @@ function normalizeDeleteMode(mode) {
   if (value === "clause") return "clause";
   return "sentence";
 }
+function normalizeDeleteMatchScope(value) {
+  return String(value || "").trim().toLowerCase() === "sentence" ? "sentence" : "clause";
+}
+function deleteWordProjection(input, literal = false) {
+  const source2 = String(input || ""), map = [];
+  let text11 = "", offset = 0, space = null;
+  const append = (value, range3) => {
+    text11 += value;
+    const length = literal ? value.length : value.toLowerCase().length;
+    for (let i = 0; i < length; i++) map.push(range3);
+  };
+  for (const char of source2) {
+    const end = offset + char.length;
+    if (!literal && /\s/u.test(char)) {
+      if (text11) space = space ? { start: space.start, end } : { start: offset, end };
+    } else {
+      if (space) {
+        append(" ", space);
+        space = null;
+      }
+      append(char, { start: offset, end });
+    }
+    offset = end;
+  }
+  return { text: literal ? text11 : text11.toLowerCase(), map };
+}
+function deleteWordOccurrences(projection, words2, literal = false) {
+  const ranges = /* @__PURE__ */ new Map();
+  for (const word of words2) {
+    const token3 = literal ? word : normalizeToken(word);
+    if (!token3) continue;
+    let cursor = 0, index2;
+    while ((index2 = projection.text.indexOf(token3, cursor)) >= 0) {
+      const first = projection.map[index2], last = projection.map[index2 + token3.length - 1];
+      if (first && last) ranges.set(`${first.start}:${last.end}:${word}`, { start: first.start, end: last.end, word });
+      cursor = index2 + 1;
+    }
+  }
+  return [...ranges.values()];
+}
+function matchDeleteScope(text11, anchors, extras, literalAnchors = false) {
+  const normalized = deleteWordProjection(text11);
+  const anchorProjection = literalAnchors ? deleteWordProjection(text11, true) : normalized;
+  const anchorRanges = deleteWordOccurrences(anchorProjection, anchors, literalAnchors);
+  const extraRanges = deleteWordOccurrences(normalized, extras);
+  const pairedAnchors = extras.length ? anchorRanges.filter((anchor) => extraRanges.some((extra) => separateDeletePositions(anchor, extra))) : anchorRanges;
+  return { hit: pairedAnchors.length > 0, anchorRanges, pairedAnchors };
+}
+function deleteMatchScopes(text11, matchScope) {
+  return normalizeDeleteMatchScope(matchScope) === "sentence" ? splitTextSentences(text11).map((unit) => ({ text: unit.text, start: unit.projectionStart })) : splitRuleClauses(text11);
+}
+function matchDeleteRule(text11, rule) {
+  if (rule?.enabled === false) return false;
+  if (normalizeDeleteMode(rule?.mode) === "keyword") return findKeywordDeleteRanges(text11, rule).length > 0;
+  const anchors = parseCommaList(rule?.anchor), extras = parseCommaList(rule?.extras);
+  if (!anchors.length || !extras.length) return false;
+  return deleteMatchScopes(text11, rule?.match_scope).some((scope3) => matchDeleteScope(scope3.text, anchors, extras).hit);
+}
 function parseDeleteKeywords(input) {
   return uniq(String(input || "").split(/[，,\r\n]+/u).map((value) => value.trim()).filter(Boolean));
 }
@@ -66688,33 +66798,13 @@ function isCompleteDeleteRule(rule) {
   return parseDeleteKeywords(rule?.anchor).length > 0 && (normalizeDeleteMode(rule?.mode) === "keyword" || parseDeleteKeywords(rule?.extras).length > 0);
 }
 function findKeywordDeleteRanges(text11, rule) {
-  const source2 = String(text11 || "");
-  const keywords = parseDeleteKeywords(rule?.anchor);
-  const extras = parseDeleteKeywords(rule?.extras).map(normalizeToken);
+  const source2 = String(text11 || ""), keywords = parseDeleteKeywords(rule?.anchor), extras = parseDeleteKeywords(rule?.extras);
   if (!keywords.length) return [];
-  const clauses = [];
-  if (!extras.length) clauses.push({ text: source2, start: 0 });
-  else {
-    let start = 0;
-    for (const boundary2 of source2.matchAll(/[\p{P}\p{Zl}\p{Zp}\r\n]+/gu)) {
-      clauses.push({ text: source2.slice(start, boundary2.index), start });
-      start = boundary2.index + boundary2[0].length;
-    }
-    clauses.push({ text: source2.slice(start), start });
-  }
-  const ranges = [];
-  for (const clause of clauses) {
-    if (extras.length && !extras.some((keyword) => normalizeToken(clause.text).includes(keyword))) continue;
-    for (const keyword of keywords) {
-      let cursor = 0;
-      let index2;
-      while ((index2 = clause.text.indexOf(keyword, cursor)) >= 0) {
-        ranges.push({ start: clause.start + index2, end: clause.start + index2 + keyword.length, keyword });
-        cursor = index2 + 1;
-      }
-    }
-  }
-  return ranges;
+  if (!extras.length) return deleteWordOccurrences(deleteWordProjection(source2, true), keywords, true).map((range3) => ({ start: range3.start, end: range3.end, keyword: range3.word }));
+  return deleteMatchScopes(source2, rule?.match_scope).flatMap((scope3) => {
+    const matched = matchDeleteScope(scope3.text, keywords, extras, true);
+    return matched.pairedAnchors.map((range3) => ({ start: scope3.start + range3.start, end: scope3.start + range3.end, keyword: range3.word }));
+  });
 }
 function mergeDeleteEdits(edits) {
   const merged = [];
@@ -66735,66 +66825,59 @@ function applyDeleteEdits(text11, edits) {
   }
   return output;
 }
-function splitIntoClauses(sentence) {
-  const s = String(sentence || "");
-  const parts = [];
-  let buf = "";
-  for (const ch of s) {
-    buf += ch;
-    if (/[，、；,;]/.test(ch)) {
-      parts.push(buf);
-      buf = "";
-    }
-  }
-  if (buf) parts.push(buf);
-  return parts;
-}
-function buildClauseDeleteEdits(text11, anchor) {
-  const anchorList = parseCommaList(String(anchor || ""));
-  if (!anchorList.length) return [];
-  const edits = [];
-  const kept = [];
-  let offset = 0;
-  for (const clause of splitIntoClauses(text11)) {
-    const end = offset + clause.length;
-    if (anchorList.some((keyword) => normalizeToken(clause).includes(keyword))) edits.push({ start: offset, end, after: "" });
-    else kept.push({ text: clause, start: offset, end });
-    offset = end;
+function buildClauseDeleteEdits(text11, anchor, extras, matchScope = "clause") {
+  const anchorList = parseCommaList(String(anchor || "")), extrasList = parseCommaList(String(extras || ""));
+  if (!anchorList.length || !extrasList.length) return [];
+  const sentenceAnchors = normalizeDeleteMatchScope(matchScope) === "sentence" ? deleteMatchScopes(text11, "sentence").flatMap((scope3) => {
+    const matched = matchDeleteScope(scope3.text, anchorList, extrasList);
+    return matched.hit ? matched.anchorRanges.map((range3) => ({ start: scope3.start + range3.start, end: scope3.start + range3.end })) : [];
+  }) : null;
+  const edits = [], kept = [];
+  for (const clause of splitRuleClauses(text11)) {
+    const hit = sentenceAnchors ? sentenceAnchors.some((range3) => range3.start >= clause.start && range3.end <= clause.end) : matchDeleteScope(clause.text, anchorList, extrasList).hit;
+    if (hit) {
+      const end = STRUCTURAL_CLAUSE_PUNCTUATION.test(clause.separator) ? clause.end : clause.sourceEnd;
+      edits.push({ start: clause.start, end, after: "" });
+      if (end < clause.sourceEnd) kept.push({ text: text11.slice(end, clause.sourceEnd), start: end, end: clause.sourceEnd, words: false });
+    } else kept.push({ text: clause.sourceText, start: clause.start, end: clause.sourceEnd, words: !!clause.text.trim() });
   }
   if (!edits.length) return [];
+  if (!kept.some((part) => part.words)) return [{ start: 0, end: text11.length, after: "" }];
   let output = kept.map((part) => part.text).join("");
-  if (!output.trim()) return [{ start: 0, end: text11.length, after: "" }];
-  const trailing = /[，、；,;]\s*$/.exec(output);
-  if (trailing) {
+  const removeKeptRange = (from2, to2) => {
     let cursor = 0;
     for (const part of kept) {
-      const from = Math.max(trailing.index, cursor);
-      const to = cursor + part.text.length;
-      if (from < to) edits.push({ start: part.start + from - cursor, end: part.end, after: "" });
-      cursor = to;
+      const first = Math.max(from2, cursor), last = Math.min(to2, cursor + part.text.length);
+      if (first < last) edits.push({ start: part.start + first - cursor, end: part.start + last - cursor, after: "" });
+      cursor += part.text.length;
     }
-    output = output.slice(0, trailing.index);
-  }
-  const endMatch = /[。！？!?…]+\s*$/.exec(text11);
+  };
+  const leading = !kept[0]?.words ? /^[\s，、；,;:：—-]+/u.exec(output) : null;
+  const trailing = /[，、；,;:：—-]+\s*$/u.exec(output);
+  const from = leading?.[0].length || 0, to = trailing ? trailing.index : output.length;
+  if (from) removeKeptRange(0, from);
+  if (trailing) removeKeptRange(to, output.length);
+  output = output.slice(from, to);
+  const endMatch = /[。！？!?….]+\s*$/.exec(text11);
   const endPunct = endMatch ? endMatch[0].trim() : "";
-  if (endPunct && !/[。！？!?…”」』）)]\s*$/.test(output)) {
+  if (endPunct && !/[。！？!?….”’」』）)\]】》〉"']\s*$/.test(output)) {
     const tail = edits.find((edit) => edit.end === text11.length);
     if (tail) tail.after = endPunct;
   }
   return mergeDeleteEdits(edits);
 }
-function buildDeleteEdits(unitText, mode, fragment, anchor, extras) {
+function buildDeleteEdits(unitText, mode, fragment, anchor, extras, matchScope = "clause") {
   const text11 = String(unitText || "");
   const normMode = normalizeDeleteMode(mode);
-  if (normMode === "keyword") return mergeDeleteEdits(findKeywordDeleteRanges(text11, { anchor, extras }));
+  if (normMode === "keyword") return mergeDeleteEdits(findKeywordDeleteRanges(text11, { anchor, extras, match_scope: matchScope }));
   if (normMode === "sentence") return text11 ? [{ start: 0, end: text11.length, after: "" }] : [];
-  if (normMode === "clause") return buildClauseDeleteEdits(text11, anchor);
+  if (normMode === "clause") return buildClauseDeleteEdits(text11, anchor, extras, matchScope);
   const frag = String(fragment || "").trim();
   if (!frag) return [];
   const index2 = text11.indexOf(frag);
   if (index2 < 0) return [];
   const tail = text11.slice(index2 + frag.length);
-  const punct = /[。！？!?…]\s*$/.exec(tail);
+  const punct = /[。！？!?….]\s*$/.exec(tail);
   const head = text11.slice(0, index2).replace(/[，、；,;]\s*$/, "");
   const openMatch = /[（(]\s*$/.exec(head);
   if (openMatch) return [{ start: head.length - openMatch[0].length, end: text11.length, after: head.endsWith("\uFF08") ? "\uFF09" : ")" }];
@@ -66803,11 +66886,8 @@ function buildDeleteEdits(unitText, mode, fragment, anchor, extras) {
 function evaluateDeleteRules(text11, splitMode, rules) {
   const source2 = String(text11 || "");
   const activeRules = (Array.isArray(rules) ? rules : []).filter((rule) => rule && rule.enabled !== false && isCompleteDeleteRule(rule));
-  const units = splitBySentence(source2);
-  let cursor = 0;
-  const unitResults = units.map((unit, index2) => {
-    const projectionStart = source2.indexOf(unit, cursor);
-    if (projectionStart >= 0) cursor = projectionStart + unit.length;
+  const unitResults = splitTextSentences(source2).map((sentence) => {
+    const unit = sentence.text, projectionStart = sentence.projectionStart;
     let legacyRule = null;
     let bestRank = 0;
     const keywordRanges = [];
@@ -66819,7 +66899,7 @@ function evaluateDeleteRules(text11, splitMode, rules) {
         if (!ranges.length) continue;
         keywordRanges.push(...ranges);
         matchedRules.push(rule);
-      } else if (matchKeywordRule(unit, rule)) {
+      } else if (matchDeleteRule(unit, rule)) {
         matchedRules.push(rule);
         const rank = { sentence: 3, clause: 2, fragment: 1 }[mode];
         if (rank > bestRank) {
@@ -66833,24 +66913,29 @@ function evaluateDeleteRules(text11, splitMode, rules) {
     const deleteMode = hit ? normalizeDeleteMode(matchedRule.mode) : null;
     const fragment = legacyRule && deleteMode === "fragment" ? String(legacyRule.fragment || "") : "";
     const anchor = legacyRule ? String(legacyRule.anchor || "") : "";
-    const legacyEdits = legacyRule ? buildDeleteEdits(unit, deleteMode, fragment, anchor) : [];
+    const extras = legacyRule ? String(legacyRule.extras || "") : "";
+    const matchScope = normalizeDeleteMatchScope(matchedRule?.match_scope);
+    const legacyEdits = legacyRule ? buildDeleteEdits(unit, deleteMode, fragment, anchor, extras, matchScope) : [];
     const edits = mergeDeleteEdits([...legacyEdits, ...keywordRanges]);
     const distinctHits = [...new Map(keywordRanges.map((range3) => [`${range3.start}:${range3.end}:${range3.keyword}`, range3])).values()];
     return {
-      unitIndex: index2 + 1,
+      unitIndex: sentence.unitIndex,
       text: unit,
+      sourceText: sentence.sourceText,
       projectionStart,
-      projectionEnd: projectionStart + unit.length,
+      projectionEnd: sentence.projectionEnd,
       hit,
       deleteMode,
       fragment,
       anchor,
+      extras,
+      match_scope: matchScope,
       edits,
       keywordRanges: distinctHits,
       keywordCount: mergeDeleteEdits(distinctHits).length,
       removedKeywords: uniq(distinctHits.map((range3) => range3.keyword)),
       after: applyDeleteEdits(unit, edits),
-      matchedRule: hit ? { anchor: matchedRule.anchor, extras: matchedRule.extras } : null
+      matchedRule: hit ? { anchor: matchedRule.anchor, extras: matchedRule.extras, match_scope: matchScope } : null
     };
   });
   const deleteUnits = unitResults.filter((unit) => unit.hit);
@@ -66920,75 +67005,21 @@ function ensureRewriteExecutionMode(item2) {
   item2.execution_conflict = ai && deletion;
   return mode;
 }
-function splitRewriteSentences(text11) {
-  const source2 = String(text11 || "");
-  const units = [];
-  let start = 0, cursor = 0;
-  const sentenceStop = (index2) => {
-    if (/[。！？!?]/.test(source2[index2])) return true;
-    if (source2[index2] !== "." || index2 + 1 < source2.length && !/[\s”’"'）)\]】]/.test(source2[index2 + 1])) return false;
-    const token3 = /[A-Za-z.]+$/.exec(source2.slice(start, index2))?.[0] || "";
-    const initial = /^[A-Z]$/.test(token3) && /^\s+[A-Z][a-z]/.test(source2.slice(index2 + 1));
-    return !initial && !/^(?:mr|mrs|ms|dr|prof|sr|jr|st|vs|etc|e\.g|i\.e)$/i.test(token3);
-  };
-  const append = (end) => {
-    const sourceText = source2.slice(start, end), body = sourceText.trim();
-    if (!body) {
-      if (units.length) units.at(-1).sourceText += sourceText;
-      return;
-    }
-    const leading = sourceText.length - sourceText.trimStart().length;
-    units.push({
-      unitIndex: units.length + 1,
-      text: body,
-      sourceText,
-      projectionStart: start + leading,
-      projectionEnd: start + leading + body.length,
-      hit: false,
-      hitWords: [],
-      matchedRules: []
-    });
-  };
-  while (cursor < source2.length) {
-    if (sentenceStop(cursor)) {
-      let end = cursor + 1;
-      while (end < source2.length && /[。！？!?….]/.test(source2[end])) end++;
-      while (end < source2.length && /[”’」』）)\]】》〉"']/.test(source2[end])) end++;
-      while (end < source2.length && /\s/.test(source2[end])) end++;
-      append(end);
-      start = end;
-      cursor = end;
-    } else if (/[\r\n\p{Zl}\p{Zp}]/u.test(source2[cursor])) {
-      let end = cursor + 1;
-      while (end < source2.length && /\s/.test(source2[end])) end++;
-      if (source2.slice(start, end).trim() || units.length) {
-        append(end);
-        start = end;
-      }
-      cursor = end;
-    } else cursor++;
-  }
-  if (start < source2.length) append(source2.length);
-  return units;
-}
 function matchRewriteRule(text11, rule) {
   const triggers = parseRewriteWords(rule?.trigger_words), extras = parseRewriteWords(rule?.extra_words), excludes = parseRewriteWords(rule?.exclude_words);
   const hitTriggers = [], hitExtras = [];
   if (!triggers.length || rule?.enabled === false) return { hit: false, triggerWords: [], extraWords: [] };
-  for (const clause of String(text11 || "").split(/[\p{P}\p{Zl}\p{Zp}\r\n]+/u)) {
-    const normalized = normalizeToken(clause);
-    if (excludes.some((word) => normalized.includes(normalizeToken(word)))) continue;
-    const triggerWords = triggers.filter((word) => normalized.includes(normalizeToken(word)));
-    const extraWords = extras.filter((word) => normalized.includes(normalizeToken(word)));
-    if (!triggerWords.length || extras.length && !extraWords.length) continue;
-    hitTriggers.push(...triggerWords);
-    hitExtras.push(...extraWords);
+  for (const clause of splitRuleClauses(text11)) {
+    const matched = matchClauseWords(clause.text, triggers, extras, excludes);
+    if (!matched) continue;
+    hitTriggers.push(...matched.triggerWords);
+    hitExtras.push(...matched.extraWords);
   }
   return { hit: hitTriggers.length > 0, triggerWords: uniq(hitTriggers), extraWords: uniq(hitExtras) };
 }
 function evaluateRewriteRules(text11, rules = []) {
   const activeRules = (Array.isArray(rules) ? rules : []).map(normalizeRewriteRule).filter((rule) => rule.enabled && rule.trigger_words);
-  const unitResults = splitRewriteSentences(text11).map((unit) => {
+  const unitResults = splitTextSentences(text11).map((unit) => {
     const matchedRules = activeRules.map((rule) => ({ rule, ...matchRewriteRule(unit.text, rule) })).filter((match) => match.hit);
     return {
       ...unit,
@@ -67136,9 +67167,14 @@ function splitLegacyRules(legacyItem) {
   }).filter((s) => s.name);
   return { rewriteSchemes, deletionRules };
 }
+var splitRewriteSentences, RULE_CLAUSE_BOUNDARIES, STRUCTURAL_CLAUSE_PUNCTUATION, separateDeletePositions;
 var init_textRewriteCore = __esm({
   "src/core/textRewriteCore.js"() {
     init_textRewritePrompts();
+    splitRewriteSentences = splitTextSentences;
+    RULE_CLAUSE_BOUNDARIES = /[\p{P}\p{Zl}\p{Zp}\r\n]+/gu;
+    STRUCTURAL_CLAUSE_PUNCTUATION = /["'“”‘’「」『』（）()\[\]{}【】《》〈〉]/u;
+    separateDeletePositions = (anchor, extra) => anchor.end <= extra.start || extra.end <= anchor.start;
   }
 });
 
@@ -67297,6 +67333,7 @@ function mountDeleteRulesEditor(container, rules = []) {
     anchor: String(rule?.anchor || ""),
     extras: String(rule?.extras || ""),
     mode: normalizeDeleteMode(rule?.mode ?? "keyword"),
+    match_scope: normalizeDeleteMatchScope(rule?.match_scope),
     fragment: String(rule?.fragment || ""),
     enabled: rule?.enabled !== false,
     retired_paragraph: rule?.retired_paragraph === true
@@ -67333,9 +67370,10 @@ function mountDeleteRulesEditor(container, rules = []) {
                     <label class="t-delete-field"><span><span data-delete-anchor-label>\u5220\u9664\u8BCD</span> <small>\u5FC5\u586B</small></span><textarea class="text_pole t-delete-rule-anchor" rows="2" data-delete-field="anchor" placeholder="\u4F8B\u5982\uFF1A\u597D\u50CF\uFF0C\u4F3C\u4E4E\uFF0C\u4EFF\u4F5B"></textarea><small data-delete-anchor-hint></small></label>
                     <div class="t-delete-condition-link"><span></span><b data-delete-condition-label>\u9644\u52A0\u6761\u4EF6\uFF08\u53EF\u9009\uFF09</b><span></span></div>
                     <label class="t-delete-field"><span>\u9644\u52A0\u8BCD <small data-delete-extras-required>\u53EF\u9009</small></span><textarea class="text_pole t-delete-rule-extras" rows="2" data-delete-field="extras" placeholder="\u7559\u7A7A\u76F4\u63A5\u5220\u8BCD\uFF1B\u586B\u5199\u5219\u8981\u6C42\u540C\u4E00\u5C0F\u53E5\u547D\u4E2D"></textarea><small data-delete-extras-hint></small></label>
+                    <label class="t-delete-field"><span>\u5224\u5B9A\u8303\u56F4</span><select class="text_pole" data-delete-field="match_scope"><option value="clause">\u540C\u5C0F\u53E5</option><option value="sentence">\u540C\u6574\u53E5</option></select><small data-delete-scope-hint></small></label>
                     <label class="t-delete-field"><span>\u5220\u9664\u65B9\u5F0F</span><select class="text_pole t-delete-rule-mode" data-delete-field="mode"><option value="keyword">\u5220\u9664\u547D\u4E2D\u5173\u952E\u8BCD</option><option value="sentence">\u5220\u9664\u6574\u53E5</option><option value="clause">\u5220\u9664\u5C0F\u53E5</option><option value="fragment">\u5220\u9664\u7247\u6BB5</option></select><small data-delete-mode-hint></small></label>
                     <label class="t-delete-field" data-delete-fragment-field hidden><span>\u5220\u9664\u8D77\u70B9\u7247\u6BB5</span><textarea class="text_pole t-delete-rule-fragment" rows="2" data-delete-field="fragment" placeholder="\u4F8B\u5982\uFF1A\u90A3\u7B11\u58F0\u50CF"></textarea><small>\u586B\u5199\u539F\u6587\u4E2D\u7684\u8FDE\u7EED\u7247\u6BB5\uFF0C\u4ECE\u6B64\u5904\u5220\u5230\u53E5\u5C3E\u3002</small></label>
-                    <details class="t-delete-matching-help"><summary>\u5982\u4F55\u5224\u65AD\u547D\u4E2D</summary><p>\u5173\u952E\u8BCD\u65B9\u5F0F\u53EA\u9700\u586B\u5199\u5220\u9664\u8BCD\uFF0C\u652F\u6301\u9017\u53F7\u6216\u6362\u884C\u5206\u9694\uFF1B\u9644\u52A0\u8BCD\u7559\u7A7A\u76F4\u63A5\u5339\u914D\uFF0C\u586B\u5199\u540E\u53EA\u5904\u7406\u4E0E\u9644\u52A0\u8BCD\u540C\u4E00\u5C0F\u53E5\u91CC\u7684\u5220\u9664\u8BCD\uFF0C\u9644\u52A0\u8BCD\u672C\u8EAB\u4E0D\u4F1A\u5220\u9664\u3002\u6574\u53E5\u3001\u5C0F\u53E5\u548C\u7247\u6BB5\u65B9\u5F0F\u4ECD\u8981\u6C42\u4E3B\u8BCD\u4E0E\u9644\u52A0\u8BCD\u540C\u65F6\u547D\u4E2D\u3002\u4EFB\u610F\u6807\u70B9\u6216\u6362\u884C\u5747\u5206\u9694\u5C0F\u53E5\uFF1B\u5220\u9664\u8303\u56F4\u7531\u6240\u9009\u65B9\u5F0F\u51B3\u5B9A\uFF0CAI \u6539\u5199\u53EA\u5904\u7406\u53E5\u5B50\u3002</p></details>
+                    <details class="t-delete-matching-help"><summary>\u5982\u4F55\u5224\u65AD\u547D\u4E2D</summary><p>\u5220\u9664\u89C4\u5219\u53EF\u9009\u540C\u5C0F\u53E5\u6216\u540C\u6574\u53E5\u5224\u5B9A\uFF1B\u586B\u5199\u9644\u52A0\u8BCD\u540E\uFF0C\u4E3B\u8BCD\u548C\u9644\u52A0\u8BCD\u5FC5\u987B\u5404\u5360\u4E00\u4E2A\u4E0D\u540C\u3001\u4E0D\u91CD\u53E0\u7684\u4F4D\u7F6E\u3002\u540C\u8BCD\u65F6\u81F3\u5C11\u51FA\u73B0\u4E24\u5904\uFF0C\u4E0D\u80FD\u8DE8\u5B8C\u6574\u53E5\u5B50\u914D\u5BF9\u3002\u5220\u9664\u5C0F\u53E5\u5728\u540C\u5C0F\u53E5\u8303\u56F4\u4E0B\u9010\u4E2A\u68C0\u67E5\uFF1B\u5728\u540C\u6574\u53E5\u8303\u56F4\u4E0B\uFF0C\u6574\u53E5\u8FBE\u6807\u540E\u5220\u9664\u6240\u6709\u5305\u542B\u4E3B\u8BCD\u7684\u5C0F\u53E5\uFF0C\u5176\u4ED6\u5C0F\u53E5\u4FDD\u7559\u3002\u6574\u53E5\u548C\u7247\u6BB5\u65B9\u5F0F\u5148\u6309\u6240\u9009\u8303\u56F4\u5224\u5B9A\uFF0C\u518D\u6309\u5220\u9664\u65B9\u5F0F\u5904\u7406\u3002\u5173\u952E\u8BCD\u7684\u9644\u52A0\u8BCD\u7559\u7A7A\u65F6\u4ECD\u76F4\u63A5\u6309\u5B57\u9762\u5220\u8BCD\u3002\u6539\u5199\u4E0E\u5220\u9664\u7EE7\u7EED\u5171\u7528\u5207\u5206\u5B9E\u73B0\uFF0C\u4F46\u8FD9\u4E9B\u72EC\u7ACB\u4F4D\u7F6E\u548C\u5224\u5B9A\u8303\u56F4\u8BBE\u7F6E\u53EA\u5F71\u54CD\u5220\u9664\uFF0C\u4E0D\u6539\u53D8 AI \u6539\u5199\u89C4\u5219\u3002</p></details>
                 </div>
                 <div class="t-delete-editor-empty" data-delete-editor-empty hidden><i class="fa-solid fa-eraser" aria-hidden="true"></i><strong>\u4ECE\u4E00\u6761\u89C4\u5219\u5F00\u59CB</strong><p>\u65B0\u589E\u89C4\u5219\uFF0C\u6216\u4ECE\u5217\u8868\u9009\u62E9\u5DF2\u6709\u89C4\u5219\u3002</p></div>
                 <footer class="t-delete-editor-actions"><span data-delete-notice role="status" aria-live="polite">\u4FEE\u6539\u540E\u70B9\u51FB\u300C\u4FDD\u5B58\u300D\u5E94\u7528\u3002</span><button class="t-btn t-btn--glass" type="button" data-delete-action="duplicate" aria-label="\u590D\u5236\u5F53\u524D\u5220\u9664\u89C4\u5219"><i class="fa-regular fa-copy" aria-hidden="true"></i> \u590D\u5236</button><button class="t-btn t-btn--glass t-delete-rule-del" type="button" data-delete-action="remove" aria-label="\u79FB\u9664\u5F53\u524D\u5220\u9664\u89C4\u5219"><i class="fa-solid fa-trash-can" aria-hidden="true"></i> \u79FB\u9664</button></footer>
@@ -67362,15 +67400,18 @@ function mountDeleteRulesEditor(container, rules = []) {
   };
   function syncModeFields(rule) {
     const keywordMode = !rule || rule.mode === "keyword";
+    const sentenceScope = normalizeDeleteMatchScope(rule?.match_scope) === "sentence";
     q("[data-delete-fragment-field]").hidden = rule?.mode !== "fragment";
     q("[data-delete-anchor-label]").textContent = keywordMode ? "\u5220\u9664\u8BCD" : "\u4E3B\u8BCD";
     q("[data-delete-anchor-hint]").textContent = keywordMode ? "\u7528\u4E2D\u82F1\u6587\u9017\u53F7\u6216\u6362\u884C\u5206\u9694\uFF1B\u53EA\u5220\u9664\u5B9E\u9645\u547D\u4E2D\u7684\u5B57\u9762\u8BCD\uFF0C\u4E0D\u505A\u8FD1\u4E49\u8BCD\u6269\u5C55\u3002" : "\u7528\u4E2D\u82F1\u6587\u9017\u53F7\u5206\u9694\uFF0C\u4EFB\u610F\u4E00\u4E2A\u4E3B\u8BCD\u547D\u4E2D\u5373\u53EF\u3002";
     q('[data-delete-field="anchor"]').placeholder = keywordMode ? "\u4F8B\u5982\uFF1A\u597D\u50CF\uFF0C\u4F3C\u4E4E\uFF0C\u4EFF\u4F5B" : "\u4F8B\u5982\uFF1A\u611F\u5230\uFF0C\u89C9\u5F97\uFF0C\u5185\u5FC3";
     q("[data-delete-condition-label]").textContent = keywordMode ? "\u9644\u52A0\u6761\u4EF6\uFF08\u53EF\u9009\uFF09" : "\u540C\u65F6\u547D\u4E2D";
     q("[data-delete-extras-required]").textContent = keywordMode ? "\u53EF\u9009" : "\u5FC5\u586B";
-    q("[data-delete-extras-hint]").textContent = keywordMode ? "\u7559\u7A7A\u65F6\u76F4\u63A5\u5220\u8BCD\uFF1B\u586B\u5199\u540E\uFF0C\u4EFB\u610F\u9644\u52A0\u8BCD\u987B\u4E0E\u5220\u9664\u8BCD\u5728\u540C\u4E00\u5C0F\u53E5\u5185\uFF0C\u4E14\u4E0D\u4F1A\u5220\u9664\u9644\u52A0\u8BCD\u3002" : "\u4EFB\u610F\u4E00\u4E2A\u9644\u52A0\u8BCD\u987B\u4E0E\u4E3B\u8BCD\u51FA\u73B0\u5728\u540C\u4E00\u5C0F\u53E5\u5185\u3002";
-    q('[data-delete-field="extras"]').placeholder = keywordMode ? "\u7559\u7A7A\u76F4\u63A5\u5220\u8BCD\uFF1B\u586B\u5199\u5219\u8981\u6C42\u540C\u4E00\u5C0F\u53E5\u547D\u4E2D" : "\u4F8B\u5982\uFF1A\u6124\u6012\uFF0C\u60B2\u4F24\uFF0C\u6050\u60E7";
-    q("[data-delete-mode-hint]").textContent = `${rule?.retired_paragraph ? "\u65E7\u6574\u6BB5\u5220\u9664\u89C4\u5219\u5DF2\u505C\u7528\u3002\u786E\u8BA4\u6309\u6574\u53E5\u5904\u7406\u540E\u53EF\u91CD\u65B0\u542F\u7528\uFF0C\u6216\u6539\u4E3A\u5176\u4ED6\u5220\u9664\u65B9\u5F0F\u3002" : ""}${modeHints[rule?.mode || "keyword"] || ""}`;
+    q("[data-delete-extras-hint]").textContent = keywordMode ? "\u7559\u7A7A\u65F6\u76F4\u63A5\u5220\u8BCD\uFF1B\u586B\u5199\u540E\uFF0C\u9644\u52A0\u8BCD\u987B\u5728\u6240\u9009\u8303\u56F4\u5185\u53E6\u5360\u4E00\u4E2A\u4E0D\u91CD\u53E0\u7684\u4F4D\u7F6E\uFF0C\u9644\u52A0\u8BCD\u672C\u8EAB\u4E0D\u56E0\u6761\u4EF6\u5339\u914D\u88AB\u5220\u9664\u3002" : "\u4EFB\u610F\u4E3B\u8BCD\u4E0E\u4EFB\u610F\u9644\u52A0\u8BCD\u987B\u5728\u6240\u9009\u8303\u56F4\u5185\u5360\u7528\u4E0D\u540C\u3001\u4E0D\u91CD\u53E0\u7684\u4F4D\u7F6E\uFF1B\u4E24\u7EC4\u8BCD\u76F8\u540C\u65F6\u81F3\u5C11\u51FA\u73B0\u4E24\u6B21\u3002";
+    q('[data-delete-field="extras"]').placeholder = keywordMode ? "\u7559\u7A7A\u76F4\u63A5\u5220\u8BCD\uFF1B\u586B\u5199\u540E\u5728\u6240\u9009\u8303\u56F4\u72EC\u7ACB\u547D\u4E2D" : "\u4F8B\u5982\uFF1A\u6124\u6012\uFF0C\u60B2\u4F24\uFF0C\u6050\u60E7";
+    q("[data-delete-scope-hint]").textContent = keywordMode && !rule?.extras?.trim() ? "\u9644\u52A0\u8BCD\u7559\u7A7A\u65F6\u76F4\u63A5\u6309\u5B57\u9762\u5220\u8BCD\uFF1B\u586B\u5199\u9644\u52A0\u8BCD\u540E\u624D\u6309\u6B64\u8303\u56F4\u68C0\u67E5\u72EC\u7ACB\u4F4D\u7F6E\u3002" : sentenceScope ? "\u53EF\u5206\u5C5E\u540C\u4E00\u5B8C\u6574\u53E5\u5B50\u7684\u4E0D\u540C\u5C0F\u53E5\uFF0C\u4E0D\u80FD\u8DE8\u53E5\u914D\u5BF9\uFF1B\u540C\u4E00\u5904\u547D\u4E2D\u4E0D\u80FD\u91CD\u590D\u8BA1\u6570\u3002" : "\u5FC5\u987B\u5728\u540C\u4E00\u4E2A\u6807\u70B9\u5C0F\u53E5\u5185\u914D\u5BF9\uFF1B\u540C\u4E00\u5904\u547D\u4E2D\u4E0D\u80FD\u91CD\u590D\u8BA1\u6570\u3002";
+    const hint = rule?.mode === "clause" ? sentenceScope ? "\u6574\u53E5\u5B58\u5728\u81F3\u5C11\u4E00\u5BF9\u72EC\u7ACB\u547D\u4E2D\u540E\uFF0C\u5220\u9664\u5176\u4E2D\u6240\u6709\u5305\u542B\u4E3B\u8BCD\u7684\u5C0F\u53E5\uFF0C\u5176\u4ED6\u5C0F\u53E5\u4FDD\u7559\u3002" : "\u9010\u4E2A\u5C0F\u53E5\u68C0\u67E5\uFF0C\u53EA\u5220\u9664\u540C\u4E00\u5C0F\u53E5\u5185\u4E3B\u8BCD\u4E0E\u9644\u52A0\u8BCD\u72EC\u7ACB\u547D\u4E2D\u7684\u5C0F\u53E5\uFF1B\u672A\u8FBE\u6807\u7684\u5C0F\u53E5\u4FDD\u7559\u3002" : modeHints[rule?.mode || "keyword"] || "";
+    q("[data-delete-mode-hint]").textContent = `${rule?.retired_paragraph ? "\u65E7\u6574\u6BB5\u5220\u9664\u89C4\u5219\u5DF2\u505C\u7528\u3002\u786E\u8BA4\u6309\u6574\u53E5\u5904\u7406\u540E\u53EF\u91CD\u65B0\u542F\u7528\uFF0C\u6216\u6539\u4E3A\u5176\u4ED6\u5220\u9664\u65B9\u5F0F\u3002" : ""}${hint}`;
   }
   function renderList() {
     const visible = entries.filter(matches3);
@@ -67384,7 +67425,7 @@ function mountDeleteRulesEditor(container, rules = []) {
       const rule = entry.rule;
       const incomplete = !isCompleteDeleteRule(rule);
       return `<button type="button" class="t-delete-rule-item${entry.id === selectedId ? " is-selected" : ""}" data-delete-action="select" data-delete-id="${entry.id}" tabindex="${entry.id === tabStop ? "0" : "-1"}" aria-pressed="${entry.id === selectedId}" aria-controls="t-delete-editor-title">
-                <span class="t-delete-rule-item-top"><span class="t-delete-rule-number">${String(index2).padStart(2, "0")}</span><span class="t-delete-mode-badge">${modeLabels[rule.mode]}</span><span class="t-delete-state${incomplete ? " is-incomplete" : rule.enabled ? " is-enabled" : ""}">${incomplete ? "\u5F85\u586B\u5199" : rule.retired_paragraph ? "\u65E7\u6574\u6BB5\u5DF2\u505C\u7528" : rule.enabled ? "\u542F\u7528" : "\u505C\u7528"}</span></span>
+                <span class="t-delete-rule-item-top"><span class="t-delete-rule-number">${String(index2).padStart(2, "0")}</span><span class="t-delete-mode-badge">${scopeLabels[normalizeDeleteMatchScope(rule.match_scope)]} / ${modeLabels[rule.mode]}</span><span class="t-delete-state${incomplete ? " is-incomplete" : rule.enabled ? " is-enabled" : ""}">${incomplete ? "\u5F85\u586B\u5199" : rule.retired_paragraph ? "\u65E7\u6574\u6BB5\u5DF2\u505C\u7528" : rule.enabled ? "\u542F\u7528" : "\u505C\u7528"}</span></span>
                 <strong>${escape2(rule.anchor.trim() || (rule.mode === "keyword" ? "\u672A\u586B\u5199\u5220\u9664\u8BCD" : "\u672A\u586B\u5199\u4E3B\u8BCD"))}</strong><span class="t-delete-rule-item-extras">${rule.mode === "keyword" && !rule.extras.trim() ? "\u76F4\u63A5\u5220\u8BCD \xB7 \u65E0\u9644\u52A0\u6761\u4EF6" : `\u4E0E ${escape2(rule.extras.trim() || "\u672A\u586B\u5199\u9644\u52A0\u8BCD")}`}</span>
                 ${rule.mode === "fragment" ? `<span class="t-delete-rule-item-fragment">\u8D77\u70B9\uFF1A${escape2(rule.fragment.trim() || "\u672A\u586B\u5199")}</span>` : ""}
             </button>`;
@@ -67400,7 +67441,7 @@ function mountDeleteRulesEditor(container, rules = []) {
     q("[data-delete-editor-index]").textContent = entry ? String(entries.indexOf(entry) + 1).padStart(2, "0") : "\u2014";
     q("#t-delete-editor-title").textContent = entry ? "\u7F16\u8F91\u89C4\u5219" : "\u89C4\u5219\u8BE6\u60C5";
     container.dataset.ruleEditorTitle = entry ? `\u5220\u9664\u89C4\u5219 ${entries.indexOf(entry) + 1}` : "\u5220\u9664\u89C4\u5219";
-    q("[data-delete-editor-subtitle]").textContent = entry ? modeLabels[entry.rule.mode] : "\u9009\u62E9\u6216\u65B0\u589E\u4E00\u6761\u89C4\u5219";
+    q("[data-delete-editor-subtitle]").textContent = entry ? `${scopeLabels[entry.rule.match_scope]} / ${modeLabels[entry.rule.mode]}` : "\u9009\u62E9\u6216\u65B0\u589E\u4E00\u6761\u89C4\u5219";
     for (const field3 of container.querySelectorAll("[data-delete-field]")) {
       if (field3.type === "checkbox") field3.checked = entry?.rule.enabled !== false;
       else field3.value = entry?.rule[field3.dataset.deleteField] || "";
@@ -67429,10 +67470,10 @@ function mountDeleteRulesEditor(container, rules = []) {
     const field3 = event.target.dataset.deleteField;
     if (!field3 || !current3()) return;
     const entry = current3();
-    entry.rule[field3] = field3 === "enabled" ? event.target.checked : field3 === "mode" ? normalizeDeleteMode(event.target.value) : event.target.value;
+    entry.rule[field3] = field3 === "enabled" ? event.target.checked : field3 === "mode" ? normalizeDeleteMode(event.target.value) : field3 === "match_scope" ? normalizeDeleteMatchScope(event.target.value) : event.target.value;
     if (field3 === "mode" || field3 === "enabled" && entry.rule.enabled) entry.rule.retired_paragraph = false;
     syncModeFields(entry.rule);
-    q("[data-delete-editor-subtitle]").textContent = modeLabels[entry.rule.mode];
+    q("[data-delete-editor-subtitle]").textContent = `${scopeLabels[entry.rule.match_scope]} / ${modeLabels[entry.rule.mode]}`;
     renderList();
     notice(matches3(entry) ? "\u6709\u672A\u4FDD\u5B58\u7684\u89C4\u5219\u66F4\u6539\u3002" : "\u5F53\u524D\u89C4\u5219\u5DF2\u8D85\u51FA\u7B5B\u9009\u6761\u4EF6\uFF0C\u66F4\u6539\u4ECD\u4FDD\u7559\u3002");
   };
@@ -67511,6 +67552,7 @@ function mountDeleteRulesEditor(container, rules = []) {
         for (const field3 of container.querySelectorAll("[data-delete-field]")) {
           rule[field3.dataset.deleteField] = field3.type === "checkbox" ? field3.checked : field3.value;
         }
+        rule.match_scope = normalizeDeleteMatchScope(rule.match_scope);
         if (rule.enabled || rule.mode !== previousMode) rule.retired_paragraph = false;
       }
       return entries.map(({ rule }) => ({ ...rule }));
@@ -67544,17 +67586,18 @@ function mountDeleteRulesEditor(container, rules = []) {
     }
   };
 }
-var escape2, modeLabels, modeHints;
+var escape2, modeLabels, scopeLabels, modeHints;
 var init_deleteRulesEditor = __esm({
   "src/ui/deleteRulesEditor.js"() {
     init_textRewriteCore();
     init_rewriteSettingsLayout();
     escape2 = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
     modeLabels = { keyword: "\u5220\u9664\u547D\u4E2D\u5173\u952E\u8BCD", sentence: "\u5220\u9664\u6574\u53E5", clause: "\u5220\u9664\u5C0F\u53E5", fragment: "\u5220\u9664\u7247\u6BB5" };
+    scopeLabels = { clause: "\u540C\u5C0F\u53E5\u5224\u5B9A", sentence: "\u540C\u6574\u53E5\u5224\u5B9A" };
     modeHints = {
       keyword: "\u53EA\u5220\u9664\u5B57\u9762\u547D\u4E2D\u7684\u5173\u952E\u8BCD\uFF0C\u6240\u6709\u7B26\u5408\u6761\u4EF6\u7684\u4F4D\u7F6E\u90FD\u4F1A\u5904\u7406\uFF0C\u4E0D\u8FDE\u5E26\u5220\u9664\u6807\u70B9\u3001\u7A7A\u683C\u6216\u5176\u4ED6\u6587\u5B57\u3002",
       sentence: "\u79FB\u9664\u547D\u4E2D\u7684\u6574\u53E5\uFF1B\u4E0D\u53D7\u6539\u5199\u5207\u5206\u6A21\u5F0F\u5F71\u54CD\uFF0C\u4E0D\u518D\u5220\u9664\u6574\u4E2A\u6BB5\u843D\u3002",
-      clause: "\u79FB\u9664\u542B\u4E3B\u8BCD\u7684\u5C0F\u53E5\uFF0C\u4FDD\u7559\u540C\u53E5\u4E2D\u7684\u5176\u4ED6\u5C0F\u53E5\u3002\u9644\u52A0\u8BCD\u53EA\u7528\u4E8E\u5224\u65AD\u662F\u5426\u89E6\u53D1\u3002",
+      clause: "\u6761\u4EF6\u8FBE\u6807\u540E\u5220\u9664\u5305\u542B\u4E3B\u8BCD\u7684\u5C0F\u53E5\uFF0C\u5176\u4ED6\u5C0F\u53E5\u4FDD\u7559\uFF1B\u914D\u5BF9\u8303\u56F4\u7531\u5224\u5B9A\u8303\u56F4\u51B3\u5B9A\u3002",
       fragment: "\u4ECE\u586B\u5199\u7684\u8D77\u70B9\u7247\u6BB5\u5220\u5230\u53E5\u5C3E\uFF0C\u5E76\u6574\u7406\u6536\u5C3E\u6807\u70B9\u3002\u672A\u586B\u5199\u6216\u672A\u627E\u5230\u8D77\u70B9\u65F6\u4E0D\u5220\u9664\u6587\u672C\u3002"
     };
   }
@@ -76270,6 +76313,7 @@ function normalizeDeleteRule(rule) {
     anchor: parseList(rule?.anchor || "").join(", "),
     extras: parseList(rule?.extras || "").join(", "),
     mode,
+    match_scope: normalizeDeleteMatchScope(rule?.match_scope),
     fragment: mode === "fragment" ? String(rule?.fragment || "").trim() : "",
     enabled: rule?.enabled !== false,
     ...rule?.retired_paragraph === true && rule?.enabled === false ? { retired_paragraph: true } : {}
@@ -76327,9 +76371,11 @@ function ensureRewriteDataShape() {
   if (typeof del.enabled !== "boolean") del.enabled = false;
   if (typeof del.auto_trigger !== "boolean") del.auto_trigger = true;
   if (!Array.isArray(del.rules)) del.rules = [];
-  if (del.schema_version !== 2) {
+  if (![2, 3].includes(del.schema_version)) {
     del.rules = del.rules.map((rule) => item2.split_mode === "paragraph" && normalizeDeleteMode(rule?.mode) === "sentence" ? { ...rule, enabled: false, retired_paragraph: true } : rule);
-    del.schema_version = 2;
+  }
+  if (del.schema_version !== 3) {
+    del.schema_version = 3;
     upgraded = true;
   }
   del.rules = del.rules.map(normalizeDeleteRule).filter(isCompleteDeleteRule);
@@ -77120,6 +77166,7 @@ async function runDelete(options2 = {}) {
       setStatus(latest.projection.reason || "\u672A\u627E\u5230\u53EF\u63D0\u53D6\u7684\u6B63\u6587\u3002", "warn");
       return false;
     }
+    const ruleSignature = JSON.stringify(del.rules);
     const result = evaluateDeleteRules(latest.content, "sentence", del.rules);
     renderDeleteResult(result, latest.content);
     if (!result.hitCount) {
@@ -77130,7 +77177,7 @@ async function runDelete(options2 = {}) {
     if (options2.replyTask) options2.replyTask.saving = true;
     const applied = await writeSafeMessagePatches(latest, result.unitResults, replacements, "delete", {
       replyTask: options2.replyTask,
-      isCurrent: () => !activeRewriteTask && (!options2.replyTask || replyTextTaskCurrent(options2.replyTask)) && (options2.source !== "auto" || ensureRewriteDataShape().execution_mode === "auto_delete")
+      isCurrent: () => !activeRewriteTask && (!options2.replyTask || replyTextTaskCurrent(options2.replyTask)) && JSON.stringify(getDeletionState().rules) === ruleSignature && (options2.source !== "auto" || ensureRewriteDataShape().execution_mode === "auto_delete")
     });
     const statuses = new Map(applied.entries.map((entry) => [entry.unitIndex, entry]));
     result.unitResults = result.unitResults.map((unit) => ({
@@ -82411,6 +82458,15 @@ function renderTimetraceCurrent(view2, compact2 = false, disabled = false) {
             ${compact2 ? '<button type="button" data-jump-tab="timetrace">\u67E5\u770B\u65F6\u95F4\u4E0E\u5929\u6C14\u8F74 \u2197</button>' : '<button type="button" data-action="time-edit-base" ' + (disabled ? "disabled" : "") + ">\u5386\u6CD5\u3001\u65F6\u533A\u4E0E\u5B63\u8282\u89C4\u5219</button>"}</div>
         ${narration && narration.id !== current3?.id && narration.frame === "parallel" ? `<p class="t-timetrace-narration">${escape4(TIMETRACE_FRAMES[narration.frame])}\uFF1A${escape4(narration.time_end || narration.time || narration.time_expression || "\u65F6\u95F4\u5F85\u5B9A\u4F4D")} \xB7 ${escape4(narration.location || "")}</p>` : ""}</section>`;
 }
+function timetraceSearchState(view2, { query = "", searchOpen = false, filter = "all", focus = null } = {}) {
+  const nodes = nodesInRange([...view2.nodes, ...view2.noTimingRecords || []], focus), scenes = timetraceSceneOptions(nodes);
+  const scene = scenes.some(([key]) => key === filter) ? filter : "all";
+  return { nodes, scenes, scene, searchQuery: searchOpen ? query : "" };
+}
+function renderTimetraceResults(view2, { expanded = /* @__PURE__ */ new Set(), ...options2 } = {}) {
+  const { nodes, scene, searchQuery } = timetraceSearchState(view2, options2);
+  return renderTimetraceNodes(nodes, { search: searchQuery, filter: scene, expanded });
+}
 function renderTimetracePanel(view2, {
   query = "",
   searchOpen = false,
@@ -82422,8 +82478,7 @@ function renderTimetracePanel(view2, {
 } = {}) {
   const disabled = busy2 || view2.busy || view2.generating;
   const analysisDisabled = analysisBusy || view2.busy || view2.generating || view2.analysisBlocked;
-  const nodes = nodesInRange([...view2.nodes, ...view2.noTimingRecords || []], focus), scenes = timetraceSceneOptions(nodes);
-  const scene = scenes.some(([key]) => key === filter) ? filter : "all", searchQuery = searchOpen ? query : "";
+  const { nodes, scenes, scene, searchQuery } = timetraceSearchState(view2, { query, searchOpen, filter, focus });
   const actions = `<div class="t-memory-card-actions"><button type="button" class="t-memory-action" data-action="time-toggle-search" aria-expanded="${searchOpen}" aria-controls="t-timetrace-search-panel">${searchOpen ? "\u6536\u8D77\u67E5\u627E" : "\u67E5\u627E"}</button>
         <button type="button" class="t-memory-action" data-action="time-edit-base" ${disabled ? "disabled" : ""}>\u5386\u6CD5\u4E0E\u8D77\u70B9</button>
         <button type="button" class="t-memory-action" data-action="${view2.paused ? "time-resume" : "time-pause"}" ${view2.saving || !view2.memory.enabled ? "disabled" : ""}>${view2.paused ? "\u6062\u590D\u81EA\u52A8\u5904\u7406" : "\u6682\u505C\u65F6\u75D5"}</button>
@@ -82438,7 +82493,7 @@ function renderTimetracePanel(view2, {
         ${focus ? `<p class="t-memory-hint">\u6B63\u5728\u67E5\u770B\u7B2C ${focus.start}\uFF5E${focus.end} \u697C\u7684\u65F6\u95F4\u4E0E\u5B63\u5019 <button type="button" class="t-memory-action" data-action="time-clear-focus">\u67E5\u770B\u5168\u90E8</button></p>` : ""}
         <div class="t-timetrace-toolbar" id="t-timetrace-search-panel" ${searchOpen ? "" : "hidden"}><label class="t-timetrace-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" class="t-input" data-role="time-search" value="${escape4(searchQuery)}" placeholder="\u65E5\u671F\u3001\u8282\u6C14\u3001\u5929\u6C14\u6216\u7B2C 12 \u697C" aria-label="\u67E5\u627E\u65F6\u8282\u7B14\u8BB0"></label><button type="button" class="t-memory-action" data-action="time-clear-search" ${searchQuery ? "" : "disabled"}>\u6E05\u9664</button></div>
         ${scenes.length ? `<div class="t-timetrace-scenes" role="group" aria-label="\u6309\u573A\u666F\u67E5\u770B\u7B14\u8BB0">${scenes.map(([key, label2]) => `<button type="button" class="t-memory-action" data-action="time-scene" data-frame="${key}" aria-pressed="${scene === key}">${label2}</button>`).join("")}</div>` : ""}
-        ${renderTimetraceNodes(nodes, { search: searchQuery, filter: scene, expanded })}`;
+        <div class="t-timetrace-results" data-role="time-results">${renderTimetraceNodes(nodes, { search: searchQuery, filter: scene, expanded })}</div>`;
 }
 var escape4, STATUS, isNoTimingOnly, SEASON_BASES, nodesInRange, sourceLabel;
 var init_storyTimetracePanel = __esm({
@@ -84669,7 +84724,7 @@ function openStoryMemoryWindow(options2 = {}) {
   let timeQuery = "", timeSearchOpen = false, timeFilter = "all", timeFocus = null;
   let factQuery = "", factFilter = "current", factEditing = null;
   const factExpanded = /* @__PURE__ */ new Set();
-  let composingFactField = null, factRenderDeferred = false;
+  let composingField = null, compositionRenderDeferred = false;
   const timeExpanded = /* @__PURE__ */ new Set();
   let editor = null;
   let source2 = null;
@@ -84709,8 +84764,8 @@ function openStoryMemoryWindow(options2 = {}) {
   const close = () => {
     if (closed) return;
     closed = true;
-    composingFactField = null;
-    factRenderDeferred = false;
+    composingField = null;
+    compositionRenderDeferred = false;
     queuedRefresh = null;
     cachedView = null;
     cachedIdentity = null;
@@ -85110,8 +85165,8 @@ ${item2.body || ""}`.includes(name)));
       factQuery = "";
       factFilter = "current";
       factExpanded.clear();
-      composingFactField = null;
-      factRenderDeferred = false;
+      composingField = null;
+      compositionRenderDeferred = false;
       filter = "all";
       query = "";
       graphSelection = "";
@@ -85134,12 +85189,12 @@ ${item2.body || ""}`.includes(name)));
       }
       renderSource();
     }
-    if (composingFactField?.isConnected && root.contains(composingFactField)) {
-      factRenderDeferred = true;
+    if (composingField?.isConnected && root.contains(composingField)) {
+      compositionRenderDeferred = true;
       return;
     }
-    composingFactField = null;
-    factRenderDeferred = false;
+    composingField = null;
+    compositionRenderDeferred = false;
     let view2;
     try {
       view2 = readView(identity4);
@@ -85267,6 +85322,78 @@ ${item2.body || ""}`.includes(name)));
     if (field4.dataset?.factField && factEditing) factEditing[field4.dataset.factField] = factFieldValue(field4);
     if (field4.dataset?.role === "fact-search") factQuery = field4.value;
   }
+  function refreshSearchResults(role) {
+    const body = root.querySelector('[data-role="body"]'), scroll = body.scrollTop;
+    const results = role === "time-search" ? body.querySelector('[data-role="time-results"]') : body.querySelector(".t-facts-list");
+    if (tab !== "timetrace" || !results) {
+      queueRender();
+      return;
+    }
+    let view2;
+    try {
+      view2 = readView();
+    } catch {
+      queueRender();
+      return;
+    }
+    if (!view2?.available) {
+      queueRender();
+      return;
+    }
+    if (role === "time-search") {
+      results.innerHTML = renderTimetraceResults(view2.timetrace, {
+        query: timeQuery,
+        searchOpen: timeSearchOpen,
+        filter: timeFilter,
+        expanded: timeExpanded,
+        focus: timeFocus
+      });
+      const clear = body.querySelector('[data-action="time-clear-search"]');
+      if (clear) clear.disabled = !timeQuery;
+    } else {
+      const template = document.createElement("template");
+      template.innerHTML = renderStoryFactsPanel(getStoryFactsView(), {
+        query: factQuery,
+        filter: factFilter,
+        editing: factEditing,
+        expanded: factExpanded,
+        disabled: factMutationBusy(view2)
+      });
+      const list = template.content.querySelector(".t-facts-list");
+      if (list) results.innerHTML = list.innerHTML;
+    }
+    body.scrollTop = scroll;
+  }
+  function updateWindowInput(field4) {
+    const role = field4.dataset?.role;
+    if (field4.dataset?.factField || role === "fact-search") {
+      updateFactInput(field4);
+      if (role === "fact-search") refreshSearchResults(role);
+    } else if (role === "time-search") {
+      timeQuery = field4.value;
+      refreshSearchResults(role);
+    } else if (role === "memory-search") {
+      query = field4.value;
+      render2();
+    } else if (field4.dataset?.field && editor) editor[field4.dataset.field] = field4.value;
+  }
+  function compositionInput(field4) {
+    return field4?.matches?.("input, textarea") && (field4.dataset.factField || field4.dataset.field || ["time-search", "memory-search", "fact-search"].includes(field4.dataset.role));
+  }
+  function finishComposition(field4) {
+    if (composingField !== field4) return;
+    const deferred = compositionRenderDeferred;
+    composingField = null;
+    compositionRenderDeferred = false;
+    if (!field4.isConnected || !guardInteraction()) return;
+    updateWindowInput(field4);
+    if (deferred) queueRender();
+  }
+  function resetTimeSearchComposition() {
+    if (composingField?.dataset.role !== "time-search") return;
+    composingField = null;
+    compositionRenderDeferred = false;
+  }
   function focusTimeSearch() {
     const target = root.querySelector(timeSearchOpen ? '[data-role="time-search"]' : '[data-action="time-toggle-search"]');
     target?.focus({ preventScroll: true });
@@ -85284,8 +85411,8 @@ ${item2.body || ""}`.includes(name)));
     graphOpen = true;
     editor = null;
     factEditing = null;
-    composingFactField = null;
-    factRenderDeferred = false;
+    composingField = null;
+    compositionRenderDeferred = false;
     source2 = null;
     sourceHistory.length = 0;
     render2();
@@ -85335,25 +85462,15 @@ ${item2.body || ""}`.includes(name)));
   root.addEventListener("input", (event) => {
     if (!guardInteraction()) return;
     const field4 = event.target;
-    if (field4.dataset?.factField || field4.dataset?.role === "fact-search") {
-      updateFactInput(field4);
-      if (event.isComposing || composingFactField === field4) {
-        composingFactField = field4;
-        factRenderDeferred = true;
-        return;
-      }
-      if (field4.dataset.role === "fact-search") render2();
+    if (compositionInput(field4) && (event.isComposing || composingField === field4)) {
+      composingField = field4;
+      if (field4.dataset.factField) {
+        updateFactInput(field4);
+        compositionRenderDeferred = true;
+      } else if (field4.dataset.field && editor) editor[field4.dataset.field] = field4.value;
       return;
     }
-    if (event.target.dataset.role === "time-search") {
-      timeQuery = event.target.value;
-      render2();
-    }
-    if (event.target.dataset.field && editor) editor[event.target.dataset.field] = event.target.value;
-    if (event.target.dataset.role === "memory-search") {
-      query = event.target.value;
-      render2();
-    }
+    updateWindowInput(field4);
   });
   root.addEventListener("change", (event) => {
     if (!guardInteraction()) return;
@@ -85374,28 +85491,15 @@ ${item2.body || ""}`.includes(name)));
       void perform(() => setStoryMemoryEnabled(checked));
     }
     if (event.target.dataset.field && editor) editor[event.target.dataset.field] = event.target.value;
-    if (event.target.dataset.role === "memory-search") {
-      query = event.target.value;
-      render2();
-    }
+    if (["time-search", "memory-search", "fact-search"].includes(event.target.dataset.role)) updateWindowInput(event.target);
   });
   root.addEventListener("compositionstart", (event) => {
     const field4 = event.target;
-    if (!(field4.dataset?.factField || field4.dataset?.role === "fact-search") || !guardInteraction()) return;
-    composingFactField = field4;
+    if (!compositionInput(field4) || !guardInteraction()) return;
+    composingField = field4;
   });
-  root.addEventListener("compositionend", (event) => {
-    const field4 = event.target;
-    if (composingFactField !== field4) return;
-    composingFactField = null;
-    if (!field4.isConnected || !guardInteraction()) {
-      factRenderDeferred = false;
-      return;
-    }
-    updateFactInput(field4);
-    if (factRenderDeferred || field4.dataset?.role === "fact-search") queueRender();
-    factRenderDeferred = false;
-  });
+  root.addEventListener("compositionend", (event) => finishComposition(event.target));
+  root.addEventListener("focusout", (event) => finishComposition(event.target));
   root.addEventListener("click", (event) => {
     if (closed || !root.isConnected) return;
     if (event.target === root) {
@@ -85547,6 +85651,7 @@ ${item2.body || ""}`.includes(name)));
     const view2 = needsView ? readView() : null;
     if (needsView && !view2) return;
     if (action === "time-toggle-search") {
+      resetTimeSearchComposition();
       timeSearchOpen = !timeSearchOpen;
       if (!timeSearchOpen) timeQuery = "";
       render2();
@@ -85554,6 +85659,7 @@ ${item2.body || ""}`.includes(name)));
       return;
     }
     if (action === "time-clear-search" || action === "time-clear-query") {
+      resetTimeSearchComposition();
       timeQuery = "";
       if (action === "time-clear-query") timeFilter = "all";
       render2();
@@ -85763,7 +85869,7 @@ ${THREAD_STATUS[entry.status] || ""}` : ""}`)
   }, true);
   function onKeydown(event) {
     if (closed || !root.isConnected) return;
-    if (event.isComposing || event.keyCode === 229) return;
+    if (event.isComposing || event.keyCode === 229 || composingField?.isConnected && root.contains(composingField)) return;
     if (settingsClose || recoveryClose || document.getElementById("t-toolbox-settings")) return;
     if (event.key === "Escape") {
       event.preventDefault();
