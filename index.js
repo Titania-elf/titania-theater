@@ -28440,6 +28440,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-memory-nav-icon { display: block; width: 28px; height: 28px; flex: 0 0 auto; color: inherit; pointer-events: none; }\r
 .t-memory-nav-item small { font: 8px/1 Georgia, serif; color: var(--t-memory-faint); }\r
 .t-memory-nav-item:hover { background: var(--t-memory-gold-soft); }\r
+.t-memory-nav-item:focus-visible { outline: 2px solid var(--t-memory-gold); outline-offset: -2px; }\r
 .t-memory-nav-item.is-active { color: var(--t-memory-gold); background: linear-gradient(135deg, var(--t-memory-gold-soft), transparent); box-shadow: inset 1px 0 var(--t-memory-gold); }\r
 .t-memory-rail-tail { margin-top: auto; padding-top: 32px; text-align: center; color: var(--t-memory-gold); }\r
 .t-memory-rail-tail span { display: block; margin-top: 24px; font: 7px/1.9 Georgia, serif; letter-spacing: .1em; color: var(--t-memory-faint); }\r
@@ -28835,8 +28836,8 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
     .t-memory-header-actions { gap: 5px; }\r
     .t-memory-header .t-help-popover { right: -37px; width: calc(100vw - 34px); max-height: min(70dvh, 650px); }\r
     .t-memory-layout { display: flex; flex-direction: column; }\r
-    .t-memory-sidebar { padding: 4px 12px; border-right: 0; border-bottom: 1px solid var(--t-memory-line); overflow: visible; flex-shrink: 0; }\r
-    .t-memory-tabs { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }\r
+    .t-memory-sidebar { padding: 4px 16px; border-right: 0; border-bottom: 1px solid var(--t-memory-line); overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: thin; flex-shrink: 0; }\r
+    .t-memory-tabs { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(52px, 1fr); gap: 4px; }\r
     .t-memory-nav-item { min-height: 57px; gap: 5px; font-size: .8em; }\r
     .t-memory-nav-icon { width: 24px; height: 24px; }\r
     .t-memory-nav-item small, .t-memory-rail-tail { display: none; }\r
@@ -29614,11 +29615,20 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-timetrace-raw > summary { color: var(--t-memory-teal); cursor: pointer; }\r
 .t-timetrace-raw > pre { max-height: 280px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; color: var(--t-memory-text); padding: 12px; border-radius: 8px; background: var(--t-memory-gold-soft); }\r
 \r
-/* \u957F\u671F\u4E8B\u5B9E\u6CBF\u7528\u65F6\u75D5\u8272\u677F\uFF0C\u5B8C\u6574\u5185\u5BB9\u548C\u6765\u6E90\u53EF\u5C55\u5F00\u9605\u8BFB\u3002 */\r
-.t-facts-panel { min-width: 0; margin-top: 36px; padding-top: 26px; border-top: 1px solid var(--t-memory-border); color: var(--t-memory-text); }\r
+/* \u957F\u671F\u4E8B\u5B9E\u72EC\u7ACB\u6210\u9875\uFF0C\u6CBF\u7528\u6545\u4E8B\u8BB0\u5FC6\u8272\u677F\u4E0E\u661F\u8C61\u6863\u6848\u523B\u5370\u3002 */\r
+.t-facts-panel { min-width: 0; color: var(--t-memory-text); }\r
 .t-facts-panel h2, .t-facts-panel h3 { color: var(--t-memory-text); }\r
-.t-facts-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 20px 0; }\r
-.t-root .t-facts-toolbar > .t-input { flex: 1 1 180px; width: auto; min-width: 0; }\r
+.t-facts-heading { display: flex; align-items: center; gap: 16px; flex: 1 1 240px; min-width: 0; }\r
+.t-facts-heading > div { min-width: 0; }\r
+.t-facts-heading h2 { margin: 0; font: 1.8em/1.5 var(--t-memory-serif); overflow-wrap: anywhere; }\r
+.t-facts-heading .t-memory-hint { margin: 6px 0 0; font-size: .78em; }\r
+.t-facts-heading-mark { display: flex; align-items: center; flex: 0 0 auto; color: var(--t-memory-gold); }\r
+.t-facts-heading-mark .t-memory-nav-icon { width: 40px; height: 40px; }\r
+.t-facts-toolbar { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; margin: 24px 0; }\r
+.t-facts-search { position: relative; display: flex; flex: 1 1 240px; min-width: 0; color: var(--t-memory-faint); }\r
+.t-facts-search > i { position: absolute; top: 50%; left: .9em; transform: translateY(-50%); pointer-events: none; }\r
+.t-root .t-facts-search > .t-input { box-sizing: border-box; width: 100%; min-width: 0; padding-inline-start: 2.6em; }\r
+.t-facts-filters { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; }\r
 .t-facts-toolbar .t-memory-action[aria-pressed="true"] { border-color: var(--t-memory-gold); background: var(--t-memory-gold-soft); color: var(--t-memory-gold); }\r
 .t-facts-list { display: grid; gap: 12px; min-width: 0; }\r
 .t-facts-record { min-width: 0; border: 1px solid var(--t-memory-line); border-radius: 12px; background: var(--t-memory-surface); }\r
@@ -29644,9 +29654,13 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-facts-issues > p { color: var(--t-memory-muted); font-size: .8em; line-height: 1.8; overflow-wrap: anywhere; }\r
 .t-facts-panel summary:focus-visible, .t-facts-panel .t-memory-action:focus-visible { outline: 2px solid var(--t-memory-teal); outline-offset: 3px; }\r
 @media (max-width: 600px) {\r
-    .t-facts-panel { margin-top: 28px; padding-top: 22px; }\r
-    .t-root .t-facts-toolbar > .t-input { flex-basis: 100%; min-height: 44px; }\r
-    .t-facts-toolbar > .t-memory-action { flex: 1 1 120px; }\r
+    .t-facts-heading { gap: 12px; }\r
+    .t-facts-heading h2 { font-size: 1.6em; }\r
+    .t-facts-heading-mark .t-memory-nav-icon { width: 34px; height: 34px; }\r
+    .t-facts-search { flex-basis: 100%; }\r
+    .t-root .t-facts-search > .t-input { min-height: 44px; }\r
+    .t-facts-filters { flex: 1 1 100%; }\r
+    .t-facts-filters > .t-memory-action { flex: 1 1 120px; }\r
     .t-facts-panel .t-memory-action { min-height: 44px; }\r
     .t-facts-record > summary { padding: 15px 38px 15px 15px; }\r
     .t-facts-record > summary::after { inset-inline-end: 17px; }\r
@@ -31969,7 +31983,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184607], "04-features/toolbox-settings.css": [184656, 189061], "04-features/main-window.css": [189105, 234004], "04-features/main-window-legacy.css": [234055, 257921], "04-features/script-picker.css": [257967, 264462], "04-features/wi-selector.css": [264506, 282332], "04-features/continuation.css": [282377, 306246], "04-features/queue.css": [306284, 312844], "04-features/content-editor.css": [312891, 315198], "04-features/illustration.css": [315243, 342551], "04-features/visual-selection.css": [342600, 347859], "04-features/storyboard.css": [347902, 364982], "04-features/echo-imaging.css": [365027, 439135], "04-features/settings-drawer.css": [439183, 457417], "04-features/settings.css": [457458, 485484], "04-features/manager.css": [485524, 498822], "04-features/workshop.css": [498863, 521645], "04-features/favs.css": [521682, 563166], "04-features/debug.css": [563204, 579969], "04-features/story-outline.css": [580015, 614321], "04-features/outline-entry-menu.css": [614372, 621125], "04-features/rewrite.css": [621165, 680679], "04-features/paragraph-editor.css": [680728, 684511], "04-features/reader.css": [684550, 693909], "04-features/chat-book.css": [693951, 700492], "04-features/story-memory.css": [700537, 747924], "04-features/retrieval.css": [747966, 759932], "04-features/character-evolution.css": [759984, 794658], "04-features/story-memory-notifications.css": [794717, 797929], "04-features/story-timetrace.css": [797977, 816109], "04-features/tts.css": [816145, 851834], "04-features/confirm-dialog.css": [851881, 855879], "04-features/image-cropper.css": [855925, 859783], "04-features/st-embedded.css": [859827, 891509], "04-features/scene-advance.css": [891555, 923829], "04-features/theater-midnight.css": [923878, 949206] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184607], "04-features/toolbox-settings.css": [184656, 189061], "04-features/main-window.css": [189105, 234004], "04-features/main-window-legacy.css": [234055, 257921], "04-features/script-picker.css": [257967, 264462], "04-features/wi-selector.css": [264506, 282332], "04-features/continuation.css": [282377, 306246], "04-features/queue.css": [306284, 312844], "04-features/content-editor.css": [312891, 315198], "04-features/illustration.css": [315243, 342551], "04-features/visual-selection.css": [342600, 347859], "04-features/storyboard.css": [347902, 364982], "04-features/echo-imaging.css": [365027, 439135], "04-features/settings-drawer.css": [439183, 457417], "04-features/settings.css": [457458, 485484], "04-features/manager.css": [485524, 498822], "04-features/workshop.css": [498863, 521645], "04-features/favs.css": [521682, 563166], "04-features/debug.css": [563204, 579969], "04-features/story-outline.css": [580015, 614321], "04-features/outline-entry-menu.css": [614372, 621125], "04-features/rewrite.css": [621165, 680679], "04-features/paragraph-editor.css": [680728, 684511], "04-features/reader.css": [684550, 693909], "04-features/chat-book.css": [693951, 700492], "04-features/story-memory.css": [700537, 748140], "04-features/retrieval.css": [748182, 760148], "04-features/character-evolution.css": [760200, 794874], "04-features/story-memory-notifications.css": [794933, 798145], "04-features/story-timetrace.css": [798193, 817261], "04-features/tts.css": [817297, 852986], "04-features/confirm-dialog.css": [853033, 857031], "04-features/image-cropper.css": [857077, 860935], "04-features/st-embedded.css": [860979, 892661], "04-features/scene-advance.css": [892707, 924981], "04-features/theater-midnight.css": [925030, 950358] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -82512,11 +82526,68 @@ var init_storyTimetracePanel = __esm({
   }
 });
 
+// src/ui/storyMemoryIcons.js
+function renderMemoryNavIcon(tab) {
+  const paths2 = MEMORY_NAV_ICONS[tab];
+  return paths2 ? `<svg class="t-memory-nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths2}</svg>` : "";
+}
+var MEMORY_NAV_ICONS;
+var init_storyMemoryIcons = __esm({
+  "src/ui/storyMemoryIcons.js"() {
+    MEMORY_NAV_ICONS = {
+      current: `<path d="M16 12C12.4 9.2 7.9 8.3 3.5 9.5v15c4.4-1.2 8.9-.3 12.5 2.5 3.6-2.8 8.1-3.7 12.5-2.5v-15c-4.4-1.2-8.9-.3-12.5 2.5Z" fill="currentColor" fill-opacity=".07"/>
+        <path d="M16 13v14M7 14.5c2.1-.2 3.7.2 5.3 1M7 19c2.1-.2 3.7.2 5.3 1m7.4-4c1.6-.8 3.2-1.2 5.3-1m-5.3 5.5c1.6-.8 3.2-1.2 5.3-1" opacity=".55"/>
+        <path d="m16 2 1.2 3.3L20.5 6.5l-3.3 1.2L16 11l-1.2-3.3-3.3-1.2 3.3-1.2Z" fill="currentColor" fill-opacity=".16"/>`,
+      relationships: `<path d="M5 20.5 12 8l12.5 3L21 25 5 20.5Zm7-12.5 9 17" opacity=".5"/>
+        <path d="M3.5 13A13 13 0 0 1 22 3.8M28.5 18A13 13 0 0 1 10 28.2" opacity=".35"/>
+        <circle cx="5" cy="20.5" r="2"/><circle cx="12" cy="8" r="2.5" fill="currentColor" fill-opacity=".16"/><circle cx="21" cy="25" r="2"/>
+        <path d="m24.5 6 1.4 3.6L29.5 11l-3.6 1.4-1.4 3.6-1.4-3.6-3.6-1.4 3.6-1.4Z" fill="currentColor" fill-opacity=".16"/>`,
+      threads: `<path d="M5 5c12-4 23 0 20 9-2 6-13 3-16 8-2 4 2 7 7 5.5"/>
+        <path d="M10 3.5c-5 4-5 10 1 13m7-8c-3 1-4 3-3 5m4 4c4 2 5 5 4 8" opacity=".45"/>
+        <path d="m15.5 12 4 4-4 4-4-4Z" fill="currentColor" fill-opacity=".16"/>
+        <circle cx="5" cy="5" r="1.5" fill="currentColor" stroke="none"/>
+        <path d="m23 24.5 3 3-3 3-3-3Z"/>`,
+      facts: `<path d="M7 4h12l6 6v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="currentColor" fill-opacity=".07"/>
+        <path d="M19 4v6h6M10 9h5m-5 4h3m-3 11h6" opacity=".5"/>
+        <path d="m10 20 7-4 6 5" opacity=".55"/>
+        <circle cx="10" cy="20" r="1.6" fill="currentColor" fill-opacity=".16"/>
+        <path d="m17 13 3 3-3 3-3-3Z" fill="currentColor" fill-opacity=".16"/>
+        <circle cx="23" cy="21" r="1.6"/>
+        <path d="m27 2 .8 2.2L30 5l-2.2 .8L27 8l-.8-2.2L24 5l2.2-.8Z" fill="currentColor" fill-opacity=".16"/>`,
+      records: `<path d="M9 4h15a3 3 0 0 1 3 3v1h-6V7a3 3 0 0 0-6 0v17a4 4 0 0 1-8 0v-1h12v1a4 4 0 0 1-4 4H11M9 4a3 3 0 0 0-3 3v12"/>
+        <path d="M21 8v11M10 11v8m-2-8h4m-4 4h4m-4 4h4" opacity=".5"/>
+        <path d="m26 13 1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z" fill="currentColor" fill-opacity=".16"/>`,
+      timetrace: `<path d="M25 7a12 12 0 1 0 3 13M21 7a9 9 0 1 0 3.5 12" opacity=".5"/>
+        <path d="M6 16H3m13 10v3m-8.5-4.5-2 2" opacity=".45"/>
+        <path d="M16 8v8l5 6M16 16l9-9"/>
+        <circle cx="16" cy="16" r="2" fill="currentColor" fill-opacity=".16"/>
+        <path d="m25 2 1.3 3.7L30 7l-3.7 1.3L25 12l-1.3-3.7L20 7l3.7-1.3Z" fill="currentColor" fill-opacity=".16"/>`,
+      evolution: `<path d="M15.5 17C12 7 5 4 4 7c-1.7 5.3 1 11 7 12-6 0-7 6-4 7 3.5 1.2 7-1.7 8.5-6M16.5 17C20 7 27 4 28 7c1.7 5.3-1 11-7 12 6 0 7 6 4 7-3.5 1.2-7-1.7-8.5-6" fill="currentColor" fill-opacity=".07"/>
+        <path d="m8 11 7 8m9-8-7 8" opacity=".45"/>
+        <path d="M16 12v16m0-16-3-4m3 4 3-4"/>
+        <path d="m16 2 1 2-1 2-1-2Z" fill="currentColor" stroke="none"/>`,
+      preview: `<path d="m17 5 8 11-8 11-8-11Z" fill="currentColor" fill-opacity=".07"/>
+        <path d="m17 5-3 11 3 11m-3-11h11" opacity=".5"/>
+        <path d="M2 10h5m-5 6h12M2 22h5m18-6h5m-4-6 3-3m-3 15 3 3"/>
+        <path d="m17 12 1.2 2.8L21 16l-2.8 1.2L17 20l-1.2-2.8L13 16l2.8-1.2Z" fill="currentColor" fill-opacity=".16"/>`
+    };
+  }
+});
+
 // src/ui/storyFactsPanel.js
-function renderStoryFactsPanel(view2, { query = "", filter = "current", editing = null, disabled = false, expanded = /* @__PURE__ */ new Set() } = {}) {
+function renderStoryFactsPanel(view2, {
+  query = "",
+  filter = "current",
+  editing = null,
+  disabled = false,
+  analysisDisabled = disabled,
+  expanded = /* @__PURE__ */ new Set()
+} = {}) {
   const records3 = (filter === "all" ? view2.records : view2.current) || [];
   const names = new Map((view2.entities || []).map((entity) => [entity.id, entity.name]));
-  const matching = records3.filter((record) => !query || `${record.content} ${record.time_text || ""} ${record.entity_refs.map((id4) => names.get(id4) || "").join(" ")}`.toLowerCase().includes(query.toLowerCase()));
+  const search = query.trim().toLowerCase();
+  const matching = records3.filter((record) => !search || `${record.content} ${record.time_text || ""} ${record.entity_refs.map((id4) => names.get(id4) || "").join(" ")}`.toLowerCase().includes(search));
+  const canBackfill = !!(view2.available && view2.enabled && view2.config?.facts_enabled && view2.config.mode === "api");
   let editor = "";
   if (editing) {
     const unavailable = !view2.available || !view2.records.some((record) => record.id === editing.id);
@@ -82533,17 +82604,21 @@ function renderStoryFactsPanel(view2, { query = "", filter = "current", editing 
             <button type="button" class="t-memory-action" data-action="fact-cancel">\u53D6\u6D88</button></div></div>`;
   }
   return `<section class="t-facts-panel" aria-label="\u957F\u671F\u4E8B\u5B9E\u4E0E\u7EBF\u7D22">
-        <div class="t-memory-section-heading"><div><h2>\u957F\u671F\u4E8B\u5B9E\u4E0E\u7EBF\u7D22</h2>
+        <div data-role="fact-overview"><div class="t-memory-section-heading"><div class="t-facts-heading">
+            <span class="t-facts-heading-mark" aria-hidden="true">${renderMemoryNavIcon("facts")}</span><div><h2 tabindex="-1">\u957F\u671F\u4E8B\u5B9E\u4E0E\u7EBF\u7D22</h2>
             <p class="t-memory-hint">${view2.coveredFloors?.length || 0} / ${view2.totalFloors || 0} \u697C\u4E8B\u5B9E\u5DF2\u63D0\u53D6 \xB7 ${view2.pendingFloors || 0} \u697C\u5F85\u8865\u9F50 \xB7 ${view2.current?.length || 0} \u6761\u8BB0\u5F55</p></div></div>
-        <p class="t-memory-hint">\u540E\u53F0\u65F6\u75D5\u6BCF\u6B21\u8BFB\u53D6\u6700\u65B0\u56DE\u590D\uFF0C\u540C\u65F6\u7EF4\u62A4\u957F\u671F\u4E8B\u5B9E\uFF1B\u77ED\u671F\u573A\u666F\u7531\u8FD1\u671F\u6B63\u6587\u627F\u63A5\u3002\u65E7\u65F6\u95F4\u8BB0\u5F55\u7684\u4E8B\u5B9E\u53EF\u7528\u4E0A\u65B9\u300C\u8865\u5EFA\u5386\u53F2\u300D\u8865\u9F50\u3002</p>
+            <div class="t-memory-card-actions"><button type="button" class="t-memory-action" data-action="time-run" data-fact-blocked="${!canBackfill}"${analysisDisabled || !canBackfill ? " disabled" : ""}>\u8865\u9F50\u5386\u53F2</button></div></div>
+        <p class="t-memory-hint">\u67E5\u770B\u9700\u8981\u957F\u671F\u8BB0\u4F4F\u7684\u4E8B\u5B9E\u3001\u4EBA\u7269\u8BF4\u6CD5\u4E0E\u7EBF\u7D22\u3002\u540E\u53F0\u65F6\u75D5\u7EE7\u7EED\u7EF4\u62A4\u8FD9\u4EFD\u6863\u6848\uFF1B\u65E7\u804A\u5929\u7684\u4E8B\u5B9E\u7F3A\u53E3\u53EF\u901A\u8FC7\u672C\u9875\u300C\u8865\u9F50\u5386\u53F2\u300D\u6574\u7406\u3002</p>
         ${view2.reason ? `<p class="t-timetrace-feedback">${escape5(view2.reason)}</p>` : ""}
         ${view2.conflictCount ? `<p class="t-timetrace-feedback">${view2.conflictCount} \u6761\u8BB0\u5F55\u88AB\u6807\u8BB0\u4E3A\u5267\u60C5\u51B2\u7A81\uFF0C\u9700\u6838\u5BF9\u539F\u6587\u3002\u66F4\u65B0\u5EFA\u8BAE\u672A\u91C7\u7528\u4E0D\u8BA1\u5165\u6B64\u6570\u3002</p>` : ""}
         ${!view2.config?.facts_enabled ? '<p class="t-memory-hint">\u957F\u671F\u4E8B\u5B9E\u7EF4\u62A4\u5DF2\u5173\u95ED\uFF1B\u5DF2\u4FDD\u5B58\u4E14\u6765\u6E90\u6709\u6548\u7684\u8BB0\u5F55\u4ECD\u53EF\u67E5\u770B\u548C\u53EC\u56DE\u3002</p>' : ""}
-        <div class="t-facts-toolbar"><input class="t-input" type="search" data-role="fact-search" value="${escape5(query)}" placeholder="\u67E5\u627E\u4EBA\u7269\u3001\u7269\u54C1\u6216\u4E8B\u5B9E" aria-label="\u67E5\u627E\u957F\u671F\u4E8B\u5B9E">
+        ${!view2.enabled ? '<p class="t-memory-hint">\u5728\u9876\u680F\u300C\u8FD0\u884C\u8BBE\u7F6E \u2192 \u56DE\u58F0\u65F6\u75D5\u300D\u4E2D\u542F\u7528\u672C\u804A\u5929\u540E\uFF0C\u53EF\u8865\u9F50\u5386\u53F2\u4E8B\u5B9E\u3002</p>' : ""}</div>
+        <div class="t-facts-toolbar"><label class="t-facts-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input class="t-input" type="search" data-role="fact-search" value="${escape5(query)}" placeholder="\u67E5\u627E\u4EBA\u7269\u3001\u7269\u54C1\u3001\u4E8B\u5B9E\u6216\u7EBF\u7D22" aria-label="\u67E5\u627E\u957F\u671F\u4E8B\u5B9E\u4E0E\u7EBF\u7D22" aria-controls="t-facts-results"></label>
+            <div class="t-facts-filters" data-role="fact-filters" role="group" aria-label="\u6309\u8BB0\u5F55\u72B6\u6001\u7B5B\u9009">
             <button type="button" class="t-memory-action" data-action="fact-filter" data-filter="current" aria-pressed="${filter === "current"}">\u5F53\u524D\u4E0E\u5386\u53F2\u4E8B\u4EF6</button>
-            <button type="button" class="t-memory-action" data-action="fact-filter" data-filter="all" aria-pressed="${filter === "all"}">\u5305\u542B\u5DF2\u7ED3\u675F\u8BB0\u5F55</button></div>
-        ${editor}
-        <div class="t-facts-list">${matching.length ? matching.map((record) => `<details class="t-facts-record" data-fact-detail="${escape5(record.id)}"${expanded.has(record.id) ? " open" : ""}>
+            <button type="button" class="t-memory-action" data-action="fact-filter" data-filter="all" aria-pressed="${filter === "all"}">\u5305\u542B\u5DF2\u7ED3\u675F\u8BB0\u5F55</button></div></div>
+        <div data-role="fact-editor">${editor}</div>
+        <div class="t-facts-list" id="t-facts-results" data-role="fact-results">${matching.length ? matching.map((record) => `<details class="t-facts-record" data-fact-detail="${escape5(record.id)}"${expanded.has(record.id) ? " open" : ""}>
             <summary><span>${escape5(STORY_FACTS_LABELS[record.type])} \xB7 ${escape5(STORY_FACT_STATUS_LABELS[record.status])}</span><strong>${escape5(record.content)}</strong></summary>
             <p>${escape5(frames[record.frame])} \xB7 ${escape5(bases[record.basis])} \xB7 ${escape5(certainties[record.certainty])}${record.time_text ? ` \xB7 ${escape5(record.time_text)}` : ""}${record.manual ? " \xB7 \u4EBA\u5DE5\u4FEE\u6B63" : ""}</p>
             ${record.viewpoint_ref ? `<p>\u8BF4\u6CD5\u6216\u60F3\u6CD5\u6240\u5C5E\u4EBA\u7269\uFF1A${escape5(names.get(record.viewpoint_ref) || "\u672A\u786E\u5B9A")}</p>` : ""}
@@ -82554,8 +82629,8 @@ function renderStoryFactsPanel(view2, { query = "", filter = "current", editing 
             <button type="button" class="t-memory-action" data-action="fact-retract" data-id="${escape5(record.id)}" data-fact-blocked="${record.status === "retracted"}"${disabled || record.status === "retracted" ? " disabled" : ""}>\u64A4\u9500\u8BEF\u62BD\u53D6</button>
             ${record.manual ? `<button type="button" class="t-memory-action" data-action="fact-reset" data-id="${escape5(record.id)}"${disabled ? " disabled" : ""}>\u6062\u590D\u5206\u6790\u8BB0\u5F55</button>` : ""}</div>
         </details>`).join("") : '<p class="t-memory-hint">\u5C1A\u65E0\u5339\u914D\u8BB0\u5F55\u3002\u53EA\u6709\u6765\u6E90\u6709\u6548\u7684\u4E8B\u5B9E\u4F1A\u5728\u8FD9\u91CC\u51FA\u73B0\u3002</p>'}</div>
-        ${view2.issues?.length ? `<details class="t-facts-issues" data-fact-detail="issues"${expanded.has("issues") ? " open" : ""}><summary>${view2.issues.length} \u6761\u6765\u6E90\u6216\u7ED3\u6784\u95EE\u9898</summary>${view2.issues.map((issue) => `<p>${escape5(issue)}</p>`).join("")}</details>` : ""}
-        ${view2.warnings?.length ? `<details class="t-facts-issues" data-fact-detail="warnings"${expanded.has("warnings") ? " open" : ""}><summary>${view2.warnings.length} \u6761\u66F4\u65B0\u5904\u7406\u8BF4\u660E</summary><p>\u4EE5\u4E0B\u8BF4\u660E\u6D89\u53CA\u66F4\u65B0\u5173\u7CFB\u662F\u5426\u91C7\u7528\uFF0C\u4E0D\u4EE3\u8868\u5267\u60C5\u77DB\u76FE\uFF0C\u4E5F\u4E0D\u5355\u72EC\u89E6\u53D1\u91CD\u65B0\u5206\u6790\u3002\u6765\u6E90\u6709\u6548\u7684\u72EC\u7ACB\u8BB0\u5F55\u4ECD\u4FDD\u7559\u3002</p>${view2.warnings.map((warning2) => `<p>${escape5(warning2)}</p>`).join("")}</details>` : ""}
+        <div data-role="fact-diagnostics">${view2.issues?.length ? `<details class="t-facts-issues" data-fact-detail="issues"${expanded.has("issues") ? " open" : ""}><summary>${view2.issues.length} \u6761\u6765\u6E90\u6216\u7ED3\u6784\u95EE\u9898</summary>${view2.issues.map((issue) => `<p>${escape5(issue)}</p>`).join("")}</details>` : ""}
+        ${view2.warnings?.length ? `<details class="t-facts-issues" data-fact-detail="warnings"${expanded.has("warnings") ? " open" : ""}><summary>${view2.warnings.length} \u6761\u66F4\u65B0\u5904\u7406\u8BF4\u660E</summary><p>\u4EE5\u4E0B\u8BF4\u660E\u6D89\u53CA\u66F4\u65B0\u5173\u7CFB\u662F\u5426\u91C7\u7528\uFF0C\u4E0D\u4EE3\u8868\u5267\u60C5\u77DB\u76FE\uFF0C\u4E5F\u4E0D\u5355\u72EC\u89E6\u53D1\u91CD\u65B0\u5206\u6790\u3002\u6765\u6E90\u6709\u6548\u7684\u72EC\u7ACB\u8BB0\u5F55\u4ECD\u4FDD\u7559\u3002</p>${view2.warnings.map((warning2) => `<p>${escape5(warning2)}</p>`).join("")}</details>` : ""}</div>
     </section>`;
 }
 var escape5, frames, bases, certainties, select2;
@@ -82563,6 +82638,7 @@ var init_storyFactsPanel = __esm({
   "src/ui/storyFactsPanel.js"() {
     init_storyFactsData();
     init_storyFactsProtocol();
+    init_storyMemoryIcons();
     escape5 = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
     frames = { main: "\u73B0\u5B9E\u5267\u60C5", past: "\u5386\u53F2", future: "\u672A\u6765", dream: "\u68A6\u5883", hypothetical: "\u5047\u8BBE", unknown: "\u672A\u786E\u5B9A" };
     bases = { narration: "\u53D9\u8FF0", dialogue: "\u4EBA\u7269\u5BF9\u767D", inner_thought: "\u5185\u5FC3", author_revision: "\u4F5C\u8005\u4FEE\u8BA2", inference: "\u63A8\u6D4B" };
@@ -84482,47 +84558,6 @@ var init_characterEvolutionView = __esm({
   }
 });
 
-// src/ui/storyMemoryIcons.js
-function renderMemoryNavIcon(tab) {
-  const paths2 = MEMORY_NAV_ICONS[tab];
-  return paths2 ? `<svg class="t-memory-nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths2}</svg>` : "";
-}
-var MEMORY_NAV_ICONS;
-var init_storyMemoryIcons = __esm({
-  "src/ui/storyMemoryIcons.js"() {
-    MEMORY_NAV_ICONS = {
-      current: `<path d="M16 12C12.4 9.2 7.9 8.3 3.5 9.5v15c4.4-1.2 8.9-.3 12.5 2.5 3.6-2.8 8.1-3.7 12.5-2.5v-15c-4.4-1.2-8.9-.3-12.5 2.5Z" fill="currentColor" fill-opacity=".07"/>
-        <path d="M16 13v14M7 14.5c2.1-.2 3.7.2 5.3 1M7 19c2.1-.2 3.7.2 5.3 1m7.4-4c1.6-.8 3.2-1.2 5.3-1m-5.3 5.5c1.6-.8 3.2-1.2 5.3-1" opacity=".55"/>
-        <path d="m16 2 1.2 3.3L20.5 6.5l-3.3 1.2L16 11l-1.2-3.3-3.3-1.2 3.3-1.2Z" fill="currentColor" fill-opacity=".16"/>`,
-      relationships: `<path d="M5 20.5 12 8l12.5 3L21 25 5 20.5Zm7-12.5 9 17" opacity=".5"/>
-        <path d="M3.5 13A13 13 0 0 1 22 3.8M28.5 18A13 13 0 0 1 10 28.2" opacity=".35"/>
-        <circle cx="5" cy="20.5" r="2"/><circle cx="12" cy="8" r="2.5" fill="currentColor" fill-opacity=".16"/><circle cx="21" cy="25" r="2"/>
-        <path d="m24.5 6 1.4 3.6L29.5 11l-3.6 1.4-1.4 3.6-1.4-3.6-3.6-1.4 3.6-1.4Z" fill="currentColor" fill-opacity=".16"/>`,
-      threads: `<path d="M5 5c12-4 23 0 20 9-2 6-13 3-16 8-2 4 2 7 7 5.5"/>
-        <path d="M10 3.5c-5 4-5 10 1 13m7-8c-3 1-4 3-3 5m4 4c4 2 5 5 4 8" opacity=".45"/>
-        <path d="m15.5 12 4 4-4 4-4-4Z" fill="currentColor" fill-opacity=".16"/>
-        <circle cx="5" cy="5" r="1.5" fill="currentColor" stroke="none"/>
-        <path d="m23 24.5 3 3-3 3-3-3Z"/>`,
-      records: `<path d="M9 4h15a3 3 0 0 1 3 3v1h-6V7a3 3 0 0 0-6 0v17a4 4 0 0 1-8 0v-1h12v1a4 4 0 0 1-4 4H11M9 4a3 3 0 0 0-3 3v12"/>
-        <path d="M21 8v11M10 11v8m-2-8h4m-4 4h4m-4 4h4" opacity=".5"/>
-        <path d="m26 13 1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z" fill="currentColor" fill-opacity=".16"/>`,
-      timetrace: `<path d="M25 7a12 12 0 1 0 3 13M21 7a9 9 0 1 0 3.5 12" opacity=".5"/>
-        <path d="M6 16H3m13 10v3m-8.5-4.5-2 2" opacity=".45"/>
-        <path d="M16 8v8l5 6M16 16l9-9"/>
-        <circle cx="16" cy="16" r="2" fill="currentColor" fill-opacity=".16"/>
-        <path d="m25 2 1.3 3.7L30 7l-3.7 1.3L25 12l-1.3-3.7L20 7l3.7-1.3Z" fill="currentColor" fill-opacity=".16"/>`,
-      evolution: `<path d="M15.5 17C12 7 5 4 4 7c-1.7 5.3 1 11 7 12-6 0-7 6-4 7 3.5 1.2 7-1.7 8.5-6M16.5 17C20 7 27 4 28 7c1.7 5.3-1 11-7 12 6 0 7 6 4 7-3.5 1.2-7-1.7-8.5-6" fill="currentColor" fill-opacity=".07"/>
-        <path d="m8 11 7 8m9-8-7 8" opacity=".45"/>
-        <path d="M16 12v16m0-16-3-4m3 4 3-4"/>
-        <path d="m16 2 1 2-1 2-1-2Z" fill="currentColor" stroke="none"/>`,
-      preview: `<path d="m17 5 8 11-8 11-8-11Z" fill="currentColor" fill-opacity=".07"/>
-        <path d="m17 5-3 11 3 11m-3-11h11" opacity=".5"/>
-        <path d="M2 10h5m-5 6h12M2 22h5m18-6h5m-4-6 3-3m-3 15 3 3"/>
-        <path d="m17 12 1.2 2.8L21 16l-2.8 1.2L17 20l-1.2-2.8L13 16l2.8-1.2Z" fill="currentColor" fill-opacity=".16"/>`
-    };
-  }
-});
-
 // src/ui/storyMemoryRecoveryWindow.js
 function openStoryMemoryRecoveryWindow({ onClose } = {}) {
   activeClose2?.();
@@ -84893,7 +84928,9 @@ ${item2.body || ""}`.toLowerCase().includes(term)) return false;
     });
   }
   function pageHeading(title, subtitle = "", actions = "") {
-    return `<div class="t-memory-page-heading"><div><p class="t-memory-eyebrow">${{ current: "01 / THE STORY SO FAR", relationships: "02 / THE CONSTELLATION", threads: "03 / THE UNFINISHED", records: "04 / THE CHRONICLE", timetrace: "05 / THE STORY CLOCK", evolution: "06 / THE CHARACTER WITHIN", preview: "07 / THE CONTEXT" }[tab]}</p><h2 tabindex="-1">${escape9(title)}</h2>${subtitle ? `<p class="t-memory-hint">${escape9(subtitle)}</p>` : ""}</div>${actions ? `<div class="t-memory-card-actions">${actions}</div>` : ""}</div>`;
+    const ordinal2 = String(TABS.findIndex(([id4]) => id4 === tab) + 1).padStart(2, "0");
+    const caption = { current: "THE STORY SO FAR", relationships: "THE CONSTELLATION", threads: "THE UNFINISHED", records: "THE CHRONICLE", timetrace: "THE STORY CLOCK", facts: "THE LASTING RECORD", evolution: "THE CHARACTER WITHIN", preview: "THE CONTEXT" }[tab];
+    return `<div class="t-memory-page-heading"><div><p class="t-memory-eyebrow">${ordinal2} / ${caption}</p><h2 tabindex="-1">${escape9(title)}</h2>${subtitle ? `<p class="t-memory-hint">${escape9(subtitle)}</p>` : ""}</div>${actions ? `<div class="t-memory-card-actions">${actions}</div>` : ""}</div>`;
   }
   function graphPanel(memory, focusNames, focusThreadId) {
     const candidates = visibleItems(memory.relationships);
@@ -85061,13 +85098,15 @@ ${item2.body || ""}`.includes(name)));
     if (tab === "evolution") return '<div data-role="evolution-mount"></div>';
     const memory = view2.memory;
     if (!view2.available) return '<div class="t-memory-empty"><i class="fa-solid fa-comments"></i><p>\u6253\u5F00\u4E00\u6BB5\u89D2\u8272\u804A\u5929\u540E\uFF0C\u5373\u53EF\u4E3A\u8FD9\u6BB5\u6545\u4E8B\u5EFA\u7ACB\u8BB0\u5FC6\u3002</p></div>';
-    if (tab === "timetrace") return `${editor?.kind.startsWith("time-") ? renderEditor() : ""}${renderTimetracePanel(view2.timetrace, { query: timeQuery, searchOpen: timeSearchOpen, filter: timeFilter, expanded: timeExpanded, focus: timeFocus, busy: view2.busy || localBusy, analysisBusy: localBusy })}${renderStoryFactsPanel(getStoryFactsView(), {
+    if (tab === "timetrace") return `${editor?.kind.startsWith("time-") ? renderEditor() : ""}${renderTimetracePanel(view2.timetrace, { query: timeQuery, searchOpen: timeSearchOpen, filter: timeFilter, expanded: timeExpanded, focus: timeFocus, busy: view2.busy || localBusy, analysisBusy: localBusy })}`;
+    if (tab === "facts") return renderStoryFactsPanel(getStoryFactsView(), {
       query: factQuery,
       filter: factFilter,
       editing: factEditing,
       expanded: factExpanded,
-      disabled: factMutationBusy(view2)
-    })}`;
+      disabled: factMutationBusy(view2),
+      analysisDisabled: localBusy || view2.generating || view2.timetrace.busy || view2.timetrace.generating || view2.timetrace.analysisBlocked || !view2.timetrace.memory.enabled
+    });
     if (tab === "preview") return `${pageHeading("\u6CE8\u5165\u9884\u89C8", "\u67E5\u770B\u672C\u8F6E\u5C06\u63D0\u4F9B\u7ED9\u6A21\u578B\u7684\u6545\u4E8B\u8BB0\u5FC6\u3002")}<p class="t-memory-hint">\u4F30\u7B97\u7EA6 ${view2.injection.tokens} token\uFF08\u8BB0\u5FC6 ${view2.injection.memoryTokens} \xB7 \u6700\u8FD1\u5206\u6BB5 ${view2.injection.recentTokens}\uFF09\u3002</p>
             ${view2.injection.overBudget ? '<p class="t-memory-error">\u5386\u53F2\u8109\u7EDC\u548C\u9501\u5B9A\u6761\u76EE\u5DF2\u8D85\u8FC7\u76EE\u6807\u9884\u7B97\uFF0C\u8BF7\u7CBE\u7B80\u5185\u5BB9\u6216\u63D0\u9AD8\u9884\u7B97\u3002</p>' : ""}
             ${view2.injection.omitted.length ? `<p class="t-memory-error">\u672C\u8F6E\u9884\u7B97\u672A\u5BB9\u7EB3\uFF1A${escape9(view2.injection.omitted.join("\u3001"))}\u3002\u8FD9\u4E9B\u5185\u5BB9\u4ECD\u4FDD\u5B58\u5728\u8BB0\u5FC6\u91CC\uFF0C\u53EF\u63D0\u9AD8\u300C\u6BCF\u6B21\u6CE8\u5165\u7684\u8BB0\u5FC6\u6700\u591A\u5360\u591A\u5C11 token\u300D\uFF0C\u6216\u7CBE\u7B80\u8F83\u65E9\u7684\u6761\u76EE\u3002</p>` : ""}
@@ -85146,6 +85185,24 @@ ${item2.body || ""}`.includes(name)));
     invalidateView();
     render2();
     return false;
+  }
+  function refreshFactsContent(body, html) {
+    const current3 = body.querySelector(".t-facts-panel");
+    if (!current3) return false;
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    const next = template.content.querySelector(".t-facts-panel");
+    if (!next) return false;
+    const roles = ["fact-overview", "fact-filters", "fact-editor", "fact-results", "fact-diagnostics"];
+    const regions = roles.map((role) => [current3.querySelector(`[data-role="${role}"]`), next.querySelector(`[data-role="${role}"]`)]);
+    const input = current3.querySelector('[data-role="fact-search"]');
+    const nextInput = next.querySelector('[data-role="fact-search"]');
+    if (!input || !nextInput || regions.some(([live, snapshot]) => !live || !snapshot)) return false;
+    for (const [live, snapshot] of regions) {
+      if (live.innerHTML !== snapshot.innerHTML) live.innerHTML = snapshot.innerHTML;
+    }
+    if (input.value !== nextInput.value) input.value = nextInput.value;
+    return true;
   }
   function render2() {
     if (closed || !root.isConnected) return;
@@ -85229,8 +85286,11 @@ ${item2.body || ""}`.includes(name)));
     alert2.hidden = !(localError || view2.error);
     alert2.textContent = localError || view2.error;
     root.querySelectorAll("[data-tab]").forEach((element3) => {
-      element3.classList.toggle("is-active", element3.dataset.tab === tab);
-      element3.setAttribute("aria-current", element3.dataset.tab === tab ? "page" : "false");
+      const active7 = element3.dataset.tab === tab;
+      const newlyActive = active7 && !element3.classList.contains("is-active");
+      element3.classList.toggle("is-active", active7);
+      element3.setAttribute("aria-current", active7 ? "page" : "false");
+      if (newlyActive) element3.scrollIntoView?.({ block: "nearest", inline: "nearest" });
     });
     const body = root.querySelector('[data-role="body"]');
     body.classList.toggle("is-evolution", tab === "evolution");
@@ -85251,6 +85311,7 @@ ${item2.body || ""}`.includes(name)));
     const focusedRelation = body.contains(focused) && focused?.matches?.("[data-relation]") ? focused.dataset.relation : "";
     const focusedPersonSelect = focused?.dataset.role === "person-select";
     const focusedTimeAction = body.contains(focused) && ["time-toggle-search", "time-scene"].includes(focused?.dataset?.action) ? focused : null;
+    const focusedFactFilter = body.contains(focused) && focused?.dataset?.action === "fact-filter" ? focused.dataset.filter : "";
     const lensScroll = body.querySelector(".t-memory-lens")?.scrollTop || 0;
     const searchRange = focusedSearch && typeof focusedSearch.selectionStart === "number" ? [focusedSearch.selectionStart, focusedSearch.selectionEnd] : null;
     const focusField = body.contains(focused) ? focused.dataset.factField || focused.dataset.field || focused.dataset.setting : "";
@@ -85260,7 +85321,8 @@ ${item2.body || ""}`.includes(name)));
     const html = renderContent(view2);
     if (html !== lastBodyHtml) {
       disposeGraph();
-      body.innerHTML = html;
+      const patched = lastBodyHtml && tab === "facts" && refreshFactsContent(body, html);
+      if (!patched) body.innerHTML = html;
       lastBodyHtml = html;
       disposeGraph = bindMemoryGraph(body.querySelector(".t-memory-graph"), graphViewport);
     }
@@ -85285,8 +85347,8 @@ ${item2.body || ""}`.includes(name)));
         return;
       }
       const timeAnalysis = ["time-run", "time-rebuild"].includes(element3.dataset.action);
-      const busy2 = timeAnalysis ? view2.timetrace.busy || view2.timetrace.analysisBlocked : view2.busy;
-      element3.disabled = busy2 || view2.generating || localBusy || element3.dataset.action === "run" && (!view2.available || !view2.memory.enabled) || element3.dataset.action.startsWith("undo") && (!view2.undo?.available || view2.saving || view2.timetrace?.busy) || timeAnalysis && !view2.timetrace.memory.enabled;
+      const busy2 = timeAnalysis ? view2.timetrace.busy || view2.timetrace.generating || view2.timetrace.analysisBlocked : view2.busy;
+      element3.disabled = busy2 || view2.generating || localBusy || element3.dataset.action === "run" && (!view2.available || !view2.memory.enabled) || element3.dataset.action.startsWith("undo") && (!view2.undo?.available || view2.saving || view2.timetrace?.busy) || timeAnalysis && !view2.timetrace.memory.enabled || element3.dataset.factBlocked === "true";
     });
     renderSource();
     if (source2) return;
@@ -85294,6 +85356,8 @@ ${item2.body || ""}`.includes(name)));
       const input = body.querySelector(`[data-role="${focusedSearch.dataset.role}"]`);
       input?.focus({ preventScroll: true });
       if (searchRange) input?.setSelectionRange?.(...searchRange);
+    } else if (focusedFactFilter) {
+      body.querySelector(`[data-action="fact-filter"][data-filter="${focusedFactFilter}"]`)?.focus({ preventScroll: true });
     } else if (focusedTimeAction) {
       const selector = focusedTimeAction.dataset.action === "time-scene" ? `[data-action="time-scene"][data-frame="${focusedTimeAction.dataset.frame}"]` : '[data-action="time-toggle-search"]';
       (body.querySelector(selector) || body.querySelector('[data-action="time-toggle-search"]'))?.focus({ preventScroll: true });
@@ -85325,7 +85389,8 @@ ${item2.body || ""}`.includes(name)));
   function refreshSearchResults(role) {
     const body = root.querySelector('[data-role="body"]'), scroll = body.scrollTop;
     const results = role === "time-search" ? body.querySelector('[data-role="time-results"]') : body.querySelector(".t-facts-list");
-    if (tab !== "timetrace" || !results) {
+    const searchTab = role === "time-search" ? "timetrace" : "facts";
+    if (tab !== searchTab || !results) {
       queueRender();
       return;
     }
@@ -85956,11 +86021,12 @@ var init_storyMemoryWindow = __esm({
     THREAD_STATUS = { open: "\u672A\u89E3\u51B3", progress: "\u6709\u8FDB\u5C55", resolved: "\u5DF2\u89E3\u51B3" };
     TABS = [
       ["current", "\u5267\u60C5\u6982\u89C8", "\u6982\u89C8"],
+      ["timetrace", "\u56DE\u58F0\u65F6\u75D5", "\u65F6\u75D5"],
       ["relationships", "\u4EBA\u7269\u661F\u56FE", "\u661F\u56FE"],
       ["threads", "\u4F0F\u7B14\u4E0E\u7EA6\u5B9A", "\u4F0F\u7B14"],
-      ["records", "\u5267\u60C5\u7F16\u5E74\u53F2", "\u7F16\u5E74"],
-      ["timetrace", "\u56DE\u58F0\u65F6\u75D5", "\u65F6\u75D5"],
+      ["facts", "\u957F\u671F\u4E8B\u5B9E\u4E0E\u7EBF\u7D22", "\u4E8B\u5B9E"],
       ["evolution", "\u89D2\u8272\u6F14\u53D8", "\u6F14\u53D8"],
+      ["records", "\u5267\u60C5\u7F16\u5E74\u53F2", "\u7F16\u5E74"],
       ["preview", "\u6CE8\u5165\u9884\u89C8", "\u6CE8\u5165"]
     ];
     MEMORY_HELP = [
@@ -85976,13 +86042,14 @@ var init_storyMemoryWindow = __esm({
         "\u300C\u8FD0\u884C\u8BBE\u7F6E \u2192 \u8FDE\u63A5\u4E0E\u6B63\u6587\u300D\u4E2D\u7684\u300C\u603B\u7ED3\u4E0E\u5206\u6790\u8DF3\u8FC7\u7528\u6237\u697C\u5C42\u300D\u4F9B\u6545\u4E8B\u8BB0\u5FC6\u3001\u89D2\u8272\u6F14\u53D8\u3001\u56DE\u58F0\u65F6\u75D5\u3001\u5927\u7EB2\u4E0E\u5267\u60C5\u63A8\u8FDB\u8DE8\u804A\u5929\u5171\u7528\uFF1B\u5C0F\u5267\u573A\u5386\u53F2\u4ECD\u7531\u5176\u4E3B\u754C\u9762\u72EC\u7ACB\u63A7\u5236\u3002\u9ED8\u8BA4\u5305\u542B\u7528\u6237\u697C\u5C42\uFF0C\u5F00\u542F\u540E\u7528\u6237\u697C\u5C42\u4E0D\u8BA1\u5165\u5206\u6790\u89E6\u53D1\u91CF\u548C\u6279\u6B21\u697C\u6570\uFF1B\u5DF2\u6709\u7ED3\u679C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u505A\u3002",
         "\u6574\u7406\u6210\u529F\u5E76\u4FDD\u5B58\u540E\u624D\u9690\u85CF\u5BF9\u5E94\u6B63\u6587\uFF0C\u539F\u6587\u4ECD\u53EF\u67E5\u770B\u548C\u6062\u590D\u3002\u5168\u5C40\u5F00\u5173\u53EA\u6539\u53D8\u603B\u7ED3\u4E0E\u5206\u6790\u7684\u8F93\u5165\uFF0C\u6210\u529F\u540E\u6574\u7406\u8303\u56F4\u5185\u7684\u7528\u6237\u697C\u5C42\u4ECD\u4F1A\u9690\u85CF\uFF0C\u539F\u6587\u67E5\u770B\u4E0E\u64A4\u9500\u4FDD\u6301\u5B8C\u6574\u3002"
       ] },
-      { heading: "\u4E03\u4E2A\u9875\u9762\u600E\u4E48\u770B", terms: [
+      { heading: "\u516B\u4E2A\u9875\u9762\u600E\u4E48\u770B", terms: [
         { term: "\u5267\u60C5\u6982\u89C8", text: "\u67E5\u770B\u5168\u7A0B\u6897\u6982\u3001\u622A\u81F3\u6574\u7406\u8303\u56F4\u7684\u5267\u60C5\u72B6\u6001\u548C\u9636\u6BB5\uFF1B\u6700\u65B0\u8FDB\u5C55\u4EE5\u5C1A\u672A\u6574\u7406\u7684\u804A\u5929\u6B63\u6587\u4E3A\u51C6\u3002" },
+        { term: "\u56DE\u58F0\u65F6\u75D5", text: "\u6A21\u578B\u7ED3\u5408\u4E16\u754C\u89C2\u8865\u5B9A\u5177\u4F53\u65E5\u671F\uFF0C\u6309\u5267\u60C5\u8017\u65F6\u7EF4\u62A4\u6545\u4E8B\u65F6\u949F\uFF1B\u67E5\u770B\u8FDE\u7EED\u65F6\u95F4\u6BB5\u3001\u5DF2\u8FC7\u53BB\u7684\u65F6\u95F4\u4E0E\u539F\u6587\u4F9D\u636E\u3002\u65E7\u804A\u5929\u5355\u904D\u8865\u5EFA\uFF0C\u8BB0\u5FC6\u603B\u7ED3\u4E5F\u4F1A\u987A\u5E26\u8865\u9F50\u7F3A\u5931\u65F6\u95F4\u3002" },
         { term: "\u4EBA\u7269\u661F\u56FE", text: "\u70B9\u4EBA\u7269\u805A\u7126\uFF0C\u70B9\u8FDE\u7EBF\u67E5\u770B\u5B8C\u6574\u5173\u7CFB\u3001\u539F\u6587\u4F9D\u636E\u548C\u53D8\u5316\uFF1B\u652F\u6301\u62D6\u52A8\u3001\u7F29\u653E\u4E0E\u7B5B\u9009\u3002" },
         { term: "\u4F0F\u7B14\u4E0E\u7EA6\u5B9A", text: "\u6309\u672A\u89E3\u51B3\u3001\u6709\u8FDB\u5C55\u3001\u5DF2\u89E3\u51B3\u67E5\u770B\u4E8B\u9879\uFF0C\u5C55\u5F00\u5361\u7247\u9605\u8BFB\u5168\u6587\u4E0E\u6765\u6E90\u3002" },
-        { term: "\u5267\u60C5\u7F16\u5E74\u53F2", text: "\u5C55\u5F00\u7AE0\u8282\u67E5\u770B\u6458\u8981\u548C\u539F\u6587\uFF1B\u5408\u5E76\u8FC7\u7684\u5C0F\u603B\u7ED3\u4ECD\u53EF\u5C55\u5F00\u67E5\u770B\uFF0C\u4E5F\u53EF\u64A4\u9500\u6574\u7406\u3002" },
-        { term: "\u56DE\u58F0\u65F6\u75D5", text: "\u6A21\u578B\u7ED3\u5408\u4E16\u754C\u89C2\u8865\u5B9A\u5177\u4F53\u65E5\u671F\uFF0C\u6309\u5267\u60C5\u8017\u65F6\u7EF4\u62A4\u6545\u4E8B\u65F6\u949F\uFF1B\u67E5\u770B\u8FDE\u7EED\u65F6\u95F4\u6BB5\u3001\u5DF2\u8FC7\u53BB\u7684\u65F6\u95F4\u4E0E\u539F\u6587\u4F9D\u636E\u3002\u65E7\u804A\u5929\u5355\u904D\u8865\u5EFA\uFF0C\u8BB0\u5FC6\u603B\u7ED3\u4E5F\u4F1A\u987A\u5E26\u8865\u9F50\u7F3A\u5931\u65F6\u95F4\u3002" },
+        { term: "\u957F\u671F\u4E8B\u5B9E\u4E0E\u7EBF\u7D22", text: "\u72EC\u7ACB\u67E5\u627E\u9700\u8981\u957F\u671F\u8BB0\u4F4F\u7684\u4E8B\u5B9E\u3001\u4EBA\u7269\u8BF4\u6CD5\u4E0E\u7EBF\u7D22\uFF0C\u5C55\u5F00\u67E5\u770B\u6027\u8D28\u3001\u5173\u8054\u8BB0\u5F55\u548C\u539F\u6587\uFF1B\u53EF\u4FEE\u6B63\u3001\u64A4\u9500\u8BEF\u62BD\u53D6\u6216\u6062\u590D\u5206\u6790\u8BB0\u5F55\u3002\u540E\u53F0\u65F6\u75D5\u7EE7\u7EED\u7EF4\u62A4\u4E8B\u5B9E\uFF0C\u65E7\u804A\u5929\u53EF\u5728\u672C\u9875\u70B9\u51FB\u300C\u8865\u9F50\u5386\u53F2\u300D\u3002\u641C\u7D22\u3001\u7B5B\u9009\u548C\u5C55\u5F00\u72B6\u6001\u4E0E\u65F6\u75D5\u5206\u522B\u4FDD\u7559\u3002" },
         { term: "\u89D2\u8272\u6F14\u53D8", text: "\u5355\u89D2\u8272\u804A\u5929\u72EC\u7ACB\u542F\u7528\uFF0C\u589E\u91CF\u7EF4\u62A4\u5BF9\u4E3B\u8981\u4EBA\u7269\u7684\u6001\u5EA6\u3001\u81EA\u8EAB\u5FC3\u5883\u4E0E\u884C\u4E3A\u6A21\u5F0F\u7684\u53D8\u5316\u3002\u5C55\u793A\u4E0E\u6CE8\u5165\u4F7F\u7528\u540C\u4E00\u4EFD\u5F53\u524D\u72B6\u6001\uFF0C\u6BCF\u9879\u5305\u542B\u9002\u7528\u8FB9\u754C\u3001\u7B80\u77ED\u4F9D\u636E\u53CA\u53EF\u5C55\u5F00\u7684\u539F\u6587\uFF1B\u672C\u6B21\u66F4\u65B0\u4E0E\u5B8C\u6574\u5386\u53F2\u53E6\u5217\uFF0C\u5DF2\u5F52\u6863\u72B6\u6001\u4E0D\u6CE8\u5165\u3002\u9884\u7B97\u4E0D\u8DB3\u65F6\u6574\u6761\u7701\u7565\uFF0C\u4E0D\u62C6\u6389\u8FB9\u754C\u6216\u4F9D\u636E\u3002\u65E7\u7248\u6863\u6848\u53EA\u8BFB\u5907\u4EFD\uFF0C\u5347\u7EA7\u540E\u6682\u505C\u81EA\u52A8\u5206\u6790\uFF0C\u53EF\u4ECE\u5934\u91CD\u6790\u3002\u65B0\u804A\u5929\u9ED8\u8BA4\u5173\u95ED\uFF0C\u5206\u6790\u65B9\u6848\u548C\u6A21\u578B\u8DDF\u968F\u6545\u4E8B\u8BB0\u5FC6\uFF0C\u4E0D\u8986\u76D6\u89D2\u8272\u5361\u3002" },
+        { term: "\u5267\u60C5\u7F16\u5E74\u53F2", text: "\u5C55\u5F00\u7AE0\u8282\u67E5\u770B\u6458\u8981\u548C\u539F\u6587\uFF1B\u5408\u5E76\u8FC7\u7684\u5C0F\u603B\u7ED3\u4ECD\u53EF\u5C55\u5F00\u67E5\u770B\uFF0C\u4E5F\u53EF\u64A4\u9500\u6574\u7406\u3002" },
         { term: "\u6CE8\u5165\u9884\u89C8", text: "\u67E5\u770B\u672C\u8F6E\u9001\u7ED9\u804A\u5929\u6A21\u578B\u7684\u5386\u53F2\u8109\u7EDC\u3001\u6700\u8FD1\u6458\u8981\uFF0C\u4EE5\u53CA\u9884\u7B97\u672A\u5BB9\u7EB3\u7684\u5185\u5BB9\u3002\u65E7\u539F\u6587\u7531\u72EC\u7ACB\u56DE\u58F0\u53EC\u56DE\u7BA1\u7406\uFF0C\u89D2\u8272\u6F14\u53D8\u7684\u72EC\u7ACB\u6CE8\u5165\u5728\u89D2\u8272\u6F14\u53D8\u9875\u9884\u89C8\u3002" }
       ] },
       { heading: "\u4FEE\u6B63\u8BB0\u5FC6\u4E0E\u5267\u60C5\u9636\u6BB5", lines: [
