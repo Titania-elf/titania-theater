@@ -29809,7 +29809,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 .t-facts-event > summary > span { font-size: .73em; color: var(--t-memory-gold); }\r
 .t-facts-event > summary > h3 { margin: 0; font: 500 1.15em/1.6 var(--t-memory-serif); overflow-wrap: anywhere; }\r
 .t-facts-event-body { padding: 0 16px 18px; }\r
-.t-facts-people { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 15px; }\r
+.t-facts-people { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 2px 0 15px; }\r
 .t-facts-process { margin: 12px 0 18px; border-block: 1px solid var(--t-memory-line); }\r
 .t-facts-process > summary { padding: 12px 0; min-height: 44px; color: var(--t-memory-muted); font-size: .8em; cursor: pointer; }\r
 .t-facts-process > section { padding: 14px 0; border-top: 1px solid var(--t-memory-line); }\r
@@ -32205,7 +32205,7 @@ body.t-reader-zen .t-reader-inspector, body.t-reader-zen .t-reader-floor-tools {
 
 
 `;
-    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184924], "04-features/toolbox-settings.css": [184973, 189378], "04-features/main-window.css": [189422, 234321], "04-features/main-window-legacy.css": [234372, 258238], "04-features/script-picker.css": [258284, 264779], "04-features/wi-selector.css": [264823, 282649], "04-features/continuation.css": [282694, 306563], "04-features/queue.css": [306601, 313161], "04-features/content-editor.css": [313208, 315515], "04-features/illustration.css": [315560, 342868], "04-features/visual-selection.css": [342917, 348176], "04-features/storyboard.css": [348219, 365299], "04-features/echo-imaging.css": [365344, 439452], "04-features/settings-drawer.css": [439500, 457734], "04-features/settings.css": [457775, 485972], "04-features/manager.css": [486012, 499310], "04-features/workshop.css": [499351, 522133], "04-features/favs.css": [522170, 563654], "04-features/debug.css": [563692, 580457], "04-features/story-outline.css": [580503, 614809], "04-features/outline-entry-menu.css": [614860, 621613], "04-features/rewrite.css": [621653, 681167], "04-features/paragraph-editor.css": [681216, 684999], "04-features/reader.css": [685038, 694397], "04-features/chat-book.css": [694439, 700980], "04-features/story-memory.css": [701025, 734407], "04-features/story-character-atlas.css": [734461, 750280], "04-features/retrieval.css": [750322, 774482], "04-features/character-evolution.css": [774534, 809208], "04-features/story-memory-notifications.css": [809267, 812479], "04-features/story-timetrace.css": [812527, 832841], "04-features/tts.css": [832877, 868566], "04-features/confirm-dialog.css": [868613, 872611], "04-features/image-cropper.css": [872657, 877441], "04-features/st-embedded.css": [877485, 909167], "04-features/scene-advance.css": [909213, 941487], "04-features/theater-midnight.css": [941536, 966864] };
+    CSS_RANGES = { "00-tokens/primitives.css": [76, 8356], "00-tokens/semantic.css": [8395, 10866], "00-tokens/theme-dark.css": [10907, 65609], "00-tokens/theme-light.css": [65651, 85943], "00-tokens/legacy-aliases.css": [85988, 87817], "01-base/scope.css": [87851, 90906], "01-base/base.css": [90939, 95161], "01-base/scrollbar.css": [95199, 103573], "01-base/form-controls.css": [103615, 114421], "01-base/keyframes.css": [114459, 123051], "02-components/window.css": [123092, 126224], "02-components/panel.css": [126264, 129884], "02-components/settings-shell.css": [129933, 134331], "02-components/dialog.css": [134372, 139717], "02-components/button.css": [139758, 146258], "02-components/icon-button.css": [146304, 148784], "02-components/field.css": [148824, 151899], "02-components/choice-input.css": [151946, 153237], "02-components/radio-card.css": [153282, 155524], "02-components/studio-workspace.css": [155575, 170464], "02-components/_legacy.css": [170506, 173470], "03-layout/button-groups.css": [173514, 174935], "03-layout/utilities.css": [174975, 176786], "04-features/floating.css": [176827, 184924], "04-features/toolbox-settings.css": [184973, 189378], "04-features/main-window.css": [189422, 234321], "04-features/main-window-legacy.css": [234372, 258238], "04-features/script-picker.css": [258284, 264779], "04-features/wi-selector.css": [264823, 282649], "04-features/continuation.css": [282694, 306563], "04-features/queue.css": [306601, 313161], "04-features/content-editor.css": [313208, 315515], "04-features/illustration.css": [315560, 342868], "04-features/visual-selection.css": [342917, 348176], "04-features/storyboard.css": [348219, 365299], "04-features/echo-imaging.css": [365344, 439452], "04-features/settings-drawer.css": [439500, 457734], "04-features/settings.css": [457775, 485972], "04-features/manager.css": [486012, 499310], "04-features/workshop.css": [499351, 522133], "04-features/favs.css": [522170, 563654], "04-features/debug.css": [563692, 580457], "04-features/story-outline.css": [580503, 614809], "04-features/outline-entry-menu.css": [614860, 621613], "04-features/rewrite.css": [621653, 681167], "04-features/paragraph-editor.css": [681216, 684999], "04-features/reader.css": [685038, 694397], "04-features/chat-book.css": [694439, 700980], "04-features/story-memory.css": [701025, 734407], "04-features/story-character-atlas.css": [734461, 750280], "04-features/retrieval.css": [750322, 774482], "04-features/character-evolution.css": [774534, 809208], "04-features/story-memory-notifications.css": [809267, 812479], "04-features/story-timetrace.css": [812527, 832862], "04-features/tts.css": [832898, 868587], "04-features/confirm-dialog.css": [868634, 872632], "04-features/image-cropper.css": [872678, 877462], "04-features/st-embedded.css": [877506, 909188], "04-features/scene-advance.css": [909234, 941508], "04-features/theater-midnight.css": [941557, 966885] };
     CSS_FILES = Object.keys(CSS_RANGES);
   }
 });
@@ -53756,12 +53756,22 @@ function createStoryFactsReferences(context8 = {}) {
   };
   return Object.freeze({
     input: frozen(input),
+    // Diagnostics use the same captured aliases as the request, never IDs
+    // from live state or a newly numbered context.
+    alias(kind, id4) {
+      const known = optionalAlias(kind, id4);
+      if (known) return known;
+      return typeof id4 === "string" && new RegExp(`^${prefixes[kind].created}[1-9]\\d{0,3}$`).test(id4) ? id4 : null;
+    },
     resolve(kind, value, path, { nullable = false, created = false } = {}) {
       if (nullable && value == null) return null;
       const ref = normalize(value, path), prefix = prefixes[kind];
       if (created && new RegExp(`^${prefix.created}[1-9]\\d{0,3}$`).test(ref)) return ref;
       const id4 = maps[kind].byRef.get(ref);
-      if (!id4) throw referenceError(`${path} \u4E0D\u662F\u672C\u6B21\u63D0\u4F9B\u7684${labels[kind]}\u77ED\u7F16\u53F7\uFF1B\u8BF7\u4F7F\u7528${prefix.known}1\u8FD9\u4E00\u7C7B\u7F16\u53F7\u3002`);
+      if (!id4) {
+        const shown = /^n?[oepr][1-9]\d{0,3}$/.test(ref) ? `\u201C${ref}\u201D` : "\u8BE5\u5F15\u7528";
+        throw referenceError(`${path}\uFF1A${shown}\u4E0D\u662F\u672C\u6B21\u63D0\u4F9B\u7684${labels[kind]}\u77ED\u7F16\u53F7\uFF1B\u8BF7\u4F7F\u7528\u8F93\u5165\u7ED9\u51FA\u7684${prefix.known}\u7C7B\u77ED\u7F16\u53F7\u3002`);
+      }
       return id4;
     }
   });
@@ -53943,7 +53953,8 @@ function parseStoryFactsResponse(raw, { context: context8 = {}, allowTimeOnly = 
   if (!object4(data) || data.format !== STORY_FACTS_FORMAT) throw parseError("\u4E8B\u4EF6\u534F\u8BAE\u6807\u8BB0\u7F3A\u5931\u6216\u4E0D\u5339\u914D\uFF0C\u8BF7\u4F7F\u7528\u5F53\u524D\u8054\u5408\u534F\u8BAE\u3002");
   const timeNote = requiredText(data.time_note, "time_note", 8e3);
   for (const key of ["new_entities", "entity_updates", "events", "relationship_changes"]) array(data[key], key);
-  data = decodeStoryFactsReferences(data, context8.references || createStoryFactsReferences(context8));
+  const references = context8.references || createStoryFactsReferences(context8);
+  data = decodeStoryFactsReferences(data, references);
   const knownEntities = new Map((context8.entities || []).map((item2) => [item2.id, item2]));
   const knownEvents = new Map((context8.events || []).map((item2) => [item2.id, item2]));
   const knownRecords = new Map((context8.records || []).map((item2) => [item2.id, item2]));
@@ -53971,7 +53982,17 @@ function parseStoryFactsResponse(raw, { context: context8 = {}, allowTimeOnly = 
   const allowedEntities = new Map([...knownEntities, ...entities.map((item2) => [item2.ref, item2])]);
   const entityRef = (value, path, person = false) => {
     const id4 = internalReference(value, path), entity = allowedEntities.get(id4);
-    if (!entity || person && entity.category !== "person") throw parseError(`${path} \u5F15\u7528\u4E86\u672A\u63D0\u4F9B\u7684${person ? "\u4EBA\u7269" : "\u5BF9\u8C61"}\u3002`);
+    if (!entity) {
+      const shortRef = references.alias("entity", id4) || "\u672A\u8BC6\u522B\u77ED\u7F16\u53F7";
+      const reason = shortRef.startsWith("no") ? "\u8BE5\u65B0\u589E\u5BF9\u8C61\u672A\u5728new_entities\u4E2D\u58F0\u660E\u3002" : "\u8BE5\u5BF9\u8C61\u672A\u5305\u542B\u5728\u672C\u6B21\u63D0\u4F9B\u7684\u5BF9\u8C61\u8D44\u6599\u4E2D\u3002";
+      throw parseError(`${path}\uFF1A\u77ED\u7F16\u53F7\u201C${shortRef}\u201D\u65E0\u6CD5\u5BF9\u5E94\u5BF9\u8C61\uFF1B${reason}`);
+    }
+    if (person && entity.category !== "person") {
+      const shortRef = references.alias("entity", id4) || "\u672A\u8BC6\u522B\u77ED\u7F16\u53F7";
+      const label3 = STORY_ENTITY_TYPE_LABELS[entity.category];
+      const category = label3 ? `${label3}\uFF08${entity.category}\uFF09` : "\u672A\u5206\u7C7B";
+      throw parseError(`${path}\uFF1A\u77ED\u7F16\u53F7\u201C${shortRef}\u201D\uFF08${entity.name || "\u672A\u547D\u540D\u5BF9\u8C61"}\uFF09\u7684\u7C7B\u578B\u4E3A${category}\uFF0C\u6B64\u5B57\u6BB5\u987B\u5F15\u7528\u4EBA\u7269\uFF08person\uFF09\u3002`);
+    }
     return id4;
   };
   const qualifiers = (item2, path, prior = {}) => {
@@ -54010,7 +54031,7 @@ function parseStoryFactsResponse(raw, { context: context8 = {}, allowTimeOnly = 
       participants: array(item2.participants, `${path}.participants`, 64).map((participant, i) => {
         if (!object4(participant)) throw parseError(`${path}.participants[${i}] \u5FC5\u987B\u662F\u5BF9\u8C61\u3002`);
         return {
-          entity_ref: entityRef(participant.entity_ref, `${path}.participants[${i}].entity_ref`, true),
+          entity_ref: entityRef(participant.entity_ref, `${path}.participants[${i}].entity_ref`),
           role: enumValue(participant.role, STORY_PARTICIPANT_ROLES, "mentioned", `${path}.participants[${i}].role`)
         };
       }),
@@ -54018,7 +54039,7 @@ function parseStoryFactsResponse(raw, { context: context8 = {}, allowTimeOnly = 
       points: []
     };
     if (!event.title) throw parseError(`${path} \u65B0\u4E8B\u4EF6\u987B\u63D0\u4F9Btitle\u3002`);
-    if (new Set(event.participants.map((value) => value.entity_ref)).size !== event.participants.length) throw parseError(`${path} \u540C\u4E00\u53C2\u4E0E\u4EBA\u7269\u91CD\u590D\u3002`);
+    if (new Set(event.participants.map((value) => value.entity_ref)).size !== event.participants.length) throw parseError(`${path} \u540C\u4E00\u53C2\u4E0E\u5BF9\u8C61\u91CD\u590D\u3002`);
     event.entity_refs = [.../* @__PURE__ */ new Set([...event.entity_refs, ...event.participants.map((value) => value.entity_ref)])];
     for (const [pointIndex, point2] of array(item2.points, `${path}.points`, 64).entries()) {
       const pointPath = `${path}.points[${pointIndex}]`, pointRef = reference(point2, pointPath);
@@ -54097,7 +54118,7 @@ function parseStoryFactsResponse(raw, { context: context8 = {}, allowTimeOnly = 
     warnings: []
   } };
 }
-var STORY_FACTS_FORMAT, STORY_FACT_TYPES, STORY_FACT_FRAMES, STORY_FACT_BASES, STORY_FACT_CERTAINTIES, STORY_FACT_ACTIONS, STORY_ENTITY_TYPES, STORY_EVENT_POINT_KINDS, STORY_PARTICIPANT_ROLES, STORY_RELATION_KINDS, STORY_OBJECTIVE_RELATIONS, STORY_FACTS_RULES, text5, object4, parseError, enumValue, endedStatuses, realFrames, statedBases, isWorldRecord, confirmedWorld, isRealIntention, requiredText, optionalText, internalReference, array;
+var STORY_FACTS_FORMAT, STORY_FACT_TYPES, STORY_FACT_FRAMES, STORY_FACT_BASES, STORY_FACT_CERTAINTIES, STORY_FACT_ACTIONS, STORY_ENTITY_TYPES, STORY_ENTITY_TYPE_LABELS, STORY_EVENT_POINT_KINDS, STORY_PARTICIPANT_ROLES, STORY_RELATION_KINDS, STORY_OBJECTIVE_RELATIONS, STORY_FACTS_RULES, text5, object4, parseError, enumValue, endedStatuses, realFrames, statedBases, isWorldRecord, confirmedWorld, isRealIntention, requiredText, optionalText, internalReference, array;
 var init_storyFactsProtocol = __esm({
   "src/core/storyFactsProtocol.js"() {
     init_storyFactsReferences();
@@ -54108,6 +54129,7 @@ var init_storyFactsProtocol = __esm({
     STORY_FACT_CERTAINTIES = ["explicit", "reported", "uncertain"];
     STORY_FACT_ACTIONS = ["corroborate", "supersede", "fulfill", "cancel", "retract", "conflict", "refine", "resolve"];
     STORY_ENTITY_TYPES = ["person", "animal", "place", "item", "organization", "other"];
+    STORY_ENTITY_TYPE_LABELS = { person: "\u4EBA\u7269", animal: "\u52A8\u7269", place: "\u5730\u70B9", item: "\u7269\u54C1", organization: "\u7EC4\u7EC7", other: "\u5176\u4ED6\u5BF9\u8C61" };
     STORY_EVENT_POINT_KINDS = ["detail", "condition", "cause", "result", "change", "unfinished"];
     STORY_PARTICIPANT_ROLES = ["actor", "recipient", "witness", "mentioned"];
     STORY_RELATION_KINDS = ["objective", "attitude"];
@@ -54147,7 +54169,8 @@ summary\u7B80\u77ED\u6982\u62EC\u672C\u697C\u5728\u8BE5\u4E8B\u4EF6\u4E2D\u7684\
 \u6BCF\u4E2A\u4FE1\u606F\u70B9\u53EA\u8868\u8FBE\u4E00\u9879\u53EF\u72EC\u7ACB\u7406\u89E3\u7684\u5185\u5BB9\uFF0C\u4FDD\u7559\u5426\u5B9A\u3001\u6761\u4EF6\u3001\u5BF9\u8C61\u4E0E\u9002\u7528\u8303\u56F4\u3002\u5141\u8BB8\u6539\u5199\uFF0C\u4E0D\u8981\u6C42\u9010\u5B57\u6458\u5F55\u3002
 \u8EAB\u4EFD\u63ED\u9732\u3001\u660E\u786E\u80CC\u666F\u4EA4\u4EE3\u548C\u91CD\u8981\u5F80\u4E8B\u4E5F\u53EF\u4EE5\u6210\u4E8B\u4EF6\uFF1B\u8BB0\u5F55\u53D1\u751F\u65F6\u95F4\u4E0E\u63D0\u53CA\u697C\u5C42\u4E0D\u662F\u4E00\u56DE\u4E8B\u3002\u65F6\u95F4\u672A\u77E5\u5C31\u7559\u7A7A\u3002
 \u666E\u901A\u52A8\u4F5C\u3001\u4E34\u65F6\u4F4D\u7F6E\u3001\u77AC\u65F6\u60C5\u7EEA\u3001\u7EAF\u6C14\u6C1B\u548C\u91CD\u590D\u5BF9\u767D\u4E0D\u5355\u72EC\u5EFA\u4E8B\u4EF6\uFF1B\u4E0D\u8981\u4E3A\u6BCF\u697C\u51D1\u4E8B\u4EF6\u6216\u4FE1\u606F\u70B9\u3002
-\u53C2\u4E0E\u4EBA\u7269\u533A\u5206actor\uFF08\u884C\u52A8\u8005\uFF09\u3001recipient\uFF08\u63A5\u53D7\u884C\u52A8\u8005\uFF09\u3001witness\uFF08\u5B9E\u9645\u76EE\u51FB\u8005\uFF09\u3001mentioned\uFF08\u4EC5\u63D0\u53CA\uFF09\u3002
+\u53C2\u4E0E\u5BF9\u8C61\u533A\u5206actor\uFF08\u884C\u52A8\u8005\uFF09\u3001recipient\uFF08\u63A5\u53D7\u884C\u52A8\u8005\uFF09\u3001witness\uFF08\u5B9E\u9645\u76EE\u51FB\u8005\uFF09\u3001mentioned\uFF08\u4EC5\u63D0\u53CA\uFF09\u3002
+participants\u4E0D\u9650\u4E8E\u4EBA\u7269\uFF0C\u52A8\u7269\u3001\u7EC4\u7EC7\u7B49\u4E5F\u53EF\u4EE5\u6309\u6B63\u6587\u4E2D\u7684\u5B9E\u9645\u89D2\u8272\u53C2\u4E0E\u4E8B\u4EF6\uFF0C\u4F8B\u5982\u63A5\u53D7\u6CBB\u7597\u7684\u5BA0\u7269\u53EF\u8BB0\u4E3Arecipient\u3002\u4EC5\u4F5C\u4E3A\u53D1\u751F\u5730\u70B9\u6216\u6D89\u53CA\u7269\u54C1\u65F6\u653E\u5165entity_refs\uFF0C\u4E0D\u4E3A\u5B83\u4EEC\u5F3A\u9020\u884C\u52A8\u3002
 \u88AB\u63D0\u53CA\u4E0D\u7B49\u4E8E\u5B9E\u9645\u53C2\u4E0E\uFF0C\u76EE\u51FB\u4E0D\u7B49\u4E8E\u77E5\u9053\u5168\u90E8\u4FE1\u606F\uFF1B\u8BA1\u5212\u4E2D\u7684\u672A\u6765\u53C2\u4E0E\u4E5F\u4E0D\u7B97\u5DF2\u7ECF\u51FA\u573A\u3002
 frame\u4FDD\u7559main/past/future/dream/hypothetical/unknown\u3002\u4EBA\u7269\u8BF4\u6CD5\u3001\u5185\u5FC3\u3001\u8BA1\u5212\u548C\u627F\u8BFA\u4FDD\u7559\u6027\u8D28\uFF0C\u4E0D\u80FD\u53D8\u6210\u5DF2\u6267\u884C\u7ED3\u679C\uFF1B\u8BFB\u8005\u77E5\u9053\u4E0D\u7B49\u4E8E\u4EBA\u7269\u77E5\u9053\u3002
 \u4FE1\u606F\u70B9type\uFF1Astate\uFF08\u660E\u786E\u957F\u671F\u72B6\u6001\uFF09\u3001event\uFF08\u5DF2\u53D1\u751F\u4E8B\u4EF6\u6216\u7ED3\u679C\uFF09\u3001claim\uFF08\u4EBA\u7269\u8BF4\u6CD5\uFF09\u3001mental\uFF08\u4EBA\u7269\u660E\u786E\u60F3\u6CD5\uFF09\u3001plan\u3001commitment\u3001clue\u3002
@@ -54159,6 +54182,7 @@ refine\u5B8C\u5584\u540C\u4E00\u4EF6\u4E8B\uFF1Bsupersede\u660E\u786E\u73B0\u5B9
 
 \u3010\u4EBA\u7269\u4E0E\u5173\u7CFB\u3011
 \u8BC6\u522B\u4EBA\u540D\u4E0D\u7B49\u4E8E\u5EFA\u4EBA\u7269\u6863\u6848\u3002\u53EA\u63D0\u4F9B\u5FC5\u8981\u540D\u79F0\u3001\u660E\u786E\u522B\u79F0\u548C\u8EAB\u4EFD\uFF0C\u51C6\u5165\u4E0E\u4E3B\u8981/\u6B21\u8981\u7B49\u7EA7\u7531\u7A0B\u5E8F\u51B3\u5B9A\u3002
+\u5BF9\u8C61\u767B\u8BB0\u4E0E\u4EBA\u7269\u56FE\u9274\u51C6\u5165\u5206\u5F00\u3002\u6240\u6709\u88AB\u77ED\u7F16\u53F7\u5F15\u7528\u7684\u5BF9\u8C61\u987B\u5DF2\u5728\u8F93\u5165\u63D0\u4F9B\uFF0C\u6216\u5728new_entities\u4E2D\u58F0\u660E\uFF1B\u5C1A\u672A\u5165\u9986\u7684\u4EBA\u7269\u548C\u5BA0\u7269\u4E5F\u987B\u6309\u5B9E\u9645\u7C7B\u578B\u767B\u8BB0\uFF0C\u4E0D\u56E0\u5EFA\u6863\u95E8\u69DB\u9057\u6F0F\u5F15\u7528\u6240\u9700\u7684\u5BF9\u8C61\u3002
 \u4F18\u5148\u4F7F\u7528\u63D0\u4F9B\u7684\u5BF9\u8C61\u5F15\u7528\uFF0C\u8EAB\u4EFD\u4E0D\u660E\u786E\u65F6\u4FDD\u7559\u4E0D\u540C\u5BF9\u8C61\uFF0C\u4E0D\u5408\u5E76\u540C\u540D\u8005\u6216\u6CDB\u79F0\u8DEF\u4EBA\uFF1B\u4E0D\u4E3A\u6BCF\u4E2A\u80CC\u666F\u89D2\u8272\u8865\u8D44\u6599\u3002
 entity_updates\u7684target_ref\u4F7F\u7528\u8F93\u5165\u63D0\u4F9B\u7684o\u7C7B\u77ED\u53F7\uFF0C\u4EC5\u8865\u5145\u6709\u6B63\u6587\u4F9D\u636E\u7684\u522B\u79F0\u6216\u8EAB\u4EFD\u3002
 \u53EA\u8F93\u51FA\u53D1\u751F\u53D8\u5316\u6216\u9996\u6B21\u660E\u786E\u7684\u5BA2\u89C2\u5173\u7CFB\uFF0C\u4EE5\u53CA\u4EBA\u7269\u5BF9\u7279\u5B9A\u5BF9\u8C61\u7684\u6001\u5EA6\u3002
@@ -54180,7 +54204,8 @@ participants\u9879\uFF1Aentity_ref\uFF08o\u6216no\u7C7B\u77ED\u53F7\uFF09/role\u
 relationship_changes\u9879\uFF1Aref\uFF08nr\u7C7B\u77ED\u53F7\uFF09/kind/subject_ref/object_ref/relation/operation/target_ref\uFF08\u5DF2\u6709r\u7C7B\u77ED\u53F7\uFF0C\u65E0\u65E7\u5173\u7CFB\u4E3Anull\uFF09/content/reason/event_ref/point_ref\uFF0C\u53EF\u9009frame/basis/viewpoint_ref/certainty\uFF0C\u7701\u7565\u65F6\u6CBF\u7528\u5F15\u7528\u7684\u4FE1\u606F\u70B9\u6027\u8D28\u3002
 subject_ref\u3001object_ref\u3001viewpoint_ref\u53CAentity_refs\u4E2D\u7684\u503C\u53EA\u4F7F\u7528\u5DF2\u63D0\u4F9B\u7684o\u7C7B\u77ED\u53F7\u6216\u672C\u6B21\u58F0\u660E\u7684no\u7C7B\u77ED\u53F7\uFF1Bviewpoint_ref\u4E0D\u9002\u7528\u65F6\u4E3Anull\u3002
 basis\u4E3Anarration/dialogue/inner_thought/author_revision/inference\uFF0Ccertainty\u4E3Aexplicit/reported/uncertain\u3002inference\u53EA\u8868\u793A\u4E0D\u786E\u5B9A\u7EBF\u7D22\uFF0C\u4E0D\u80FD\u4EA7\u751F\u786E\u5B9A\u73B0\u5B9E\u72B6\u6001\u3002
-\u4EBA\u7269\u5F15\u7528\u987B\u662Fperson\u3002\u4E0D\u8F93\u51FAid\u3001target_id\u3001event_id\u3001point_id\u3001logical_id\u3001fragment_id\u3001\u697C\u53F7\u3001\u5F15\u6587\u3001\u539F\u6587\u6458\u5F55\u3001\u6765\u6E90\u7F16\u7801\u6216\u53EF\u4FE1\u5EA6\u5206\u6570\uFF1B\u53EA\u4F7F\u7528\u77ED\u7F16\u53F7\u5F15\u7528\u5B57\u6BB5\uFF0C\u6765\u6E90\u4E0E\u6C38\u4E45\u8EAB\u4EFD\u7531\u7A0B\u5E8F\u7ED1\u5B9A\u3002
+\u4EBA\u7269\u5173\u7CFB\u7684subject_ref\u3001object_ref\u53CA\u8BF4\u6CD5\u6216\u60F3\u6CD5\u7684viewpoint_ref\u987B\u662Fperson\uFF1Bparticipants\u548Centity_refs\u53EF\u5F15\u7528\u4EFB\u4E00\u5DF2\u767B\u8BB0\u7C7B\u578B\u3002\u4EBA\u7269\u56FE\u9274\u53EA\u7EB3\u5165\u4EBA\u7269\uFF0C\u4E0D\u56E0\u52A8\u7269\u7B49\u53C2\u4E0E\u4E8B\u4EF6\u800C\u5EFA\u4EBA\u7269\u5361\u7247\u3002
+\u4E0D\u8F93\u51FAid\u3001target_id\u3001event_id\u3001point_id\u3001logical_id\u3001fragment_id\u3001\u697C\u53F7\u3001\u5F15\u6587\u3001\u539F\u6587\u6458\u5F55\u3001\u6765\u6E90\u7F16\u7801\u6216\u53EF\u4FE1\u5EA6\u5206\u6570\uFF1B\u53EA\u4F7F\u7528\u77ED\u7F16\u53F7\u5F15\u7528\u5B57\u6BB5\uFF0C\u6765\u6E90\u4E0E\u6C38\u4E45\u8EAB\u4EFD\u7531\u7A0B\u5E8F\u7ED1\u5B9A\u3002
 \u4E00\u6B21\u4EA4\u4ED8\u5B8C\u6574\u7ED3\u679C\uFF0C\u4E0D\u8865\u534A\u4EFD\uFF0C\u4E0D\u5BA3\u79F0\u5DF2\u7ECF\u4FEE\u6539\u5B58\u6863\u3002`;
     text5 = (value) => typeof value === "string" ? value.trim() : "";
     object4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -84525,6 +84550,7 @@ function renderStoryFactsPanel(view2, {
   focusEvent = null,
   returnToAtlas = false
 } = {}) {
+  const entities = new Map((view2.entities || []).map((entity) => [entity.id, entity]));
   const names = new Map((view2.entities || []).map((entity) => [entity.id, entity.name]));
   const search = query.trim().toLowerCase();
   const matching = (view2.events || []).filter((event) => (!focusEvent || event.id === focusEvent) && (!search || [
@@ -84567,10 +84593,13 @@ function renderStoryFactsPanel(view2, {
         <div data-role="fact-editor">${editor}</div>
         <div class="t-facts-list" id="t-facts-results" data-role="fact-results">${matching.length ? matching.map((event) => {
     const key = `event:${event.id}`, points = event.records.filter((record) => filter === "all" || view2.current.some((item2) => item2.id === record.id));
-    const people = [...new Set(event.fragments.flatMap((fragment) => fragment.participants.map((item2) => item2.entity_ref)))];
+    const participants = [...new Set(event.fragments.flatMap((fragment) => fragment.participants.map((item2) => item2.entity_ref)))];
     return `<details class="t-facts-event" data-event-id="${escape5(event.id)}" data-fact-detail="${escape5(key)}"${expanded.has(key) || focusEvent === event.id ? " open" : ""}>
                 <summary><span>\u7B2C ${event.start}${event.start !== event.end ? `\uFF5E${event.end}` : ""} \u697C \xB7 ${event.fragments.length} \u4E2A\u7247\u6BB5${event.status === "open" ? " \xB7 \u5C1A\u6709\u672A\u5B8C\u4E8B\u9879" : ""}</span><h3>${escape5(event.title)}</h3></summary>
-                <div class="t-facts-event-body"><div class="t-facts-people">${people.map((id4) => `<button type="button" class="t-memory-action" data-action="event-person" data-person-id="${escape5(id4)}" data-event-id="${escape5(event.id)}">${escape5(names.get(id4) || "\u672A\u786E\u5B9A\u4EBA\u7269")}</button>`).join("")}</div>
+                <div class="t-facts-event-body"><div class="t-facts-people">${participants.map((id4) => {
+      const entity = entities.get(id4), name = escape5(entity?.name || "\u672A\u786E\u5B9A\u5BF9\u8C61");
+      return entity?.category === "person" ? `<button type="button" class="t-memory-action" data-action="event-person" data-person-id="${escape5(id4)}" data-event-id="${escape5(event.id)}">${name}</button>` : `<span class="t-memory-badge">${name} \xB7 ${escape5(STORY_ENTITY_TYPE_LABELS[entity?.category] || "\u5176\u4ED6\u5BF9\u8C61")}</span>`;
+    }).join("")}</div>
                 <details class="t-facts-process" data-fact-detail="${escape5(`process:${event.id}`)}"${expanded.has(`process:${event.id}`) ? " open" : ""}><summary>\u4E8B\u4EF6\u7ECF\u8FC7 \xB7 ${event.fragments.length} \u4E2A\u7247\u6BB5</summary>
                     ${event.fragments.map((fragment) => `<section><h4>\u7B2C ${fragment.floor} \u697C${fragment.time_text ? ` \xB7 ${escape5(fragment.time_text)}` : ""} \xB7 ${escape5(frames[fragment.frame])}</h4><p>${escape5(fragment.summary)}</p>
                         <button type="button" class="t-memory-action" data-action="event-source" data-event-id="${escape5(event.id)}" data-floor="${fragment.floor}">\u67E5\u770B\u8FD9\u697C\u539F\u6587</button></section>`).join("")}</details>
