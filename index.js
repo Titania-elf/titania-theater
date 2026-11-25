@@ -54199,6 +54199,7 @@ var init_storyFactsReferences = __esm({
       "kind",
       "type",
       "content",
+      "reason",
       "frame",
       "time_text",
       "basis",
